@@ -9,6 +9,7 @@ export default function Home() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
+<<<<<<< HEAD
     <div className="flex h-screen bg-zinc-50 font-sans dark:bg-zinc-950 overflow-hidden">
       <Sidebar
         isCollapsed={isCollapsed}
@@ -24,6 +25,10 @@ export default function Home() {
           <Dashboard />
         </div>
       </main>
+=======
+  <div>
+    <h1>hi</h1>
+>>>>>>> 3fd7123 (sync Campaign)
     </div>
   );
 }
