@@ -1,38 +1,21 @@
-// import { NextResponse } from "next/server";
-// import { connectDB } from "@/lib/db";
-// import Campaign from "@/models/Campaign";
+import { connectDB } from "@/lib/db";
+import { NextRequest } from "next/server";
 
-// export async function POST(req: Request) {
-//   try {
-//     await connectDB();
+import {
+  createCampaignController,
+  getCampaignsController,
+} from "@/modules/campaign/campaign.controller";
 
-//     const body = await req.json();
+export async function POST(req: NextRequest) {
+  await connectDB();
 
-//     const campaign = await Campaign.create(body);
+  return createCampaignController(req);
+}
 
-//     return NextResponse.json(campaign, { status: 201 });
-//   } catch (error: any) {
-//     return NextResponse.json(
-//       { status: false, msg: error.message },
-//       { status: 500 }
-//     );
-//   }
-// }
-// // export async function GET(req: Request) {
-// //   try {
-// //     await connectDB();
-// //     const campaign = await Campaign.findOne();
-    
+export async function GET(req: NextRequest) {
+  await connectDB();
 
-// //     return NextResponse.json(campaign, { status: 201 });
-// //   } catch (error: any) {
-// //     return NextResponse.json(
-// //       { status: false, msg: error.message },
-// //       { status: 500 }
-// //     );
-// //   }
-// // }
+  return getCampaignsController(req);
+}
 
-// export async function getCampaigns(){
-  
-// }
+
