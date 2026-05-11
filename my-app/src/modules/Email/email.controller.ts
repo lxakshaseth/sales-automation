@@ -111,14 +111,16 @@ export const sendEmail = async ({
     await savedEmail.save();
 
     return savedEmail;
-  } catch {
-    const failedEmail = await Email.create({
-      to,
-      subject: subject || "",
-      body: body || "",
-      status: "FAILED",
-    });
+  } catch (error) {
+  console.log("EMAIL ERROR:", error);
 
-    return failedEmail;
-  }
+  const failedEmail = await Email.create({
+    to,
+    subject: subject || "FAILED_EMAIL",
+    body: body || "FAILED_EMAIL_BODY",
+    status: "FAILED",
+  });
+
+  return failedEmail;
+}
 };

@@ -1,14 +1,5 @@
 import nodemailer from "nodemailer";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-
-  auth: {
-    user: process.env.SMTP_EMAIL,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
-
 interface SendEmailProps {
   to: string;
   subject: string;
@@ -20,8 +11,25 @@ export const sendEmailService = async ({
   subject,
   body,
 }: SendEmailProps) => {
+
+  const SMTP_EMAIL = process.env.SMTP_EMAIL;
+  const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
+
+  if (!SMTP_EMAIL || !SMTP_PASSWORD) {
+    throw new Error("SMTP credentials missing");
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+
+    auth: {
+      user: SMTP_EMAIL,
+      pass: SMTP_PASSWORD,
+    },
+  });
+
   const info = await transporter.sendMail({
-    from: process.env.SMTP_EMAIL,
+    from: SMTP_EMAIL,
     to,
     subject,
     html: body,
