@@ -156,8 +156,6 @@ const campaignSchema = new mongoose.Schema(
   },
 );
 
-const Campaign =
-  mongoose.models.Campaign ||
-  mongoose.model("Campaign", campaignSchema);
+const Campaign = mongoose.models.Campaign || mongoose.model("Campaign", campaignSchema);
 
 export default Campaign;

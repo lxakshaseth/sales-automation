@@ -82,7 +82,7 @@ const leadSchema = new Schema(
       type: Date,
     },
 
-    campaignId: {
+    campaign: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Campaign",
       required: true,
@@ -93,7 +93,6 @@ const leadSchema = new Schema(
   }
 );
 
-const Lead =
-  mongoose.models.Lead || mongoose.model("Lead", leadSchema);
+const Lead = mongoose.models.Lead || mongoose.model("Lead", leadSchema);
 
 export default Lead;
