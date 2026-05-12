@@ -17,5 +17,3 @@ export async function GET(req: NextRequest) {
 
   return getCampaignsController(req);
 }
-
-
