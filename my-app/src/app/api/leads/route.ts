@@ -1,7 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { NextRequest } from "next/server";
 
-import {createLeadController} from "@/modules/leads/leads.controller";
+import {createLeadController,getLeadsController} from "@/modules/leads/leads.controller";
 
 export async function POST(req: NextRequest) {
   await connectDB();
@@ -9,8 +9,8 @@ export async function POST(req: NextRequest) {
   return createLeadController(req);
 }
 
-// export async function GET(req: NextRequest) {
-//   await connectDB();
+export async function GET(req: NextRequest) {
+  await connectDB();
 
-//   return getCampaignsController(req);
-// }
+  return getLeadsController(req);
+}
