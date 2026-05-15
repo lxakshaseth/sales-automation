@@ -20,12 +20,15 @@ class RateLimiterTests(unittest.IsolatedAsyncioTestCase):
         self.redis = AsyncMock()
         self.redis.pipeline = MagicMock()
         self.redis.ttl.return_value = 60
+        self.enabled_patch = patch.object(rate_limiter, "RATE_LIMIT_ENABLED", True)
+        self.enabled_patch.start()
         self.client_patch = patch.object(rate_limiter, "_get_redis_client", return_value=self.redis)
         self.client_patch.start()
         self.log_patch = patch.object(rate_limiter, "log_event")
         self.log_patch.start()
 
     async def asyncTearDown(self):
+        self.enabled_patch.stop()
         self.client_patch.stop()
         self.log_patch.stop()
         await close_rate_limiter()
@@ -109,7 +112,10 @@ class RateLimitMiddlewareTests(unittest.TestCase):
         async def allow(*args, **kwargs):
             return {"allowed": True, "limit": 20, "remaining": 19, "reset_in": 60, "retry_after": 0}
 
-        with patch.object(rate_limiter, "check_rate_limit", new=AsyncMock(side_effect=allow)):
+        with (
+            patch.object(rate_limiter, "RATE_LIMIT_ENABLED", True),
+            patch.object(rate_limiter, "check_rate_limit", new=AsyncMock(side_effect=allow)),
+        ):
             response = TestClient(app).get("/ping", headers={"x-user-id": "user-123"})
 
         self.assertEqual(response.status_code, 200)
@@ -126,7 +132,10 @@ class RateLimitMiddlewareTests(unittest.TestCase):
         async def block(*args, **kwargs):
             return {"allowed": False, "limit": 20, "remaining": 0, "reset_in": 60, "retry_after": 60}
 
-        with patch.object(rate_limiter, "check_rate_limit", new=AsyncMock(side_effect=block)):
+        with (
+            patch.object(rate_limiter, "RATE_LIMIT_ENABLED", True),
+            patch.object(rate_limiter, "check_rate_limit", new=AsyncMock(side_effect=block)),
+        ):
             response = TestClient(app).get("/ping")
 
         self.assertEqual(response.status_code, 429)

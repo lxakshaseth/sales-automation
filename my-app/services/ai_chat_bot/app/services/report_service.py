@@ -1,3 +1,4 @@
+import asyncio
 import html
 import json
 import os
@@ -9,8 +10,10 @@ from uuid import uuid4
 import redis.asyncio as redis
 from redis.exceptions import RedisError
 
+from app.config.settings import settings
 from app.core.config import REDIS_URL
 from app.core.logger import log_error, log_event, log_info
+from app.core.performance import measure
 from app.models.report_models import ConversationReport
 from app.models.summary_models import EmailReport
 from app.services.ai_summary_service import generate_ai_sales_summary
@@ -18,6 +21,7 @@ from app.services.conversation_service import get_conversation_history, get_conv
 from app.services.email_service import EmailServiceError, send_html_email
 from app.services.owner_settings_service import get_active_owner_emails
 from app.services.transcript_service import normalize_transcript
+from app.utils.ttl_cache import TTLCache
 
 REPORT_KEY_PREFIX = "agent:report"
 REPORT_HISTORY_KEY = "agent:report:history"
@@ -27,6 +31,7 @@ TEMPLATE_DIR = Path(__file__).resolve().parents[1] / "templates"
 _redis_client: redis.Redis | None = None
 _memory_reports: dict[str, ConversationReport] = {}
 _memory_history: list[str] = []
+_history_cache: TTLCache[list[ConversationReport]] = TTLCache(ttl_seconds=settings.report_history_cache_ttl_seconds)
 
 
 class ReportServiceError(RuntimeError):
@@ -38,8 +43,20 @@ def _get_redis_client() -> redis.Redis:
     if _redis_client is None:
         if not REDIS_URL:
             raise ReportServiceError("REDIS_URL is not configured")
-        _redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+        _redis_client = redis.from_url(
+            REDIS_URL,
+            decode_responses=True,
+            socket_connect_timeout=settings.redis_operation_timeout_seconds,
+            socket_timeout=settings.redis_operation_timeout_seconds,
+            retry_on_timeout=True,
+            health_check_interval=30,
+        )
     return _redis_client
+
+
+async def _redis_call(operation: str, coro):
+    async with measure("redis", f"reports.{operation}"):
+        return await asyncio.wait_for(coro, timeout=settings.redis_operation_timeout_seconds)
 
 
 async def close_report_service_client() -> None:
@@ -146,17 +163,17 @@ async def save_report(report: ConversationReport) -> ConversationReport:
     _memory_reports[report.report_id] = report
     if report.report_id not in _memory_history:
         _memory_history.insert(0, report.report_id)
+    _history_cache.invalidate_prefix("history:")
     try:
         client = _get_redis_client()
-        await client.set(
-            f"{REPORT_KEY_PREFIX}:{report.report_id}",
-            report.model_dump_json(),
-            ex=REPORT_TTL_SECONDS,
-        )
-        await client.lrem(REPORT_HISTORY_KEY, 0, report.report_id)
-        await client.lpush(REPORT_HISTORY_KEY, report.report_id)
-        await client.ltrim(REPORT_HISTORY_KEY, 0, 499)
-    except (ReportServiceError, RedisError) as exc:
+        async with measure("redis", "reports.save", report_id=report.report_id):
+            pipe = client.pipeline()
+            pipe.set(f"{REPORT_KEY_PREFIX}:{report.report_id}", report.model_dump_json(), ex=REPORT_TTL_SECONDS)
+            pipe.lrem(REPORT_HISTORY_KEY, 0, report.report_id)
+            pipe.lpush(REPORT_HISTORY_KEY, report.report_id)
+            pipe.ltrim(REPORT_HISTORY_KEY, 0, 499)
+            await asyncio.wait_for(pipe.execute(), timeout=settings.redis_operation_timeout_seconds)
+    except (asyncio.TimeoutError, ReportServiceError, RedisError) as exc:
         log_error("Report Redis persistence failed", report_id=report.report_id, error_type=type(exc).__name__)
     return report
 
@@ -165,8 +182,8 @@ async def get_report(report_id: str) -> ConversationReport | None:
     if report_id in _memory_reports:
         return _memory_reports[report_id]
     try:
-        raw_value = await _get_redis_client().get(f"{REPORT_KEY_PREFIX}:{report_id}")
-    except (ReportServiceError, RedisError):
+        raw_value = await _redis_call("get", _get_redis_client().get(f"{REPORT_KEY_PREFIX}:{report_id}"))
+    except (asyncio.TimeoutError, ReportServiceError, RedisError):
         return None
     if not raw_value:
         return None
@@ -174,17 +191,38 @@ async def get_report(report_id: str) -> ConversationReport | None:
 
 
 async def list_reports(limit: int = 50) -> list[ConversationReport]:
+    limit = max(1, min(limit, 200))
+    cache_key = f"history:{limit}"
+    cached = _history_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     ids = _memory_history[:limit]
     try:
-        redis_ids = await _get_redis_client().lrange(REPORT_HISTORY_KEY, 0, max(0, limit - 1))
+        redis_ids = await _redis_call("history_ids", _get_redis_client().lrange(REPORT_HISTORY_KEY, 0, max(0, limit - 1)))
         ids = list(dict.fromkeys([*redis_ids, *ids]))[:limit]
-    except (ReportServiceError, RedisError):
+    except (asyncio.TimeoutError, ReportServiceError, RedisError):
         pass
+
     reports: list[ConversationReport] = []
-    for report_id in ids:
-        report = await get_report(report_id)
-        if report:
-            reports.append(report)
+    missing_ids = [report_id for report_id in ids if report_id not in _memory_reports]
+    reports.extend(_memory_reports[report_id] for report_id in ids if report_id in _memory_reports)
+
+    if missing_ids:
+        try:
+            keys = [f"{REPORT_KEY_PREFIX}:{report_id}" for report_id in missing_ids]
+            raw_values = await _redis_call("history_mget", _get_redis_client().mget(keys))
+            for raw_value in raw_values:
+                if raw_value:
+                    report = ConversationReport.model_validate_json(raw_value)
+                    _memory_reports[report.report_id] = report
+                    reports.append(report)
+        except (asyncio.TimeoutError, ReportServiceError, RedisError, ValueError) as exc:
+            log_error("Report history Redis read failed", error_type=type(exc).__name__)
+
+    order = {report_id: index for index, report_id in enumerate(ids)}
+    reports = sorted(reports, key=lambda item: order.get(item.report_id, len(order)))[:limit]
+    _history_cache.set(cache_key, reports, ttl_seconds=settings.report_history_cache_ttl_seconds)
     return reports
 
 

@@ -3,6 +3,29 @@ import os
 
 load_dotenv()
 
+
+def _parse_bool(value: str | None, *, default: bool) -> bool:
+    """Parse common environment boolean values while keeping production-safe defaults."""
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+ENVIRONMENT = os.getenv("ENVIRONMENT", "production").strip().lower()
+LOAD_TEST_ENVIRONMENTS = {"test", "testing", "loadtest", "load-test", "locust", "ci"}
+LOAD_TEST_MODE = _parse_bool(os.getenv("LOAD_TEST_MODE"), default=ENVIRONMENT in LOAD_TEST_ENVIRONMENTS)
+MOCK_AI = _parse_bool(os.getenv("MOCK_AI"), default=LOAD_TEST_MODE)
+MOCK_EMAILS = _parse_bool(os.getenv("MOCK_EMAILS"), default=LOAD_TEST_MODE)
+AI_WEBHOOK_TIMEOUT_SECONDS = float(os.getenv("AI_WEBHOOK_TIMEOUT_SECONDS", "15"))
+AI_WEBHOOK_MAX_CONCURRENCY = int(os.getenv("AI_WEBHOOK_MAX_CONCURRENCY", "5"))
+AI_REQUEST_TIMEOUT_SECONDS = float(os.getenv("AI_REQUEST_TIMEOUT_SECONDS", "5"))
+WEBHOOK_FAST_ACK = _parse_bool(os.getenv("WEBHOOK_FAST_ACK"), default=LOAD_TEST_MODE)
+CACHE_DEFAULT_TTL_SECONDS = int(os.getenv("CACHE_DEFAULT_TTL_SECONDS", "60"))
+REPORT_HISTORY_CACHE_TTL_SECONDS = int(os.getenv("REPORT_HISTORY_CACHE_TTL_SECONDS", "30"))
+OWNER_EMAIL_CACHE_TTL_SECONDS = int(os.getenv("OWNER_EMAIL_CACHE_TTL_SECONDS", "30"))
+AI_RESPONSE_CACHE_TTL_SECONDS = int(os.getenv("AI_RESPONSE_CACHE_TTL_SECONDS", "300"))
+REDIS_OPERATION_TIMEOUT_SECONDS = float(os.getenv("REDIS_OPERATION_TIMEOUT_SECONDS", "0.75"))
+
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_TOOL_MODEL = os.getenv("GROQ_TOOL_MODEL", "llama-3.3-70b-versatile")
 RETRY_MAX_ATTEMPTS = int(os.getenv("RETRY_MAX_ATTEMPTS", "3"))
@@ -18,6 +41,29 @@ RATE_LIMIT_MESSAGES_PER_MINUTE = int(os.getenv("RATE_LIMIT_MESSAGES_PER_MINUTE",
 RATE_LIMIT_EMAILS_PER_MINUTE = int(os.getenv("RATE_LIMIT_EMAILS_PER_MINUTE", "5"))
 RATE_LIMIT_API_REQUESTS_PER_MINUTE = int(os.getenv("RATE_LIMIT_API_REQUESTS_PER_MINUTE", "20"))
 RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
+# Rate limiting is enabled by default in production. In explicit test/load-test
+# environments it is disabled unless ENABLE_RATE_LIMIT/RATE_LIMIT_ENABLED says otherwise.
+_rate_limit_default = ENVIRONMENT not in LOAD_TEST_ENVIRONMENTS
+_rate_limit_env_value = os.getenv("ENABLE_RATE_LIMIT", os.getenv("RATE_LIMIT_ENABLED"))
+_disable_rate_limit = _parse_bool(os.getenv("DISABLE_RATE_LIMIT"), default=False)
+ENABLE_RATE_LIMIT = _parse_bool(_rate_limit_env_value, default=_rate_limit_default)
+if _disable_rate_limit:
+    ENABLE_RATE_LIMIT = False
+RATE_LIMIT_ENABLED = ENABLE_RATE_LIMIT
+RATE_LIMIT_DISABLED_REASON = (
+    "DISABLE_RATE_LIMIT=true"
+    if _disable_rate_limit
+    else
+    "explicit environment override"
+    if _rate_limit_env_value is not None and not ENABLE_RATE_LIMIT
+    else f"ENVIRONMENT={ENVIRONMENT}"
+    if not ENABLE_RATE_LIMIT
+    else ""
+)
+RATE_LIMIT_BYPASS_LOCALHOST = os.getenv("RATE_LIMIT_BYPASS_LOCALHOST", "false").lower() in {"1", "true", "yes", "on"}
+DEBUG_HTTP_LOGGING = os.getenv("DEBUG_HTTP_LOGGING", "false").lower() in {"1", "true", "yes", "on"}
+DEBUG_HTTP_BODY_LOGGING = os.getenv("DEBUG_HTTP_BODY_LOGGING", "false").lower() in {"1", "true", "yes", "on"}
+DEBUG_HTTP_BODY_MAX_CHARS = int(os.getenv("DEBUG_HTTP_BODY_MAX_CHARS", "2000"))
 
 def _normalize_redis_url(value: str | None) -> str | None:
     """Accept a raw Redis URL and tolerate accidental `redis-cli -u` prefixes."""

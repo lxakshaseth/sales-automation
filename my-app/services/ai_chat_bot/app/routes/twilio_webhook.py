@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
 from starlette.responses import JSONResponse, PlainTextResponse, Response
 
@@ -22,6 +24,9 @@ from app.services.whatsapp_provider import META_PROVIDER, get_active_provider, s
 from app.utils.twilio_parser import InvalidTwilioPayloadError, parse_twilio_form
 
 router = APIRouter()
+
+AI_FALLBACK_REPLY = "Thanks for your message. Our team will follow up shortly."
+_ai_webhook_semaphore = asyncio.Semaphore(max(1, settings.ai_webhook_max_concurrency))
 
 
 @router.get("/webhook")
@@ -200,6 +205,17 @@ async def _handle_twilio_form_webhook(
         form_keys=sorted(form_data.keys()),
     )
 
+    explicit_fast_ack = request.headers.get("x-fast-ack", "").lower() in {"1", "true", "yes", "on"}
+    load_test_fast_ack = settings.webhook_fast_ack and bool(request.headers.get("x-load-test"))
+    if explicit_fast_ack or load_test_fast_ack:
+        log_event(
+            "twilio_webhook_fast_ack",
+            message_sid=incoming.message_sid,
+            from_number=incoming.from_number,
+            load_test_mode=settings.load_test_mode,
+        )
+        return Response(content=build_twiml_response(AI_FALLBACK_REPLY), media_type="application/xml")
+
     uploaded_media = []
     media_context = None
     try:
@@ -236,22 +252,33 @@ async def _handle_twilio_form_webhook(
     preferred_language = (conversation_state or {}).get("preferred_language") or detect_language(incoming.body)["language_code"]
     ai_reply = (conversation_state or {}).get("language_switch_confirmation")
     if not ai_reply:
-        try:
-            ai_reply = await generate_sales_reply(
-                incoming.body,
-                user_id=incoming.from_number,
-                media_context=media_context,
-                preferred_language=preferred_language,
-            )
-        except GroqServiceError as exc:
-            log_error(
-                "Groq AI response failed",
+        explicit_mock_ai = request.headers.get("x-mock-ai", "").lower() in {"1", "true", "yes", "on"}
+        load_test_mock_ai = settings.mock_ai and bool(request.headers.get("x-load-test"))
+        if explicit_mock_ai or load_test_mock_ai:
+            ai_reply = AI_FALLBACK_REPLY
+            log_event(
+                "mock_ai_reply_used",
                 message_sid=incoming.message_sid,
                 from_number=incoming.from_number,
-                preferred_language=preferred_language,
-                error=str(exc),
+                load_test_mode=settings.load_test_mode,
             )
-            ai_reply = "Sorry, I am having trouble responding right now. Please try again shortly."
+        else:
+            if _ai_webhook_semaphore.locked():
+                log_error(
+                    "AI webhook concurrency saturated",
+                    message_sid=incoming.message_sid,
+                    from_number=incoming.from_number,
+                    max_concurrency=settings.ai_webhook_max_concurrency,
+                )
+                ai_reply = AI_FALLBACK_REPLY
+            else:
+                ai_reply = await _generate_sales_reply_with_timeout(
+                    user_message=incoming.body,
+                    user_id=incoming.from_number,
+                    media_context=media_context,
+                    preferred_language=preferred_language,
+                    message_sid=incoming.message_sid,
+                )
 
     try:
         await record_assistant_message(incoming.from_number, ai_reply)
@@ -274,6 +301,47 @@ async def _handle_twilio_form_webhook(
 
     twiml = build_twiml_response(ai_reply)
     return Response(content=twiml, media_type="application/xml")
+
+
+async def _generate_sales_reply_with_timeout(
+    *,
+    user_message: str,
+    user_id: str,
+    media_context: dict | None,
+    preferred_language: str,
+    message_sid: str,
+) -> str:
+    async with _ai_webhook_semaphore:
+        try:
+            # Keep webhook latency bounded. Twilio expects a quick response,
+            # and load tests should not pile up behind slow model calls.
+            return await asyncio.wait_for(
+                generate_sales_reply(
+                    user_message,
+                    user_id=user_id,
+                    media_context=media_context,
+                    preferred_language=preferred_language,
+                ),
+                timeout=settings.ai_webhook_timeout_seconds,
+            )
+        except asyncio.TimeoutError:
+            log_error(
+                "Groq AI response timed out",
+                message_sid=message_sid,
+                from_number=user_id,
+                preferred_language=preferred_language,
+                timeout_seconds=settings.ai_webhook_timeout_seconds,
+            )
+            return AI_FALLBACK_REPLY
+        except GroqServiceError as exc:
+            log_error(
+                "Groq AI response failed",
+                message_sid=message_sid,
+                from_number=user_id,
+                preferred_language=preferred_language,
+                error=str(exc),
+            )
+            return "Sorry, I am having trouble responding right now. Please try again shortly."
 
 
 def _parse_twilio_media_count(form_data: dict) -> int:

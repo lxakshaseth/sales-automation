@@ -1,11 +1,14 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.gzip import GZipMiddleware
 from app.core.agent_executor import close_agent_executor_client
+from app.core.debugging import DebugRequestMiddleware, install_exception_handlers
 from app.core.event_bus import close_event_bus
 from app.core.logger import LoggingMiddleware, configure_logging
-from app.core.llm import ask_llm
-from app.core.rate_limiter import RateLimitMiddleware, close_rate_limiter
+from app.core.llm import ask_llm, close_llm_client
+from app.core.performance import PerformanceMiddleware
+from app.core.rate_limiter import close_rate_limiter, install_rate_limit_middleware
 from app.routes.owner_settings import router as owner_settings_router
 from app.routes.reports import router as reports_router
 from app.routes.twilio_webhook import router as twilio_router
@@ -43,6 +46,7 @@ async def lifespan(app: FastAPI):
     await start_scheduler()
     yield
     await shutdown_scheduler()
+    await close_llm_client()
     await close_agent_executor_client()
     await close_groq_service_client()
     await close_whatsapp_cloud_client()
@@ -58,8 +62,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+install_exception_handlers(app)
+app.add_middleware(GZipMiddleware, minimum_size=1024)
+app.add_middleware(PerformanceMiddleware)
+app.add_middleware(DebugRequestMiddleware)
 app.add_middleware(LoggingMiddleware)
-app.add_middleware(RateLimitMiddleware)
+install_rate_limit_middleware(app)
 app.include_router(twilio_router)
 app.include_router(owner_settings_router)
 app.include_router(reports_router)

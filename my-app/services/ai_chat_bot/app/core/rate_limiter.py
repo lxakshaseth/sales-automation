@@ -9,8 +9,13 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 from app.core.config import (
+    ENABLE_RATE_LIMIT,
+    ENVIRONMENT,
     RATE_LIMIT_API_REQUESTS_PER_MINUTE,
+    RATE_LIMIT_BYPASS_LOCALHOST,
+    RATE_LIMIT_DISABLED_REASON,
     RATE_LIMIT_EMAILS_PER_MINUTE,
+    RATE_LIMIT_ENABLED,
     RATE_LIMIT_MESSAGES_PER_MINUTE,
     RATE_LIMIT_WINDOW_SECONDS,
     REDIS_URL,
@@ -37,9 +42,26 @@ DEFAULT_LIMITS: dict[str, RateLimitRule] = {
     "api": RateLimitRule(limit=RATE_LIMIT_API_REQUESTS_PER_MINUTE),
 }
 
+LOCALHOST_CLIENTS = {"127.0.0.1", "::1", "localhost", "testclient"}
+
 
 class RateLimitError(RuntimeError):
     """Raised when Redis rate limiting fails unexpectedly."""
+
+
+def log_rate_limiter_startup() -> None:
+    """Emit one startup log that makes load-test limiter behavior unmistakable."""
+    log_event(
+        "rate_limiter_configuration",
+        enabled=ENABLE_RATE_LIMIT,
+        environment=ENVIRONMENT,
+        api_limit_per_window=RATE_LIMIT_API_REQUESTS_PER_MINUTE,
+        message_limit_per_window=RATE_LIMIT_MESSAGES_PER_MINUTE,
+        email_limit_per_window=RATE_LIMIT_EMAILS_PER_MINUTE,
+        window_seconds=RATE_LIMIT_WINDOW_SECONDS,
+        localhost_bypass=RATE_LIMIT_BYPASS_LOCALHOST,
+        disabled_reason=RATE_LIMIT_DISABLED_REASON or None,
+    )
 
 
 def _get_redis_client() -> redis.Redis:
@@ -136,6 +158,24 @@ async def check_rate_limit(
 
     Set `increment=False` to only inspect current usage without consuming quota.
     """
+    if not RATE_LIMIT_ENABLED:
+        rule = _resolve_rule(limit_type, limit=limit, window_seconds=window_seconds)
+        return {
+            "allowed": True,
+            "scope": scope,
+            "identifier": str(identifier or "disabled"),
+            "limit_type": limit_type,
+            "limit": rule.limit,
+            "count": 0,
+            "remaining": rule.limit,
+            "retry_after": 0,
+            "reset_in": rule.window_seconds,
+            "window_seconds": rule.window_seconds,
+            "key": "rate_limit:disabled",
+            "bypassed": True,
+            "bypass_reason": RATE_LIMIT_DISABLED_REASON or "ENABLE_RATE_LIMIT=false",
+        }
+
     if not identifier or not str(identifier).strip():
         raise ValueError("identifier is required")
 
@@ -208,7 +248,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     """FastAPI middleware enforcing distributed per-IP and optional per-user limits."""
 
     async def dispatch(self, request: Request, call_next: Callable[[Request], Any]) -> Response:
-        if request.url.path in {"/health", "/docs", "/openapi.json"}:
+        if _should_bypass_request_rate_limit(request):
             return await call_next(request)
 
         client_ip = request.client.host if request.client else "unknown"
@@ -228,6 +268,27 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response.headers["x-ratelimit-remaining"] = str(ip_result["remaining"])
         response.headers["x-ratelimit-reset"] = str(ip_result["reset_in"])
         return response
+
+
+def install_rate_limit_middleware(app) -> None:
+    """Install rate limiting only when enabled, preserving a clean FastAPI middleware stack."""
+    log_rate_limiter_startup()
+    if RATE_LIMIT_ENABLED:
+        app.add_middleware(RateLimitMiddleware)
+        return
+
+    # Do not add the middleware during Locust/testing runs. Direct helper calls
+    # still use check_rate_limit(), which returns an allowed bypass result.
+    log_event("rate_limiter_disabled", environment=ENVIRONMENT, reason=RATE_LIMIT_DISABLED_REASON)
+
+
+def _should_bypass_request_rate_limit(request: Request) -> bool:
+    if request.url.path in {"/docs", "/openapi.json", "/redoc"}:
+        return True
+    if not RATE_LIMIT_ENABLED:
+        return True
+    client_host = request.client.host if request.client else ""
+    return bool(RATE_LIMIT_BYPASS_LOCALHOST and client_host in LOCALHOST_CLIENTS)
 
 
 def _rate_limited_response(result: dict[str, Any]) -> JSONResponse:
