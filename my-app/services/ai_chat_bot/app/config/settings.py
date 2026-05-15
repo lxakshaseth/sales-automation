@@ -6,10 +6,40 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _parse_bool(value: str | None, *, default: bool) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+ENVIRONMENT = os.getenv("ENVIRONMENT", "production").strip().lower()
+LOAD_TEST_ENVIRONMENTS = {"test", "testing", "loadtest", "load-test", "locust", "ci"}
+LOAD_TEST_MODE = _parse_bool(os.getenv("LOAD_TEST_MODE"), default=ENVIRONMENT in LOAD_TEST_ENVIRONMENTS)
+_DISABLE_RATE_LIMIT = _parse_bool(os.getenv("DISABLE_RATE_LIMIT"), default=False)
+_ENABLE_RATE_LIMIT = _parse_bool(
+    os.getenv("ENABLE_RATE_LIMIT", os.getenv("RATE_LIMIT_ENABLED")),
+    default=ENVIRONMENT not in LOAD_TEST_ENVIRONMENTS,
+)
+
+
 @dataclass(frozen=True)
 class Settings:
     """Application settings loaded from environment variables."""
 
+    environment: str = ENVIRONMENT
+    load_test_mode: bool = LOAD_TEST_MODE
+    mock_ai: bool = _parse_bool(os.getenv("MOCK_AI"), default=LOAD_TEST_MODE)
+    mock_emails: bool = _parse_bool(os.getenv("MOCK_EMAILS"), default=LOAD_TEST_MODE)
+    ai_webhook_timeout_seconds: float = float(os.getenv("AI_WEBHOOK_TIMEOUT_SECONDS", "15"))
+    ai_webhook_max_concurrency: int = int(os.getenv("AI_WEBHOOK_MAX_CONCURRENCY", "5"))
+    ai_request_timeout_seconds: float = float(os.getenv("AI_REQUEST_TIMEOUT_SECONDS", "5"))
+    webhook_fast_ack: bool = _parse_bool(os.getenv("WEBHOOK_FAST_ACK"), default=LOAD_TEST_MODE)
+    cache_default_ttl_seconds: int = int(os.getenv("CACHE_DEFAULT_TTL_SECONDS", "60"))
+    report_history_cache_ttl_seconds: int = int(os.getenv("REPORT_HISTORY_CACHE_TTL_SECONDS", "30"))
+    owner_email_cache_ttl_seconds: int = int(os.getenv("OWNER_EMAIL_CACHE_TTL_SECONDS", "30"))
+    ai_response_cache_ttl_seconds: int = int(os.getenv("AI_RESPONSE_CACHE_TTL_SECONDS", "300"))
+    redis_operation_timeout_seconds: float = float(os.getenv("REDIS_OPERATION_TIMEOUT_SECONDS", "0.75"))
+    enable_rate_limit: bool = False if _DISABLE_RATE_LIMIT else _ENABLE_RATE_LIMIT
     groq_api_key: str | None = os.getenv("GROQ_API_KEY")
     groq_model: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     twilio_account_sid: str | None = os.getenv("TWILIO_ACCOUNT_SID")

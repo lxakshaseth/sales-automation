@@ -9,6 +9,10 @@ from app.core.logger import log_error, log_event
 from app.core.rate_limiter import check_rate_limit
 from app.services.conversation_service import get_conversation_state, save_conversation_state
 from app.tools.memory_tool import append_memory, get_memory
+from app.memory.memory_manager import MemoryManager
+from app.models.memory_models import ConversationMemory, MemoryConfig
+from app.models.message_models import ChatMessage, MessageRole
+from app.models.session_models import SessionMetadata, SessionState
 
 DEFAULT_HISTORY_LIMIT = 12
 
@@ -112,3 +116,38 @@ async def update_workflow_state(user_id: str, values: dict[str, Any]) -> dict[st
         raise MemoryServiceError("failed to save workflow state") from exc
     log_event("workflow_state_updated", user_id=user_id, keys=sorted(serializable))
     return serializable
+
+
+class ShortTermMemoryService:
+    """R6 Redis short-term memory facade for active AI conversations."""
+
+    def __init__(self, *, memory_manager: MemoryManager | None = None, config: MemoryConfig | None = None) -> None:
+        self.memory_manager = memory_manager or MemoryManager(config=config)
+
+    async def create_session(self, user_id: str, metadata: SessionMetadata | None = None) -> SessionState:
+        return await self.memory_manager.start_session(user_id, metadata)
+
+    async def store_message(
+        self,
+        *,
+        session_id: str,
+        user_id: str,
+        role: MessageRole,
+        message_text: str,
+        metadata: dict[str, Any] | None = None,
+        message_id: str | None = None,
+    ) -> ChatMessage:
+        return await self.memory_manager.store_message(
+            session_id=session_id,
+            user_id=user_id,
+            role=role,
+            message_text=message_text,
+            metadata=metadata,
+            message_id=message_id,
+        )
+
+    async def get_active_context(self, session_id: str) -> ConversationMemory:
+        return await self.memory_manager.get_conversation_memory(session_id)
+
+    async def clear_session(self, session_id: str) -> bool:
+        return await self.memory_manager.clear_session(session_id)

@@ -10,6 +10,7 @@ from pymongo.database import Database
 from pymongo.errors import PyMongoError
 
 from app.core.config import MONGO_DB_NAME, MONGO_URI
+from app.core.performance import measure
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +116,8 @@ def _collection(name: str) -> Collection:
 
 async def _run_blocking(func, *args, **kwargs):
     """Run blocking PyMongo work off the event loop for FastAPI async routes."""
-    return await asyncio.to_thread(func, *args, **kwargs)
+    async with measure("db", "mongo_tool.operation", function=getattr(func, "__name__", "callable")):
+        return await asyncio.to_thread(func, *args, **kwargs)
 
 
 def _serialize_document(value: Any) -> Any:
@@ -223,7 +225,10 @@ async def get_chat_history(user_id: str, limit: int = 50) -> list[dict[str, Any]
     def fetch_history() -> list[dict[str, Any]]:
         cursor = (
             _collection(CONVERSATIONS_COLLECTION)
-            .find({"user_id": user_id})
+            .find(
+                {"user_id": user_id},
+                {"messages": {"$slice": -20}, "summary": 1, "intents": 1, "lead_status": 1, "metadata": 1, "created_at": 1, "updated_at": 1, "user_id": 1},
+            )
             .sort("created_at", DESCENDING)
             .limit(limit)
         )
