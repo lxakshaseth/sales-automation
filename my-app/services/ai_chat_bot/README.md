@@ -53,7 +53,7 @@ The backend can run with Docker Compose from the `backend/ai_chat_bot` folder.
 Expected folder structure:
 
 ```text
-backend/
+services/
 └── ai_chat_bot/
     ├── app/
     ├── requirements.txt
