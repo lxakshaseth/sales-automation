@@ -50,7 +50,7 @@ const menu: SidebarMenuItem[] = [
   { name: "Conversation", href: "/conversation", icon: MessageSquare },
   { name: "Templates", href: "/templates", icon: LayoutTemplate },
   { name: "Campaigns", href: "/Campaign", icon: Megaphone },
-  { name: "Lead & Sales Pipeline", href: "/pipeline", icon: TrendingUp, notificationId: "leads" },
+  { name: "Lead & Sales Pipeline", href: "/LeadSalesPipeline", icon: TrendingUp, notificationId: "leads" },
   { name: "Smart Config", href: "/smart-config", icon: Settings },
   { name: "User Management", href: "/user-management", icon: Users },
   { name: "Master", href: "/master", icon: Database },
