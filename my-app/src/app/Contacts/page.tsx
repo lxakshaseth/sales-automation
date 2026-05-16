@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Sidebar from "../../Components/SideBar";
-import Contact from "../../Components/Contact";
+import Contact from "@/Components/contacts/Contact";
 
 export default function ContactPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
