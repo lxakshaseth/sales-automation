@@ -22,7 +22,7 @@ export default function PipelineChart() {
           Lead & Sales Pipeline
         </h3>
       </div>
-      <div className="h-[300px] w-full">
+      <div className="h-75 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={pipelineData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />

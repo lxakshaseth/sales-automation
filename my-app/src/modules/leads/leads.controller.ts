@@ -1,36 +1,85 @@
-import Lead from "./leads.model"
+import Lead from "./leads.model";
 import { NextRequest, NextResponse } from "next/server";
 import "@/modules/campaign/campaign.model";
 import mongoose from "mongoose";
-import { DateTime } from "luxon"
+import { DateTime } from "luxon";
+
 type Params = { params: Promise<{ id: string; }>; };
-const countryTimezoneMap: Record<string, string> = {
-  usa: "America/New_York",
+const countryTimezoneMap: Record<string, any> = {
+  usa: {
+    alabama: "America/Chicago",
+    alaska: "America/Anchorage",
+    arizona: "America/Phoenix",
+    arkansas: "America/Chicago",
+    california: "America/Los_Angeles",
+    colorado: "America/Denver",
+    connecticut: "America/New_York",
+    delaware: "America/New_York",
+    florida: "America/New_York",
+    georgia: "America/New_York",
+    hawaii: "Pacific/Honolulu",
+    idaho: "America/Denver",
+    illinois: "America/Chicago",
+    indiana: "America/Indiana/Indianapolis",
+    iowa: "America/Chicago",
+    kansas: "America/Chicago",
+    kentucky: "America/New_York",
+    louisiana: "America/Chicago",
+    maine: "America/New_York",
+    maryland: "America/New_York",
+    massachusetts: "America/New_York",
+    michigan: "America/Detroit",
+    minnesota: "America/Chicago",
+    mississippi: "America/Chicago",
+    missouri: "America/Chicago",
+    montana: "America/Denver",
+    nebraska: "America/Chicago",
+    nevada: "America/Los_Angeles",
+    "new hampshire": "America/New_York",
+    "new jersey": "America/New_York",
+    "new mexico": "America/Denver",
+    "new york": "America/New_York",
+    "north carolina": "America/New_York",
+    "north dakota": "America/Chicago",
+    ohio: "America/New_York",
+    oklahoma: "America/Chicago",
+    oregon: "America/Los_Angeles",
+    pennsylvania: "America/New_York",
+    "rhode island": "America/New_York",
+    "south carolina": "America/New_York",
+    "south dakota": "America/Chicago",
+    tennessee: "America/Chicago",
+    texas: "America/Chicago",
+    utah: "America/Denver",
+    vermont: "America/New_York",
+    virginia: "America/New_York",
+    washington: "America/Los_Angeles",
+    "west virginia": "America/New_York",
+    wisconsin: "America/Chicago",
+    wyoming: "America/Denver",
+  },
 
   india: "Asia/Kolkata",
-
   dubai: "Asia/Dubai",
-
   europe: "Europe/London",
 };
 
-export const createLeadController = async (
-  req: NextRequest
-) => {
+export const createLeadController = async (req: NextRequest) => {
 
   try {
-
     const body = await req.json();
+    const { country, state } = body
 
-    const timezone =countryTimezoneMap[body.country] || "UTC";
+    const countryData = countryTimezoneMap[country?.toLowerCase()];
 
-    const createLead = await Lead.create({...body,timezone,});
+    const timezone = typeof countryData === "string" ? countryData : countryData?.[state?.toLowerCase()];
+    const createLead = await Lead.create({ ...body, timezone });
 
     const currentTime = DateTime.now().setZone(createLead.timezone).toString();
 
-    const leadWithTime = {...createLead.toObject(),currentLocalTime: currentTime,};
+    const leadWithTime = { ...createLead.toObject(), currentLocalTime: currentTime, };
 
-    return NextResponse.json({success: true, data: leadWithTime,},{status: 201, });
+    return NextResponse.json({ success: true, data: leadWithTime, }, { status: 201, });
 
   } catch (error: any) {
 
@@ -48,14 +97,50 @@ export const createLeadController = async (
 
 export const getLeadsController = async (req: NextRequest) => {
   try {
+    const { searchParams } = new URL(req.url);
+    const page = Number(searchParams.get("page")) || 1;
+    const limit = Number(searchParams.get("limit")) || 10;
+    const skip = (page - 1) * limit;
+    const firstName = searchParams.get("firstName");
+    const email = searchParams.get("email");
+    const lastName = searchParams.get("lastName");
+    const phone = searchParams.get("phone");
+    const company = searchParams.get("company");
+    const country = searchParams.get("country");
+    const state = searchParams.get("state");
+    const filter: any = {};
 
-    const leads = await Lead.find().populate("campaign");
-    const usaTime = DateTime.now()
-      .setZone("America/New_York");
+    if (firstName) {
+      filter.firstName = { $regex: firstName, $options: "i" };
+    }
+    if (email) {
+      filter.email = { $regex: email, $options: "i" };
+    }
+    if (lastName) {
+      filter.lastName = { $regex: lastName, $options: "i" };
+    }
+    if (phone) {
+      filter.phone = { $regex: phone, $options: "i" };
+    }
+    if (company) {
+      filter.company = { $regex: company, $options: "i" };
+    }
+    if (country) {
+      filter.country = { $regex: country, $options: "i" };
+    }
+    if (state) {
+      filter.state = { $regex: state, $options: "i" };
+    }
 
-    console.log(usaTime.toString());
-
-    return NextResponse.json({ success: true, count: leads.length, data: leads, }, { status: 200 });
+    const leads = await Lead.find(filter).populate("campaign").sort({ createdAt: -1 }).skip(skip).limit(limit);
+    const totalData = await Lead.countDocuments(filter);
+    return NextResponse.json({
+      success: true,
+      page: page,
+      limit: limit,
+      totalData: totalData,
+      data: leads,
+    }, { status: 200 });
 
   } catch (error: any) {
 
@@ -63,3 +148,75 @@ export const getLeadsController = async (req: NextRequest) => {
 
   }
 };
+
+export const getLeadsByIdController = async (req: NextRequest, context: Params) => {
+  try {
+    const { id } = await context.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "invalid lead id" }, { status: 400 });
+    }
+    const lead = await Lead.findById(id).populate("campaign");
+    if (!lead) {
+      return NextResponse.json({ success: false, message: "lead not found", }, { status: 404, });
+    }
+    return NextResponse.json({ success: true, data: lead, }, { status: 200, });
+  }
+  catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
+}
+
+
+export const updateLeadController = async (req: NextRequest, context: Params) => {
+  try {
+
+    const { id } = await context.params;
+    
+     if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid lead id", }, { status: 400 });
+    }
+    const body = await req.json();
+    const updatedLead = await Lead.findByIdAndUpdate(id, body);
+    if (!updatedLead) {
+      return NextResponse.json({ success: false, msg: "lead not found" }, { status: 404 })
+    };
+
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "lead updated successfully",
+        
+      },
+      {
+        status: 200,
+      },
+    );
+  } 
+  
+  catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message, }, { status: 500, });
+  }
+}
+
+
+export const deleteLeadController = async (req: NextRequest, context: Params) => {
+  try {
+    const { id } = await context.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid lead id", }, { status: 400 });
+    }
+    const deleteLead = await Lead.findByIdAndDelete(id);
+
+    if (!deleteLead) {
+      return NextResponse.json({ success: true, message: "lead not found" }, { status: 200 });
+    }
+    return NextResponse.json({ success: true, message: "Deleted successfully" }, { status: 200 });
+
+  } 
+  
+  catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message, }, { status: 500, });
+  }
+}
