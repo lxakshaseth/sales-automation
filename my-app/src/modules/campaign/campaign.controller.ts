@@ -20,7 +20,7 @@ export const getCampaignsController = async (req: NextRequest) => {
     const limit = Number(searchParams.get("limit")) || 10;
     const skip = (page - 1) * limit;
 
-    const campaigns = await Campaign.find().sort({ createdAt: -1, }).skip(skip).limit(limit);
+    const campaigns = await Campaign.find(searchParams).sort({ createdAt: -1, }).skip(skip).limit(limit);
     const count = await Campaign.countDocuments();
     return NextResponse.json({
       success: true,
@@ -79,7 +79,7 @@ export const updateCampaignController = async (req: NextRequest, context: Params
       {
         success: true,
         message: "Campaign updated successfully",
-        data: updatedCampaign,
+        
       },
       {
         status: 200,
