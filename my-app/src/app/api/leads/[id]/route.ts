@@ -1,4 +1,4 @@
-import{connectDB} from "@/lib/db"
+import connectDB from "@/lib/db"
 import { getLeadsByIdController,updateLeadController,deleteLeadController } from "@/modules/leads/leads.controller"
 import { NextRequest } from "next/server"
 
