@@ -1,4 +1,4 @@
-import { connectDB } from "@/lib/db";
+import  connectDB  from "@/lib/db";
 import { getCampaignByIdController, updateCampaignController,deleteCampaingnController } from "@/modules/campaign/campaign.controller";
 import { NextRequest } from "next/server";
 type Params = { params: Promise<{ id: string; }>; };

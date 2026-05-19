@@ -79,7 +79,7 @@ export const updateCampaignController = async (req: NextRequest, context: Params
       {
         success: true,
         message: "Campaign updated successfully",
-        data: updatedCampaign,
+        
       },
       {
         status: 200,
