@@ -30,7 +30,7 @@ export const injectTrackingLinks = ({
   emailId: string;
 }) => {
   return html.replace(
-    /<a\s+(?:[^>]*?\s+)?href="([^"]*)"/g,
+    /<a\s+(?:[^>]*?\s+)?href=["']([^"']*)["']/g,
     (_, originalUrl) => {
       const trackedUrl =
         `${baseUrl}/api/email/click?url=${encodeURIComponent(originalUrl)}&emailId=${emailId}`;
