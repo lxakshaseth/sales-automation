@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import "@/modules/campaign/campaign.model";
 import mongoose from "mongoose";
 import { DateTime } from "luxon";
+import { startCampaignFlow } from "@/modules/automation/automation.service";
 
-type Params = { params: Promise<{ id: string; }>; };
+type Params = { params: Promise<{ id: string }> };
 const countryTimezoneMap: Record<string, any> = {
   usa: {
     alabama: "America/Chicago",
@@ -65,24 +66,32 @@ const countryTimezoneMap: Record<string, any> = {
 };
 
 export const createLeadController = async (req: NextRequest) => {
-
   try {
     const body = await req.json();
-    const { country, state } = body
+    const { country, state } = body;
 
     const countryData = countryTimezoneMap[country?.toLowerCase()];
 
-    const timezone = typeof countryData === "string" ? countryData : countryData?.[state?.toLowerCase()];
+    const timezone =
+      typeof countryData === "string"
+        ? countryData
+        : countryData?.[state?.toLowerCase()];
     const createLead = await Lead.create({ ...body, timezone });
+
+    await startCampaignFlow(createLead._id.toString());
 
     const currentTime = DateTime.now().setZone(createLead.timezone).toString();
 
-    const leadWithTime = { ...createLead.toObject(), currentLocalTime: currentTime, };
+    const leadWithTime = {
+      ...createLead.toObject(),
+      currentLocalTime: currentTime,
+    };
 
-    return NextResponse.json({ success: true, data: leadWithTime, }, { status: 201, });
-
+    return NextResponse.json(
+      { success: true, data: leadWithTime },
+      { status: 201 },
+    );
   } catch (error: any) {
-
     return NextResponse.json(
       {
         success: false,
@@ -90,7 +99,7 @@ export const createLeadController = async (req: NextRequest) => {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 };
@@ -132,91 +141,126 @@ export const getLeadsController = async (req: NextRequest) => {
       filter.state = { $regex: state, $options: "i" };
     }
 
-    const leads = await Lead.find(filter).populate("campaign").sort({ createdAt: -1 }).skip(skip).limit(limit);
+    const leads = await Lead.find(filter)
+      .populate("campaign")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
     const totalData = await Lead.countDocuments(filter);
-    return NextResponse.json({
-      success: true,
-      page: page,
-      limit: limit,
-      totalData: totalData,
-      data: leads,
-    }, { status: 200 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        page: page,
+        limit: limit,
+        totalData: totalData,
+        data: leads,
+      },
+      { status: 200 },
+    );
   } catch (error: any) {
-
-    return NextResponse.json({ success: false, message: error.message, }, { status: 500 });
-
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 },
+    );
   }
 };
 
-export const getLeadsByIdController = async (req: NextRequest, context: Params) => {
+export const getLeadsByIdController = async (
+  req: NextRequest,
+  context: Params,
+) => {
   try {
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ success: false, message: "invalid lead id" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "invalid lead id" },
+        { status: 400 },
+      );
     }
     const lead = await Lead.findById(id).populate("campaign");
     if (!lead) {
-      return NextResponse.json({ success: false, message: "lead not found", }, { status: 404, });
+      return NextResponse.json(
+        { success: false, message: "lead not found" },
+        { status: 404 },
+      );
     }
-    return NextResponse.json({ success: true, data: lead, }, { status: 200, });
+    return NextResponse.json({ success: true, data: lead }, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 },
+    );
   }
-  catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
-  }
-}
+};
 
-
-export const updateLeadController = async (req: NextRequest, context: Params) => {
+export const updateLeadController = async (
+  req: NextRequest,
+  context: Params,
+) => {
   try {
-
     const { id } = await context.params;
-    
-     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ success: false, message: "Invalid lead id", }, { status: 400 });
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid lead id" },
+        { status: 400 },
+      );
     }
     const body = await req.json();
     const updatedLead = await Lead.findByIdAndUpdate(id, body);
     if (!updatedLead) {
-      return NextResponse.json({ success: false, msg: "lead not found" }, { status: 404 })
-    };
-
+      return NextResponse.json(
+        { success: false, msg: "lead not found" },
+        { status: 404 },
+      );
+    }
 
     return NextResponse.json(
       {
         success: true,
         message: "lead updated successfully",
-        
       },
       {
         status: 200,
       },
     );
-  } 
-  
-  catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message, }, { status: 500, });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 },
+    );
   }
-}
+};
 
-
-export const deleteLeadController = async (req: NextRequest, context: Params) => {
+export const deleteLeadController = async (
+  req: NextRequest,
+  context: Params,
+) => {
   try {
     const { id } = await context.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ success: false, message: "Invalid lead id", }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "Invalid lead id" },
+        { status: 400 },
+      );
     }
     const deleteLead = await Lead.findByIdAndDelete(id);
 
     if (!deleteLead) {
-      return NextResponse.json({ success: true, message: "lead not found" }, { status: 200 });
+      return NextResponse.json(
+        { success: true, message: "lead not found" },
+        { status: 200 },
+      );
     }
-    return NextResponse.json({ success: true, message: "Deleted successfully" }, { status: 200 });
-
-  } 
-  
-  catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message, }, { status: 500, });
+    return NextResponse.json(
+      { success: true, message: "Deleted successfully" },
+      { status: 200 },
+    );
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 },
+    );
   }
-}
+};
