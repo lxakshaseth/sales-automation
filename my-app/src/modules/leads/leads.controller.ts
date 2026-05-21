@@ -4,8 +4,9 @@ import "@/modules/campaign/campaign.model";
 import mongoose from "mongoose";
 import { DateTime } from "luxon";
 import { startCampaignFlow } from "@/modules/automation/automation.service";
-
+import Campaign from "../campaign/campaign.model";
 type Params = { params: Promise<{ id: string }> };
+
 const countryTimezoneMap: Record<string, any> = {
   usa: {
     alabama: "America/Chicago",
@@ -68,39 +69,31 @@ const countryTimezoneMap: Record<string, any> = {
 export const createLeadController = async (req: NextRequest) => {
   try {
     const body = await req.json();
-    const { country, state } = body;
+    const { country, state, campaign, email } = body;
+
+    const campaignExists = await Campaign.exists({ _id: campaign });
+    if (!campaignExists) return NextResponse.json({ success: false, message: "Campaign not found" }, { status: 404 })
+
+    const checkLeadEmail = await Lead.exists({ email });
+
+    if (checkLeadEmail) {
+      return NextResponse.json({ success: false, message: "email is already exists" }, { status: 409 })
+    }
 
     const countryData = countryTimezoneMap[country?.toLowerCase()];
-
-    const timezone =
-      typeof countryData === "string"
-        ? countryData
-        : countryData?.[state?.toLowerCase()];
+    const timezone = typeof countryData === "string" ? countryData : countryData?.[state?.toLowerCase()];
     const createLead = await Lead.create({ ...body, timezone });
 
     await startCampaignFlow(createLead._id.toString());
 
     const currentTime = DateTime.now().setZone(createLead.timezone).toString();
 
-    const leadWithTime = {
-      ...createLead.toObject(),
-      currentLocalTime: currentTime,
-    };
+    const leadWithTime = { ...createLead.toObject(), currentLocalTime: currentTime, };
 
-    return NextResponse.json(
-      { success: true, data: leadWithTime },
-      { status: 201 },
-    );
+    return NextResponse.json({ success: true, data: leadWithTime }, { status: 201 },);
+
   } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error.message,
-      },
-      {
-        status: 500,
-      },
-    );
+    return NextResponse.json({ success: false, message: error.message, }, { status: 500, },);
   }
 };
 
@@ -141,11 +134,7 @@ export const getLeadsController = async (req: NextRequest) => {
       filter.state = { $regex: state, $options: "i" };
     }
 
-    const leads = await Lead.find(filter)
-      .populate("campaign")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    const leads = await Lead.find(filter).populate("campaign").sort({ createdAt: -1 }).skip(skip).limit(limit);
     const totalData = await Lead.countDocuments(filter);
     return NextResponse.json(
       {
