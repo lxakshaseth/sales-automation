@@ -19,9 +19,23 @@ export const getCampaignsController = async (req: NextRequest) => {
     const page = Number(searchParams.get("page")) || 1;
     const limit = Number(searchParams.get("limit")) || 10;
     const skip = (page - 1) * limit;
+    const name = searchParams.get("name");
+    const description = searchParams.get("description");
+    const status = searchParams.get("status");
 
-    const campaigns = await Campaign.find().sort({ createdAt: -1, }).skip(skip).limit(limit);
-    const count = await Campaign.countDocuments();
+    const filter: any = {};
+    if (name) {
+      filter.name = { $regex: name, $options: "i" };
+    }
+    if (description) {
+      filter.description = { $regex: description, $options: "i" };
+    }
+    if (status) {
+      filter.status = { $regex: status, $options: "i" };
+    }
+
+    const campaigns = await Campaign.find(filter).sort({ createdAt: -1, }).skip(skip).limit(limit);
+    const count = await Campaign.countDocuments(filter);
     return NextResponse.json({
       success: true,
       page: page,
@@ -31,8 +45,8 @@ export const getCampaignsController = async (req: NextRequest) => {
     },
       { status: 200, },);
 
-  } 
-  
+  }
+
   catch (error: any) {
     return NextResponse.json({ success: false, message: error.message, }, { status: 500, },);
   }
@@ -43,7 +57,7 @@ export const getCampaignByIdController = async (req: NextRequest, context: Param
 
     const { id } = await context.params;
 
-     if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, message: "Invalid campaign id", }, { status: 400 });
     }
 
@@ -54,7 +68,7 @@ export const getCampaignByIdController = async (req: NextRequest, context: Param
     return NextResponse.json({ success: true, data: campaign, }, { status: 200, });
 
   }
-  
+
   catch (error: any) {
     return NextResponse.json({ success: false, message: error.message, }, { status: 500, });
   }
@@ -64,8 +78,8 @@ export const updateCampaignController = async (req: NextRequest, context: Params
   try {
 
     const { id } = await context.params;
-    
-     if (!mongoose.Types.ObjectId.isValid(id)) {
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, message: "Invalid campaign id", }, { status: 400 });
     }
     const body = await req.json();
@@ -79,14 +93,14 @@ export const updateCampaignController = async (req: NextRequest, context: Params
       {
         success: true,
         message: "Campaign updated successfully",
-        data: updatedCampaign,
+
       },
       {
         status: 200,
       },
     );
-  } 
-  
+  }
+
   catch (error: any) {
     return NextResponse.json({ success: false, message: error.message, }, { status: 500, });
   }
@@ -106,8 +120,8 @@ export const deleteCampaingnController = async (req: NextRequest, context: Param
     }
     return NextResponse.json({ success: true, message: "Deleted successfully" }, { status: 200 });
 
-  } 
-  
+  }
+
   catch (error: any) {
     return NextResponse.json({ success: false, message: error.message, }, { status: 500, });
   }

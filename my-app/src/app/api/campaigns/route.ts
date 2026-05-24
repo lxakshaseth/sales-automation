@@ -1,4 +1,4 @@
-import { connectDB } from "@/lib/db";
+import connectDB  from "@/lib/db";
 import { NextRequest } from "next/server";
 
 import {

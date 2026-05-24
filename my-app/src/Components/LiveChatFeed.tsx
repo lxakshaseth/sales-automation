@@ -44,7 +44,7 @@ export default function LiveChatFeed() {
 
   return (
     <div 
-      className="xl:col-span-2 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col overflow-hidden h-[450px]"
+      className="xl:col-span-2 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col overflow-hidden h-112.5"
     >
       <div 
         className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between shrink-0"

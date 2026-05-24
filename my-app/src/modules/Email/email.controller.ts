@@ -5,9 +5,7 @@ import { injectTrackingLinks } from "./email.util";
 import Template from "./template.model";
 import { renderTemplate } from "./email.util";
 
-import {
-  createUnsubscribeLink,
-} from "./email.util";
+import { createUnsubscribeLink } from "./email.util";
 
 interface EmailBody {
   to: string;
@@ -44,6 +42,11 @@ export const sendEmail = async ({
     let finalSubject = subject || "";
     let finalBody = body || "";
 
+    // Render variables for direct subject/body too
+    finalSubject = renderTemplate(finalSubject, variables);
+
+    finalBody = renderTemplate(finalBody, variables);
+
     // 3. Render template if provided
     if (templateName) {
       const template = await Template.findOne({
@@ -54,15 +57,9 @@ export const sendEmail = async ({
         throw new Error("Template not found");
       }
 
-      finalSubject = renderTemplate(
-        template.subject,
-        variables,
-      );
+      finalSubject = renderTemplate(template.subject, variables);
 
-      finalBody = renderTemplate(
-        template.body,
-        variables,
-      );
+      finalBody = renderTemplate(template.body, variables);
     }
 
     // 4. Save email
@@ -112,15 +109,15 @@ export const sendEmail = async ({
 
     return savedEmail;
   } catch (error) {
-  console.log("EMAIL ERROR:", error);
+    console.log("EMAIL ERROR:", error);
 
-  const failedEmail = await Email.create({
-    to,
-    subject: subject || "FAILED_EMAIL",
-    body: body || "FAILED_EMAIL_BODY",
-    status: "FAILED",
-  });
+    const failedEmail = await Email.create({
+      to,
+      subject: subject || "FAILED_EMAIL",
+      body: body || "FAILED_EMAIL_BODY",
+      status: "FAILED",
+    });
 
-  return failedEmail;
-}
+    return failedEmail;
+  }
 };

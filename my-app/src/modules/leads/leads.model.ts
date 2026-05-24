@@ -34,6 +34,10 @@ const leadSchema = new Schema(
     country: {
       type: String,
     },
+    
+    state:{
+      type:String,
+    },
 
     timezone: {
       type: String,
