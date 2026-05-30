@@ -93,7 +93,6 @@ async def twilio_whatsapp_webhook(request: Request) -> Response:
 
 async def _process_cloud_message(incoming) -> None:
     user_id = incoming.from_number
-    started = None
     try:
         try:
             rate_limit = await check_rate_limit(user_id, scope="user", limit_type="message")
@@ -324,7 +323,7 @@ async def _generate_sales_reply_with_timeout(
                 ),
                 timeout=settings.ai_webhook_timeout_seconds,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             log_error(
                 "Groq AI response timed out",
                 message_sid=message_sid,

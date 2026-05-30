@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -8,7 +8,7 @@ from app.models.compression_models import TokenUsage
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class TranscriptMessage(BaseModel):

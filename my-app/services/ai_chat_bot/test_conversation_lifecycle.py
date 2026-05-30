@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 from app.services import conversation_service
@@ -29,7 +29,7 @@ class ConversationLifecycleTests(unittest.IsolatedAsyncioTestCase):
         schedule_close.assert_awaited_once_with("user-1")
 
     def test_inactive_minutes_uses_last_message_time(self):
-        last_message_time = datetime.now(timezone.utc) - timedelta(minutes=3)
+        last_message_time = datetime.now(UTC) - timedelta(minutes=3)
         state = {"last_message_time": last_message_time.isoformat()}
 
         self.assertGreaterEqual(inactive_minutes(state), 2.9)
@@ -40,7 +40,7 @@ class ConversationLifecycleTests(unittest.IsolatedAsyncioTestCase):
             "phone_number": "whatsapp:+1000",
             "conversation_status": "open",
             "reminder_sent": False,
-            "last_message_time": datetime.now(timezone.utc).isoformat(),
+            "last_message_time": datetime.now(UTC).isoformat(),
         }
 
         with patch("app.services.reminder_service.get_conversation_state", new=AsyncMock(return_value=state)):
@@ -55,7 +55,7 @@ class ConversationLifecycleTests(unittest.IsolatedAsyncioTestCase):
             "phone_number": "whatsapp:+1000",
             "preferred_language": "en",
             "language_confidence": 0.99,
-            "conversation_start_time": datetime.now(timezone.utc).isoformat(),
+            "conversation_start_time": datetime.now(UTC).isoformat(),
         }
 
         with (

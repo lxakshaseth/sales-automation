@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.agents.intent_classifier import classify_intent
@@ -10,7 +10,7 @@ from app.services.product_media_service import ProductMediaError, resolve_media_
 
 
 def _candidate_slots() -> list[dict[str, str]]:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     base = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
     slots = []
     for offset in (1, 3, 24):

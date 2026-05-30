@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.core.logger import log_event
 from app.exceptions.memory_exceptions import InvalidSessionError
@@ -43,7 +43,7 @@ class SessionManager:
 
     async def touch_session(self, session_id: str) -> SessionState:
         session = await self.get_session(session_id)
-        updated = session.model_copy(update={"updated_at": datetime.now(timezone.utc), "expires_at": self.ttl_manager.expires_at()})
+        updated = session.model_copy(update={"updated_at": datetime.now(UTC), "expires_at": self.ttl_manager.expires_at()})
         await self.store.store_session(updated)
         await self.cache.set_session(updated)
         return updated

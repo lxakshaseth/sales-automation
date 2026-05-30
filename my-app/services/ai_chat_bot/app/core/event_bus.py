@@ -1,15 +1,16 @@
 import asyncio
 import inspect
 import json
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Awaitable, Callable
+from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
 
 import redis.asyncio as redis
 from redis.exceptions import RedisError
 
-from app.core.config import REDIS_URL
+from app.core.config import REDIS_OPERATION_TIMEOUT_SECONDS, REDIS_URL
 from app.core.logger import get_request_id, log_error, log_event
 from app.core.retry_handler import RetryConfig, retry_async
 
@@ -40,7 +41,7 @@ class Event:
     payload: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
     event_id: str = field(default_factory=lambda: str(uuid4()))
-    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -68,8 +69,8 @@ def _get_redis_client() -> redis.Redis:
             REDIS_URL,
             decode_responses=True,
             health_check_interval=30,
-            socket_connect_timeout=5,
-            socket_timeout=5,
+            socket_connect_timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
+            socket_timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
             retry_on_timeout=True,
         )
 
@@ -148,7 +149,7 @@ async def handle_event(
             config=retry_config
             or RetryConfig(max_attempts=3, base_delay_seconds=0.25, max_delay_seconds=5, timeout_seconds=DEFAULT_HANDLER_TIMEOUT_SECONDS),
         )
-        async def _protected_handler() -> Any:
+        async def _protected_handler(handler: EventHandler = handler) -> Any:
             return await asyncio.wait_for(_run_handler(handler, event_dict), timeout=DEFAULT_HANDLER_TIMEOUT_SECONDS)
 
         try:
@@ -170,8 +171,11 @@ async def handle_event(
 
 async def _publish_to_redis(event: Event, channel: str) -> None:
     try:
-        await _get_redis_client().publish(channel, json.dumps(event.to_dict(), ensure_ascii=False))
-    except RedisError as exc:
+        await asyncio.wait_for(
+            _get_redis_client().publish(channel, json.dumps(event.to_dict(), ensure_ascii=False)),
+            timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
+        )
+    except (TimeoutError, RedisError) as exc:
         log_error("Redis event publish failed", event_name=event.name, event_id=event.event_id, error_type=type(exc).__name__)
         raise EventBusError("failed to publish event to Redis") from exc
 

@@ -31,3 +31,4 @@ torch
 tiktoken
 twilio
 uvicorn
+python-multipart>=0.0.9

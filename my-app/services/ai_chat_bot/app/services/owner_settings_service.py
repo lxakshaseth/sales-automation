@@ -1,7 +1,7 @@
 import asyncio
 import os
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from app.config.settings import settings
@@ -17,18 +17,23 @@ class OwnerSettingsError(RuntimeError):
 
 _emails_cache: TTLCache[list[dict[str, Any]]] = TTLCache(ttl_seconds=settings.owner_email_cache_ttl_seconds)
 _db_initialized = False
+_init_lock = asyncio.Lock()
+_write_lock = asyncio.Lock()
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _connect() -> sqlite3.Connection:
     db_dir = os.path.dirname(CONVERSATION_DB_PATH)
     if db_dir:
         os.makedirs(db_dir, exist_ok=True)
-    connection = sqlite3.connect(CONVERSATION_DB_PATH)
+    connection = sqlite3.connect(CONVERSATION_DB_PATH, timeout=0.25)
     connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA busy_timeout=250")
+    connection.execute("PRAGMA journal_mode=WAL")
+    connection.execute("PRAGMA synchronous=NORMAL")
     return connection
 
 
@@ -38,28 +43,32 @@ async def init_owner_settings_db() -> None:
     if _db_initialized:
         return
 
-    def initialize() -> None:
-        with _connect() as connection:
-            connection.execute(
-                """
-                CREATE TABLE IF NOT EXISTS owner_settings (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    email TEXT NOT NULL UNIQUE,
-                    active INTEGER NOT NULL DEFAULT 1,
-                    created_at TEXT NOT NULL
-                )
-                """
-            )
-            connection.execute("CREATE INDEX IF NOT EXISTS idx_owner_settings_active_id ON owner_settings(active, id)")
-            connection.commit()
+    async with _init_lock:
+        if _db_initialized:
+            return
 
-    try:
-        async with measure("db", "owner_settings.init"):
-            await asyncio.to_thread(initialize)
-    except sqlite3.Error as exc:
-        log_error("Owner settings table initialization failed", error_type=type(exc).__name__)
-        raise OwnerSettingsError("failed to initialize owner settings table") from exc
-    _db_initialized = True
+        def initialize() -> None:
+            with _connect() as connection:
+                connection.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS owner_settings (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        email TEXT NOT NULL UNIQUE,
+                        active INTEGER NOT NULL DEFAULT 1,
+                        created_at TEXT NOT NULL
+                    )
+                    """
+                )
+                connection.execute("CREATE INDEX IF NOT EXISTS idx_owner_settings_active_id ON owner_settings(active, id)")
+                connection.commit()
+
+        try:
+            async with measure("db", "owner_settings.init"):
+                await asyncio.to_thread(initialize)
+        except sqlite3.Error as exc:
+            log_error("Owner settings table initialization failed", error_type=type(exc).__name__)
+            raise OwnerSettingsError("failed to initialize owner settings table") from exc
+        _db_initialized = True
 
 
 def _normalize_email(email: str) -> str:
@@ -87,8 +96,9 @@ async def add_owner_email(email: str, active: bool = True) -> dict[str, Any]:
             connection.commit()
 
     try:
-        async with measure("db", "owner_settings.add"):
-            await asyncio.to_thread(insert_email)
+        async with _write_lock:
+            async with measure("db", "owner_settings.add"):
+                await asyncio.to_thread(insert_email)
     except sqlite3.Error as exc:
         log_error("Owner email add failed", email=normalized, error_type=type(exc).__name__)
         raise OwnerSettingsError("failed to add owner email") from exc
@@ -113,8 +123,9 @@ async def update_owner_email(email: str, *, active: bool) -> dict[str, Any]:
             return int(cursor.rowcount)
 
     try:
-        async with measure("db", "owner_settings.update"):
-            rowcount = await asyncio.to_thread(patch_email)
+        async with _write_lock:
+            async with measure("db", "owner_settings.update"):
+                rowcount = await asyncio.to_thread(patch_email)
     except sqlite3.Error as exc:
         log_error("Owner email update failed", email=normalized, error_type=type(exc).__name__)
         raise OwnerSettingsError("failed to update owner email") from exc
@@ -139,8 +150,9 @@ async def remove_owner_email(email: str) -> bool:
             return int(cursor.rowcount)
 
     try:
-        async with measure("db", "owner_settings.remove"):
-            rowcount = await asyncio.to_thread(delete_email)
+        async with _write_lock:
+            async with measure("db", "owner_settings.remove"):
+                rowcount = await asyncio.to_thread(delete_email)
     except sqlite3.Error as exc:
         log_error("Owner email remove failed", email=normalized, error_type=type(exc).__name__)
         raise OwnerSettingsError("failed to remove owner email") from exc
@@ -154,7 +166,8 @@ async def remove_owner_email(email: str) -> bool:
 async def list_owner_emails(active_only: bool = True) -> list[dict[str, Any]]:
     """Return owner email rows from the local owner_settings table."""
     cache_key = f"owner_emails:{active_only}"
-    cached = _emails_cache.get(cache_key)
+    async with measure("cache", "owner_settings.cache_get", active_only=active_only):
+        cached = _emails_cache.get(cache_key)
     if cached is not None:
         return cached
 
@@ -178,7 +191,8 @@ async def list_owner_emails(active_only: bool = True) -> list[dict[str, Any]]:
         log_error("Owner email list failed", error_type=type(exc).__name__)
         raise OwnerSettingsError("failed to list owner emails") from exc
 
-    _emails_cache.set(cache_key, result, ttl_seconds=settings.owner_email_cache_ttl_seconds)
+    async with measure("cache", "owner_settings.cache_set", active_only=active_only):
+        _emails_cache.set(cache_key, result, ttl_seconds=settings.owner_email_cache_ttl_seconds)
     return result
 
 

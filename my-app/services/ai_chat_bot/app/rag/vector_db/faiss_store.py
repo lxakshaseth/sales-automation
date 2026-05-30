@@ -4,7 +4,13 @@ from pathlib import Path
 import numpy as np
 
 from app.core.logger import log_error, log_event
-from app.rag.exceptions.vector_db_exceptions import DuplicateVectorError, MissingVectorError, VectorIndexError, VectorPersistenceError, VectorSearchError
+from app.rag.exceptions.vector_db_exceptions import (
+    DuplicateVectorError,
+    MissingVectorError,
+    VectorIndexError,
+    VectorPersistenceError,
+    VectorSearchError,
+)
 from app.rag.models.search_models import SearchQuery, SearchResult
 from app.rag.models.vector_models import DenseVector, StoredVector, VectorIndexConfig
 from app.rag.utils.faiss_helpers import ensure_index_directory, faiss_index_file, import_faiss

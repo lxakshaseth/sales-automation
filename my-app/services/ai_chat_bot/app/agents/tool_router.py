@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.core.logger import log_event
@@ -51,7 +51,7 @@ async def calendar_checker(user_id: str, max_results: int = 10) -> dict[str, Any
 
 
 async def reminder_scheduler(user_id: str, message: str, delay_minutes: float = 5, job_id: str | None = None) -> dict[str, Any]:
-    run_at = datetime.now(timezone.utc) + timedelta(minutes=float(delay_minutes))
+    run_at = datetime.now(UTC) + timedelta(minutes=float(delay_minutes))
     return await schedule_reminder(
         user_id=user_id,
         message=message,

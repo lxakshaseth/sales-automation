@@ -4,8 +4,8 @@ from typing import Any
 from pydantic import BaseModel, Field, field_validator
 
 from app.rag.models.document_models import utc_now
-from app.rag.models.vector_models import StoredVector
 from app.rag.models.ranking_models import RankedChunk
+from app.rag.models.vector_models import StoredVector
 
 
 class SearchQuery(BaseModel):

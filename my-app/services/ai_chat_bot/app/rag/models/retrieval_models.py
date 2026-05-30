@@ -7,7 +7,6 @@ from app.rag.models.document_models import utc_now
 from app.rag.models.embedding_models import EmbeddingConfig
 from app.rag.models.ranking_models import RankedChunk
 
-
 RetrievalMode = Literal["semantic", "hybrid"]
 
 

@@ -13,7 +13,6 @@ from locust import between, events, task
 from locust.contrib.fasthttp import FastHttpUser
 from locust.exception import StopUser
 
-
 logger = logging.getLogger("locust.ai_chat_bot")
 
 DEFAULT_HOST = os.getenv("LOCUST_HOST", "http://127.0.0.1:8000")

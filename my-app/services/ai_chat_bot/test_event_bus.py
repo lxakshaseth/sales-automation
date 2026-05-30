@@ -1,8 +1,7 @@
 import unittest
 from unittest.mock import AsyncMock, patch
 
-from app.core import event_bus
-from app.core import retry_handler
+from app.core import event_bus, retry_handler
 from app.core.event_bus import (
     EVENT_APPOINTMENT_BOOKED,
     EVENT_LEAD_SAVED,

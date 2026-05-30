@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -130,8 +130,8 @@ class CalendarToolTests(unittest.IsolatedAsyncioTestCase):
             result = await create_event(
                 user_id="user-123",
                 title="Discovery call",
-                start_time=datetime.now(timezone.utc),
-                end_time=datetime.now(timezone.utc),
+                start_time=datetime.now(UTC),
+                end_time=datetime.now(UTC),
             )
 
         self.assertTrue(result["success"])

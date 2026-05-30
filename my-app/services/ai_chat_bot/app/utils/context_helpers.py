@@ -1,8 +1,7 @@
-import re
 import hashlib
+import re
 
 from app.models.message_models import ChatMessage
-
 
 TOKEN_PATTERN = re.compile(r"[\w\u0900-\u097F]+|[^\w\s]", re.UNICODE)
 SPACE_PATTERN = re.compile(r"\s+", re.UNICODE)
