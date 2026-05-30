@@ -8,6 +8,12 @@ const TemplateSchema = new mongoose.Schema(
       unique: true,
     },
 
+    type: {
+      type: String,
+      enum: ["email", "sms", "ai_call"],
+      default: "email",
+    },
+
     subject: {
       type: String,
       required: true,
@@ -20,7 +26,7 @@ const TemplateSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export default mongoose.models.Template ||
