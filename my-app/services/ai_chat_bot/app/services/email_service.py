@@ -106,7 +106,7 @@ def _validated_recipients(recipients: list[str]) -> list[str]:
 def _smtp_error_message(exc: Exception) -> str:
     if isinstance(exc, SMTPAuthenticationError):
         return "Gmail SMTP authentication failed. Check EMAIL_USER, app password, and Gmail 2FA/app-password setup."
-    if isinstance(exc, (socket.timeout, TimeoutError)):
+    if isinstance(exc, socket.timeout | TimeoutError):
         return "Gmail SMTP connection timed out."
     if isinstance(exc, ConnectionRefusedError):
         return "Gmail SMTP connection refused from this environment."

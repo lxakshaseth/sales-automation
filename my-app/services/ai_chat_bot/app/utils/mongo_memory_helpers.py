@@ -1,6 +1,7 @@
 import asyncio
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 from bson import ObjectId
 from pymongo import MongoClient

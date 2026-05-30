@@ -12,7 +12,6 @@ from starlette.responses import Response
 from app.core.config import DEBUG_HTTP_BODY_LOGGING, DEBUG_HTTP_BODY_MAX_CHARS, DEBUG_HTTP_LOGGING
 from app.core.logger import get_request_id, log_error, log_event
 
-
 SENSITIVE_HEADERS = {"authorization", "cookie", "set-cookie", "x-hub-signature-256"}
 SENSITIVE_ENV_KEYS = (
     "GROQ_API_KEY",

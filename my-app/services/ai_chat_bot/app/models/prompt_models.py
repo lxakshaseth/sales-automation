@@ -2,7 +2,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-
 PromptMode = Literal["conversational", "rag_qa", "memory_aware", "enterprise_assistant", "tool_calling"]
 
 

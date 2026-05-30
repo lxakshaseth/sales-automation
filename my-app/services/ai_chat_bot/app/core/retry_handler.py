@@ -3,8 +3,9 @@ import functools
 import logging
 import random
 import time
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable, TypeVar
+from typing import Any, TypeVar
 
 from app.core.config import (
     RETRY_BASE_DELAY_SECONDS,

@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from typing import Any
@@ -5,7 +6,7 @@ from typing import Any
 import redis.asyncio as redis
 from redis.exceptions import RedisError
 
-from app.core.config import REDIS_MEMORY_TTL_SECONDS, REDIS_URL
+from app.core.config import REDIS_MEMORY_TTL_SECONDS, REDIS_OPERATION_TIMEOUT_SECONDS, REDIS_URL
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +44,8 @@ def _get_redis_client() -> redis.Redis:
             REDIS_URL,
             decode_responses=True,
             health_check_interval=30,
-            socket_connect_timeout=5,
-            socket_timeout=5,
+            socket_connect_timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
+            socket_timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
             retry_on_timeout=True,
         )
 
@@ -89,12 +90,15 @@ async def save_memory(user_id: str, message: Any) -> list[Any]:
     payload = _serialize_history(history)
 
     try:
-        await _get_redis_client().set(
-            _memory_key(user_id),
-            payload,
-            ex=REDIS_MEMORY_TTL_SECONDS,
+        await asyncio.wait_for(
+            _get_redis_client().set(
+                _memory_key(user_id),
+                payload,
+                ex=REDIS_MEMORY_TTL_SECONDS,
+            ),
+            timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
         )
-    except RedisError as exc:
+    except (TimeoutError, RedisError) as exc:
         logger.exception("Failed to save memory for user_id=%s", user_id)
         raise MemoryStoreError("failed to save memory") from exc
 
@@ -104,8 +108,8 @@ async def save_memory(user_id: str, message: Any) -> list[Any]:
 async def get_memory(user_id: str) -> list[Any]:
     """Fetch a user's conversation memory as a JSON-deserialized list."""
     try:
-        raw_value = await _get_redis_client().get(_memory_key(user_id))
-    except RedisError as exc:
+        raw_value = await asyncio.wait_for(_get_redis_client().get(_memory_key(user_id)), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
+    except (TimeoutError, RedisError) as exc:
         logger.exception("Failed to get memory for user_id=%s", user_id)
         raise MemoryStoreError("failed to get memory") from exc
 
@@ -124,11 +128,11 @@ async def append_memory(user_id: str, message: Any) -> list[Any]:
 
     try:
         client = _get_redis_client()
-        raw_value = await client.get(key)
+        raw_value = await asyncio.wait_for(client.get(key), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
         history = _deserialize_history(raw_value)
         history.append(message)
-        await client.set(key, _serialize_history(history), ex=REDIS_MEMORY_TTL_SECONDS)
-    except RedisError as exc:
+        await asyncio.wait_for(client.set(key, _serialize_history(history), ex=REDIS_MEMORY_TTL_SECONDS), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
+    except (TimeoutError, RedisError) as exc:
         logger.exception("Failed to append memory for user_id=%s", user_id)
         raise MemoryStoreError("failed to append memory") from exc
 
@@ -138,8 +142,8 @@ async def append_memory(user_id: str, message: Any) -> list[Any]:
 async def clear_memory(user_id: str) -> bool:
     """Delete a user's memory. Returns True when a key was removed."""
     try:
-        deleted_count = await _get_redis_client().delete(_memory_key(user_id))
-    except RedisError as exc:
+        deleted_count = await asyncio.wait_for(_get_redis_client().delete(_memory_key(user_id)), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
+    except (TimeoutError, RedisError) as exc:
         logger.exception("Failed to clear memory for user_id=%s", user_id)
         raise MemoryStoreError("failed to clear memory") from exc
 

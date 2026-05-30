@@ -12,7 +12,6 @@ from app.services.groq_service import GroqServiceError, _get_groq_client
 from app.utils.memory_helpers import compression_ratio
 from app.utils.summarization_helpers import extract_keywords, parse_summary_json
 
-
 MEMORY_SUMMARY_PROMPT = """
 Summarize this conversation for long-term AI memory.
 Return only JSON with:

@@ -3,7 +3,6 @@ from collections import Counter
 
 from app.models.long_term_memory_models import MemoryInsight, UserPreference
 
-
 PREFERENCE_PATTERNS = (
     re.compile(r"\bprefer(?:s|red)?\s+(?P<value>[^.?!]+)", re.IGNORECASE),
     re.compile(r"\bmy preference is\s+(?P<value>[^.?!]+)", re.IGNORECASE),

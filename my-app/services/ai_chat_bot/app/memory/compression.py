@@ -2,10 +2,10 @@ import time
 
 from app.core.logger import log_error, log_event
 from app.exceptions.summarization_exceptions import CompressionError, EmptyConversationError
+from app.memory.token_optimizer import TokenOptimizer
 from app.models.compression_models import CompressedContext, CompressionResult
 from app.models.message_models import ChatMessage
 from app.models.summary_models import SummarizationConfig
-from app.memory.token_optimizer import TokenOptimizer
 from app.utils.memory_helpers import split_messages_for_summary
 from app.utils.summarization_helpers import extract_keywords, messages_to_transcript, remove_duplicate_and_small_talk
 

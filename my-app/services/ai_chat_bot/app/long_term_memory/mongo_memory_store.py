@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pymongo import ASCENDING, DESCENDING, ReturnDocument
 
@@ -49,7 +49,7 @@ class MongoLongTermMemoryStore:
 
     async def upsert_profile(self, profile: UserMemoryProfile) -> UserMemoryProfile:
         await self.ensure_indexes()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         document = profile.model_dump(mode="python")
         document["updated_at"] = now
 

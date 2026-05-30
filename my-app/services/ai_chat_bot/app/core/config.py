@@ -1,5 +1,6 @@
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -16,7 +17,7 @@ LOAD_TEST_ENVIRONMENTS = {"test", "testing", "loadtest", "load-test", "locust", 
 LOAD_TEST_MODE = _parse_bool(os.getenv("LOAD_TEST_MODE"), default=ENVIRONMENT in LOAD_TEST_ENVIRONMENTS)
 MOCK_AI = _parse_bool(os.getenv("MOCK_AI"), default=LOAD_TEST_MODE)
 MOCK_EMAILS = _parse_bool(os.getenv("MOCK_EMAILS"), default=LOAD_TEST_MODE)
-AI_WEBHOOK_TIMEOUT_SECONDS = float(os.getenv("AI_WEBHOOK_TIMEOUT_SECONDS", "15"))
+AI_WEBHOOK_TIMEOUT_SECONDS = float(os.getenv("AI_WEBHOOK_TIMEOUT_SECONDS", "2.5"))
 AI_WEBHOOK_MAX_CONCURRENCY = int(os.getenv("AI_WEBHOOK_MAX_CONCURRENCY", "5"))
 AI_REQUEST_TIMEOUT_SECONDS = float(os.getenv("AI_REQUEST_TIMEOUT_SECONDS", "5"))
 WEBHOOK_FAST_ACK = _parse_bool(os.getenv("WEBHOOK_FAST_ACK"), default=LOAD_TEST_MODE)
@@ -24,7 +25,7 @@ CACHE_DEFAULT_TTL_SECONDS = int(os.getenv("CACHE_DEFAULT_TTL_SECONDS", "60"))
 REPORT_HISTORY_CACHE_TTL_SECONDS = int(os.getenv("REPORT_HISTORY_CACHE_TTL_SECONDS", "30"))
 OWNER_EMAIL_CACHE_TTL_SECONDS = int(os.getenv("OWNER_EMAIL_CACHE_TTL_SECONDS", "30"))
 AI_RESPONSE_CACHE_TTL_SECONDS = int(os.getenv("AI_RESPONSE_CACHE_TTL_SECONDS", "300"))
-REDIS_OPERATION_TIMEOUT_SECONDS = float(os.getenv("REDIS_OPERATION_TIMEOUT_SECONDS", "0.75"))
+REDIS_OPERATION_TIMEOUT_SECONDS = float(os.getenv("REDIS_OPERATION_TIMEOUT_SECONDS", "0.5"))
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_TOOL_MODEL = os.getenv("GROQ_TOOL_MODEL", "llama-3.3-70b-versatile")

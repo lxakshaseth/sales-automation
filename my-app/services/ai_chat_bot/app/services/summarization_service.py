@@ -1,5 +1,5 @@
-from app.memory.summary_manager import SummaryManager
 from app.memory.summarizer import MemorySummarizer
+from app.memory.summary_manager import SummaryManager
 from app.models.message_models import ChatMessage
 from app.models.summary_models import ConversationSummary, SummarizationConfig
 

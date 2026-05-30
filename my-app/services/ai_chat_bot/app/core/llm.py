@@ -2,14 +2,13 @@ import asyncio
 import hashlib
 
 import redis.asyncio as redis
-from redis.exceptions import RedisError
 from groq import AsyncGroq
+from redis.exceptions import RedisError
 
 from app.config.settings import settings
 from app.core.config import REDIS_URL
 from app.core.performance import measure
 from app.utils.ttl_cache import TTLCache
-
 
 ASK_FALLBACK_RESPONSE = "Thanks for reaching out. I will help you with sales automation details shortly."
 
@@ -65,7 +64,7 @@ async def _get_cached_response(key: str) -> str | None:
     try:
         async with measure("redis", "ask_llm.cache_get"):
             cached = await asyncio.wait_for(client.get(f"ai:ask:{key}"), timeout=settings.redis_operation_timeout_seconds)
-    except (asyncio.TimeoutError, RedisError):
+    except (TimeoutError, RedisError):
         return None
     if cached:
         _response_cache.set(key, cached, ttl_seconds=settings.ai_response_cache_ttl_seconds)
@@ -83,7 +82,7 @@ async def _set_cached_response(key: str, value: str) -> None:
                 client.set(f"ai:ask:{key}", value, ex=settings.ai_response_cache_ttl_seconds),
                 timeout=settings.redis_operation_timeout_seconds,
             )
-    except (asyncio.TimeoutError, RedisError):
+    except (TimeoutError, RedisError):
         return
 
 

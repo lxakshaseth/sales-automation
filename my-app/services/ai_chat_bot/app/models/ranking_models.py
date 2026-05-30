@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field, field_validator
 
 from app.models.context_models import ContextSource
 
-
 RankingSignal = Literal["query_overlap", "source_score", "importance", "recency", "confidence", "density"]
 
 

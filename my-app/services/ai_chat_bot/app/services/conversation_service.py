@@ -1,11 +1,12 @@
+import asyncio
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import redis.asyncio as redis
 from redis.exceptions import RedisError
 
-from app.core.config import REDIS_CONVERSATION_TTL_SECONDS, REDIS_URL
+from app.core.config import REDIS_CONVERSATION_TTL_SECONDS, REDIS_OPERATION_TIMEOUT_SECONDS, REDIS_URL
 from app.core.event_bus import EVENT_CONVERSATION_CLOSED, EVENT_MESSAGE_RECEIVED, emit_event
 from app.core.logger import log_error, log_event
 from app.services.language_service import detect_language, should_switch_language
@@ -26,7 +27,7 @@ class ConversationStateError(RuntimeError):
 
 
 def _utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _iso_now() -> str:
@@ -49,8 +50,8 @@ def _get_redis_client() -> redis.Redis:
             REDIS_URL,
             decode_responses=True,
             health_check_interval=30,
-            socket_connect_timeout=5,
-            socket_timeout=5,
+            socket_connect_timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
+            socket_timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
             retry_on_timeout=True,
         )
     return _redis_client
@@ -81,8 +82,8 @@ def _deserialize_state(raw_value: str | bytes | None) -> dict[str, Any] | None:
 async def get_conversation_state(user_id: str) -> dict[str, Any] | None:
     """Read one user's lifecycle state from Redis."""
     try:
-        raw_value = await _get_redis_client().get(_conversation_key(user_id))
-    except RedisError as exc:
+        raw_value = await asyncio.wait_for(_get_redis_client().get(_conversation_key(user_id)), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
+    except (TimeoutError, RedisError) as exc:
         log_error("Conversation state read failed", user_id=user_id, error_type=type(exc).__name__)
         raise ConversationStateError("failed to read conversation state") from exc
     return _deserialize_state(raw_value)
@@ -95,16 +96,18 @@ async def save_conversation_state(state: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("state.user_id is required")
     try:
         client = _get_redis_client()
-        await client.set(
+        pipe = client.pipeline()
+        pipe.set(
             _conversation_key(user_id),
             json.dumps(state, ensure_ascii=False, default=str),
             ex=REDIS_CONVERSATION_TTL_SECONDS,
         )
         if state.get("conversation_status") == STATUS_CLOSED:
-            await client.srem(ACTIVE_CONVERSATIONS_KEY, user_id)
+            pipe.srem(ACTIVE_CONVERSATIONS_KEY, user_id)
         else:
-            await client.sadd(ACTIVE_CONVERSATIONS_KEY, user_id)
-    except RedisError as exc:
+            pipe.sadd(ACTIVE_CONVERSATIONS_KEY, user_id)
+        await asyncio.wait_for(pipe.execute(), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
+    except (TimeoutError, RedisError) as exc:
         log_error("Conversation state save failed", user_id=user_id, error_type=type(exc).__name__)
         raise ConversationStateError("failed to save conversation state") from exc
     return state
@@ -113,8 +116,8 @@ async def save_conversation_state(state: dict[str, Any]) -> dict[str, Any]:
 async def list_active_conversation_ids() -> list[str]:
     """Return active user ids for scan-style scheduler checks and future analytics."""
     try:
-        values = await _get_redis_client().smembers(ACTIVE_CONVERSATIONS_KEY)
-    except RedisError as exc:
+        values = await asyncio.wait_for(_get_redis_client().smembers(ACTIVE_CONVERSATIONS_KEY), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
+    except (TimeoutError, RedisError) as exc:
         log_error("Active conversation list failed", error_type=type(exc).__name__)
         raise ConversationStateError("failed to list active conversations") from exc
     return sorted(str(value) for value in values)
@@ -168,8 +171,8 @@ async def record_message_received(user_id: str, phone_number: str, message: str)
     await save_conversation_state(state)
     await append_memory(user_id, {"role": "user", "content": message, "timestamp": now})
 
-    from app.scheduler.reminder_scheduler import schedule_inactivity_reminder
     from app.scheduler.close_chat_scheduler import schedule_auto_close
+    from app.scheduler.reminder_scheduler import schedule_inactivity_reminder
 
     await schedule_inactivity_reminder(user_id)
     await schedule_auto_close(user_id)
@@ -204,8 +207,8 @@ def inactive_minutes(state: dict[str, Any], now: datetime | None = None) -> floa
     now = now or _utc_now()
     last_message_time = datetime.fromisoformat(str(state["last_message_time"]).replace("Z", "+00:00"))
     if last_message_time.tzinfo is None:
-        last_message_time = last_message_time.replace(tzinfo=timezone.utc)
-    return (now - last_message_time.astimezone(timezone.utc)).total_seconds() / 60
+        last_message_time = last_message_time.replace(tzinfo=UTC)
+    return (now - last_message_time.astimezone(UTC)).total_seconds() / 60
 
 
 async def mark_reminder_sent(user_id: str) -> dict[str, Any]:

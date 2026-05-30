@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.models.long_term_memory_models import (
     ConversationSummaryMemory,
@@ -41,7 +41,7 @@ class UserProfileBuilder:
                 "recurring_intents": recurring_intents,
                 "semantic_profile": semantic_profile,
                 "last_summary": summary.summary if summary else profile.last_summary,
-                "updated_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(UTC),
             }
         )
 

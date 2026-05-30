@@ -8,7 +8,6 @@ from app.models.summary_models import AISummary, LeadAnalysis, TranscriptReport
 from app.services.groq_service import _get_groq_client
 from app.services.language_service import detect_language
 
-
 AI_REPORT_SYSTEM_PROMPT = """
 You are a senior sales operations analyst.
 Return only valid JSON for a professional sales conversation report.

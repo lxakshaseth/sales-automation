@@ -2,11 +2,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
+
 from app.core.agent_executor import close_agent_executor_client
 from app.core.debugging import DebugRequestMiddleware, install_exception_handlers
 from app.core.event_bus import close_event_bus
-from app.core.logger import LoggingMiddleware, configure_logging
 from app.core.llm import ask_llm, close_llm_client
+from app.core.logger import LoggingMiddleware, configure_logging
 from app.core.performance import PerformanceMiddleware
 from app.core.rate_limiter import close_rate_limiter, install_rate_limit_middleware
 from app.routes.owner_settings import router as owner_settings_router

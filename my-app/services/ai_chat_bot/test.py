@@ -1,5 +1,7 @@
 import asyncio
+
 from app.tools.email_tool import send_email
+
 
 async def main():
 

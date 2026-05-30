@@ -5,7 +5,6 @@ from typing import Any
 from app.models.message_models import ChatMessage
 from app.utils.token_helpers import estimate_tokens
 
-
 SMALL_TALK_PATTERN = re.compile(r"^(hi|hello|hey|thanks|thank you|ok|okay|yes|no)[\s!.]*$", re.IGNORECASE)
 
 

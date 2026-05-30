@@ -1,6 +1,4 @@
-from app.rag.embeddings.embedding_service import (
-    EmbeddingService
-)
+from app.rag.embeddings.embedding_service import EmbeddingService
 
 
 def test_embedding_generation():

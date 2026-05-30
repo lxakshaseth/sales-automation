@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from app.models.summary_models import AISummary, EmailReport, TranscriptMessage, TranscriptReport, utc_now
+from app.models.summary_models import AISummary, EmailReport, TranscriptReport, utc_now
 
 
 class ReportGenerateRequest(BaseModel):

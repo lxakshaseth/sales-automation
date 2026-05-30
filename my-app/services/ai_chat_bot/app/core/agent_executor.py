@@ -191,11 +191,11 @@ def _extract_json_object(text: str) -> dict[str, Any]:
     text = _strip_code_fence(text)
     try:
         parsed = json.loads(text)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
         start = text.find("{")
         end = text.rfind("}")
         if start == -1 or end == -1 or end <= start:
-            raise ToolCallParseError("LLM did not return a JSON object")
+            raise ToolCallParseError("LLM did not return a JSON object") from exc
 
         try:
             parsed = json.loads(text[start : end + 1])
@@ -306,7 +306,7 @@ async def execute_agent_action(
                 raw_model_output=raw_output,
                 attempts=attempt,
             )
-        except (ToolCallParseError, ToolCallValidationError, asyncio.TimeoutError, AgentExecutorError) as exc:
+        except (TimeoutError, ToolCallParseError, ToolCallValidationError, AgentExecutorError) as exc:
             last_error = exc
             correction = f"Previous response failed: {exc}. Return only valid JSON with a registered tool and valid args."
             logger.warning("Agent action attempt failed: attempt=%s/%s error=%s", attempt, attempts, exc)

@@ -1,12 +1,5 @@
 """RAG ingestion exceptions."""
 
-from app.rag.exceptions.ingestion_exceptions import (
-    CorruptedDocumentError,
-    EmptyDocumentError,
-    FileValidationError,
-    IngestionError,
-    UnsupportedFileTypeError,
-)
 from app.rag.exceptions.embedding_exceptions import (
     BatchEmbeddingError,
     EmbeddingError,
@@ -14,6 +7,21 @@ from app.rag.exceptions.embedding_exceptions import (
     EmbeddingModelLoadError,
     EmbeddingValidationError,
     EmptyChunkError,
+)
+from app.rag.exceptions.ingestion_exceptions import (
+    CorruptedDocumentError,
+    EmptyDocumentError,
+    FileValidationError,
+    IngestionError,
+    UnsupportedFileTypeError,
+)
+from app.rag.exceptions.retrieval_exceptions import (
+    EmptyQueryError,
+    LowRelevanceError,
+    QueryEmbeddingError,
+    RerankingError,
+    RetrievalError,
+    RetrievalSearchError,
 )
 from app.rag.exceptions.vector_db_exceptions import (
     DuplicateVectorError,
@@ -23,14 +31,6 @@ from app.rag.exceptions.vector_db_exceptions import (
     VectorPersistenceError,
     VectorSearchError,
     VectorValidationError,
-)
-from app.rag.exceptions.retrieval_exceptions import (
-    EmptyQueryError,
-    LowRelevanceError,
-    QueryEmbeddingError,
-    RetrievalError,
-    RetrievalSearchError,
-    RerankingError,
 )
 
 __all__ = [

@@ -1,6 +1,6 @@
 import time
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 
 def now_ms() -> float:

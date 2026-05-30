@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field, field_validator
 from app.rag.models.document_models import DocumentChunk, utc_now
 from app.rag.models.vector_models import DenseVector
 
-
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 DEFAULT_EMBEDDING_DIMENSION = 384
 

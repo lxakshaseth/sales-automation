@@ -4,7 +4,6 @@ import re
 from app.rag.models.document_models import DocumentChunk
 from app.rag.models.embedding_models import EmbeddingConfig
 
-
 CONTROL_CHARACTER_PATTERN = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 
 

@@ -1,12 +1,11 @@
 import json
 from typing import Any
 
+from app.config.settings import settings
 from app.core.event_bus import EVENT_SUMMARY_GENERATED, emit_event
 from app.core.logger import log_error, log_event
 from app.services.groq_service import GroqServiceError, _get_groq_client
-from app.config.settings import settings
 from app.services.language_service import detect_language
-
 
 SUMMARY_SYSTEM_PROMPT = """
 You summarize closed sales chatbot conversations for a business owner.

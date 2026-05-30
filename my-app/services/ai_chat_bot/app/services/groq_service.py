@@ -1,8 +1,10 @@
+import asyncio
 import logging
 
 from groq import AsyncGroq
 
 from app.config.settings import settings
+from app.core.performance import measure
 from app.services.language_service import get_language_prompt
 
 logger = logging.getLogger(__name__)
@@ -104,16 +106,20 @@ async def generate_sales_reply(
             except Exception:
                 logger.exception("Conversation memory could not be loaded for user_id=%s", user_id)
 
-        response = await _get_groq_client().chat.completions.create(
-            model=settings.groq_model,
-            messages=[
-                {"role": "system", "content": f"{SYSTEM_PROMPT}\n\n{get_language_prompt(preferred_language)}"},
-                *history_messages,
-                {"role": "user", "content": content},
-            ],
-            temperature=0.4,
-            max_tokens=500,
-        )
+        async with measure("ai", "generate_sales_reply", model=settings.groq_model):
+            response = await asyncio.wait_for(
+                _get_groq_client().chat.completions.create(
+                    model=settings.groq_model,
+                    messages=[
+                        {"role": "system", "content": f"{SYSTEM_PROMPT}\n\n{get_language_prompt(preferred_language)}"},
+                        *history_messages,
+                        {"role": "user", "content": content},
+                    ],
+                    temperature=0.4,
+                    max_tokens=500,
+                ),
+                timeout=settings.ai_request_timeout_seconds,
+            )
     except Exception as exc:
         logger.exception("Groq response generation failed for user_id=%s", user_id)
         raise GroqServiceError("Failed to generate AI response") from exc

@@ -6,7 +6,6 @@ from app.rag.chunking.recursive_chunker import RecursiveDocumentChunker
 from app.rag.chunking.token_chunker import TokenCounter, estimate_token_count
 from app.rag.models.document_models import ChunkingResult, DocumentChunk, DocumentSection, RawDocument
 
-
 HEADING_PATTERN = re.compile(r"^(#{1,6}\s+.+|[A-Z][A-Z0-9\s\-:]{6,}|[0-9]+[.)]\s+.+)$")
 
 

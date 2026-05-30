@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
@@ -34,7 +34,7 @@ class CalendarToolError(RuntimeError):
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _parse_datetime(value: datetime | str) -> datetime:
@@ -44,7 +44,7 @@ def _parse_datetime(value: datetime | str) -> datetime:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
 
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
 
     return parsed
 
@@ -450,7 +450,7 @@ async def get_upcoming_events(
 ) -> dict[str, Any]:
     """Fetch upcoming events for booking context and agent planning."""
     params = {
-        "timeMin": _to_rfc3339(time_min or datetime.now(timezone.utc)),
+        "timeMin": _to_rfc3339(time_min or datetime.now(UTC)),
         "maxResults": max(1, min(max_results, 50)),
         "singleEvents": "true",
         "orderBy": "startTime",
@@ -494,7 +494,7 @@ async def check_availability(
             busy.append((_parse_datetime(event["start_time"]), _parse_datetime(event["end_time"])))
 
     slots = []
-    cursor = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    cursor = datetime.now(UTC).replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
     while len(slots) < max(1, max_slots):
         if 9 <= cursor.hour < 18:
             end = cursor + timedelta(minutes=duration_minutes)
@@ -502,7 +502,7 @@ async def check_availability(
             if not overlaps:
                 slots.append({"start_time": cursor.isoformat(), "end_time": end.isoformat()})
         cursor += timedelta(minutes=30)
-        if cursor > datetime.now(timezone.utc) + timedelta(days=7):
+        if cursor > datetime.now(UTC) + timedelta(days=7):
             break
 
     return _structured_response(

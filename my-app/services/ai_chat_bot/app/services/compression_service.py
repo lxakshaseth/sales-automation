@@ -1,5 +1,5 @@
-from app.memory.context_compressor import ContextCompressor
 from app.memory.compression import CompressionEngine
+from app.memory.context_compressor import ContextCompressor
 from app.models.compression_models import CompressionResult
 from app.models.memory_models import ConversationMemory
 from app.models.message_models import ChatMessage
