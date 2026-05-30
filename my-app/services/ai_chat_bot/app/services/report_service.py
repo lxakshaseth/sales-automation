@@ -1,8 +1,7 @@
 import asyncio
 import html
-import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -173,7 +172,7 @@ async def save_report(report: ConversationReport) -> ConversationReport:
             pipe.lpush(REPORT_HISTORY_KEY, report.report_id)
             pipe.ltrim(REPORT_HISTORY_KEY, 0, 499)
             await asyncio.wait_for(pipe.execute(), timeout=settings.redis_operation_timeout_seconds)
-    except (asyncio.TimeoutError, ReportServiceError, RedisError) as exc:
+    except (TimeoutError, ReportServiceError, RedisError) as exc:
         log_error("Report Redis persistence failed", report_id=report.report_id, error_type=type(exc).__name__)
     return report
 
@@ -183,7 +182,7 @@ async def get_report(report_id: str) -> ConversationReport | None:
         return _memory_reports[report_id]
     try:
         raw_value = await _redis_call("get", _get_redis_client().get(f"{REPORT_KEY_PREFIX}:{report_id}"))
-    except (asyncio.TimeoutError, ReportServiceError, RedisError):
+    except (TimeoutError, ReportServiceError, RedisError):
         return None
     if not raw_value:
         return None
@@ -201,7 +200,7 @@ async def list_reports(limit: int = 50) -> list[ConversationReport]:
     try:
         redis_ids = await _redis_call("history_ids", _get_redis_client().lrange(REPORT_HISTORY_KEY, 0, max(0, limit - 1)))
         ids = list(dict.fromkeys([*redis_ids, *ids]))[:limit]
-    except (asyncio.TimeoutError, ReportServiceError, RedisError):
+    except (TimeoutError, ReportServiceError, RedisError):
         pass
 
     reports: list[ConversationReport] = []
@@ -217,7 +216,7 @@ async def list_reports(limit: int = 50) -> list[ConversationReport]:
                     report = ConversationReport.model_validate_json(raw_value)
                     _memory_reports[report.report_id] = report
                     reports.append(report)
-        except (asyncio.TimeoutError, ReportServiceError, RedisError, ValueError) as exc:
+        except (TimeoutError, ReportServiceError, RedisError, ValueError) as exc:
             log_error("Report history Redis read failed", error_type=type(exc).__name__)
 
     order = {report_id: index for index, report_id in enumerate(ids)}
@@ -246,7 +245,7 @@ async def send_report_email(report: ConversationReport, recipients: list[str] | 
     try:
         await send_html_email(resolved_recipients, email_report.subject, text_body, html_body)
         email_report.sent = True
-        email_report.sent_at = datetime.now(timezone.utc)
+        email_report.sent_at = datetime.now(UTC)
         log_event("sales_report_email_sent", report_id=report.report_id, recipients=resolved_recipients)
     except EmailServiceError as exc:
         email_report.error = str(exc)

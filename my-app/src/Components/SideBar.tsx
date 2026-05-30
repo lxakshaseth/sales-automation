@@ -52,10 +52,9 @@ const menu: SidebarMenuItem[] = [
   { name: "Campaigns", href: "/Campaign", icon: Megaphone },
   { name: "Lead & Sales Pipeline", href: "/LeadSalesPipeline", icon: TrendingUp, notificationId: "leads" },
   { name: "Smart Config", href: "/smart-config", icon: Settings },
-  { name: "User Management", href: "/user-management", icon: Users },
-  { name: "Master", href: "/master", icon: Database },
+  { name: "User Management", href: "/UserManagement", icon: Users },
+  { name: "Master", href: "/Master", icon: Database },
 ];
-
 interface SidebarItemProps {
   item: SidebarMenuItem;
   count: number;

@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field, field_validator
 
 from app.models.message_models import utc_now
 
-
 CacheNamespace = Literal["retrieval", "embedding", "response", "semantic_query"]
 
 

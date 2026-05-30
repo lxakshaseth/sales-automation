@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import "@/modules/Email/template.model";
 
 const funnelStepSchema = new mongoose.Schema(
   {
@@ -21,28 +22,6 @@ const funnelStepSchema = new mongoose.Schema(
     enabled: {
       type: Boolean,
       default: true,
-    },
-  },
-  {
-    _id: false,
-  },
-);
-
-const templateSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-    },
-
-    subject: {
-      type: String,
-      default: "",
-    },
-
-    body: {
-      type: String,
-      required: true,
     },
   },
   {
@@ -131,15 +110,19 @@ const campaignSchema = new mongoose.Schema(
       },
     },
 
-    emailTemplates: {
-      type: [templateSchema],
-      default: [],
-    },
+    emailTemplates: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Template",
+      },
+    ],
 
-    smsTemplates: {
-      type: [templateSchema],
-      default: [],
-    },
+    smsTemplates: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Template",
+      },
+    ],
 
     retryLimits: {
       type: retrySchema,
@@ -156,6 +139,7 @@ const campaignSchema = new mongoose.Schema(
   },
 );
 
-const Campaign = mongoose.models.Campaign || mongoose.model("Campaign", campaignSchema);
+const Campaign =
+  mongoose.models.Campaign || mongoose.model("Campaign", campaignSchema);
 
 export default Campaign;

@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from bson import ObjectId
@@ -71,7 +71,7 @@ class MongoStoreError(RuntimeError):
 
 def _utc_now() -> datetime:
     """Use timezone-aware timestamps for consistent analytics queries."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _validate_user_id(user_id: str) -> str:

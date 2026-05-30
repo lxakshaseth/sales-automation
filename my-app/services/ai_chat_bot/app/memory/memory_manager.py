@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.core.logger import log_error, log_event
 from app.exceptions.memory_exceptions import MemoryError
@@ -59,7 +59,7 @@ class MemoryManager:
             updated_session = session.model_copy(
                 update={
                     "message_count": session.message_count + 1,
-                    "updated_at": datetime.now(timezone.utc),
+                    "updated_at": datetime.now(UTC),
                 }
             )
             await self.store.store_session(updated_session)

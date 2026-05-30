@@ -1,6 +1,5 @@
 import re
 
-
 TOKEN_PATTERN = re.compile(r"[\w\u0900-\u097F]+|[^\w\s]", re.UNICODE)
 
 

@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 from app.scheduler import followup
@@ -20,7 +20,7 @@ class SchedulerTests(unittest.IsolatedAsyncioTestCase):
             followup.scheduler.remove_job(job.id)
 
     async def test_schedule_followup_adds_metadata(self):
-        run_at = datetime.now(timezone.utc) + timedelta(hours=1)
+        run_at = datetime.now(UTC) + timedelta(hours=1)
 
         result = await schedule_followup(
             user_id="user-123",
@@ -93,7 +93,7 @@ class SchedulerTests(unittest.IsolatedAsyncioTestCase):
             "job_id": "retry-test",
             "user_id": "user-123",
             "task_type": "followup",
-            "scheduled_time": datetime.now(timezone.utc).isoformat(),
+            "scheduled_time": datetime.now(UTC).isoformat(),
             "message": "Send message",
             "retry_attempts": 2,
             "tool_name": "send_whatsapp",

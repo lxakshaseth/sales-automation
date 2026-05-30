@@ -2,7 +2,7 @@ import re
 import unicodedata
 
 from app.core.logger import log_event
-from app.rag.models.document_models import DocumentSection, RawDocument
+from app.rag.models.document_models import RawDocument
 
 
 class NormalizationService:

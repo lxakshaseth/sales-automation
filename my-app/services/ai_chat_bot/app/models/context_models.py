@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field, field_validator
 
 from app.models.message_models import ChatMessage, utc_now
 
-
 ContextSource = Literal["retrieval", "short_term_memory", "long_term_memory", "summary_memory"]
 
 

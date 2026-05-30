@@ -1,6 +1,6 @@
 import asyncio
 
-from app.queue.worker import enqueue_task, get_task_status, recover_failed_jobs, start_worker
+from app.queue.worker import enqueue_task, get_task_status, recover_failed_jobs
 
 
 async def main() -> None:

@@ -1,6 +1,6 @@
 import time
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from app.core.logger import log_event
 from app.models.performance_models import PerformanceMetrics, PerformanceSnapshot

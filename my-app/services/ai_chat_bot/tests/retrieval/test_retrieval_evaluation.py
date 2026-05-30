@@ -1,6 +1,5 @@
 import pytest
 
-
 BENCHMARK_QUERIES = [
     {
         "query": "WhatsApp CRM pricing follow-up",

@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
@@ -16,7 +16,7 @@ DEFAULT_RETRY_ATTEMPTS = 3
 DEFAULT_RETRY_BACKOFF_SECONDS = 2.0
 
 scheduler = AsyncIOScheduler(
-    timezone=timezone.utc,
+    timezone=UTC,
     job_defaults={
         "coalesce": True,
         "max_instances": 3,
@@ -42,7 +42,7 @@ if not scheduler._listeners:
 
 
 def _utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _normalize_scheduled_time(
@@ -58,9 +58,9 @@ def _normalize_scheduled_time(
             scheduled_time = datetime.fromisoformat(scheduled_time.replace("Z", "+00:00"))
 
         if scheduled_time.tzinfo is None:
-            scheduled_time = scheduled_time.replace(tzinfo=timezone.utc)
+            scheduled_time = scheduled_time.replace(tzinfo=UTC)
 
-        return scheduled_time.astimezone(timezone.utc)
+        return scheduled_time.astimezone(UTC)
 
     return _utc_now() + timedelta(seconds=float(delay_seconds or 0))
 
@@ -111,7 +111,6 @@ async def _dispatch_scheduled_task(metadata: dict[str, Any]) -> dict[str, Any]:
         )
         return {"queued": True, "metadata": metadata}
 
-    from app.core.tool_router import execute_tool
 
     tool_args = metadata.get("tool_args") or {}
     return await _execute_tool(tool_name, tool_args)
@@ -219,7 +218,7 @@ def _schedule_job(
 
         scheduler.add_job(
             _run_with_retries,
-            trigger=DateTrigger(run_date=run_at, timezone=timezone.utc),
+            trigger=DateTrigger(run_date=run_at, timezone=UTC),
             id=resolved_job_id,
             kwargs={"metadata": metadata},
             replace_existing=True,

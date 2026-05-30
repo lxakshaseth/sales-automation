@@ -188,7 +188,7 @@ async def execute_tool(tool_name: str, args: dict[str, Any] | None = None) -> di
                 result=result,
                 attempts=attempt,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             error: Exception = ToolExecutionError(f"Tool '{tool_name}' timed out")
             logger.warning("Tool timeout on attempt %s/%s: %s", attempt, max_attempts, tool_name)
         except Exception as exc:

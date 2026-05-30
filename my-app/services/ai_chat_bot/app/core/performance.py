@@ -12,7 +12,6 @@ from starlette.responses import Response
 
 from app.core.logger import log_event
 
-
 MetricCategory = str
 _request_metrics: ContextVar[dict[MetricCategory, float] | None] = ContextVar("request_metrics", default=None)
 

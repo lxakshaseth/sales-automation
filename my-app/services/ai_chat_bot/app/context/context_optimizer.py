@@ -1,7 +1,7 @@
+from app.context.token_controller import TokenController
 from app.core.logger import log_event
 from app.models.context_models import MemoryContext, RetrievalContext, TokenBudget
 from app.models.ranking_models import RankedContext
-from app.context.token_controller import TokenController
 
 
 class ContextOptimizer:

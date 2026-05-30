@@ -1,6 +1,5 @@
 from app.models.prompt_models import PromptTemplate
 
-
 BASE_GUARDRAILS = [
     "Use only the provided context when factual grounding is required.",
     "If context is missing or contradictory, say what is missing instead of guessing.",

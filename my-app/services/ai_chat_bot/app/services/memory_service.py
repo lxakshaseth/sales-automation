@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import redis.asyncio as redis
@@ -7,12 +7,12 @@ from redis.exceptions import RedisError
 from app.core.config import REDIS_CONVERSATION_TTL_SECONDS, REDIS_URL
 from app.core.logger import log_error, log_event
 from app.core.rate_limiter import check_rate_limit
-from app.services.conversation_service import get_conversation_state, save_conversation_state
-from app.tools.memory_tool import append_memory, get_memory
 from app.memory.memory_manager import MemoryManager
 from app.models.memory_models import ConversationMemory, MemoryConfig
 from app.models.message_models import ChatMessage, MessageRole
 from app.models.session_models import SessionMetadata, SessionState
+from app.services.conversation_service import get_conversation_state, save_conversation_state
+from app.tools.memory_tool import append_memory, get_memory
 
 DEFAULT_HISTORY_LIMIT = 12
 
@@ -55,7 +55,7 @@ async def save_message(user_id: str, role: str, content: str, metadata: dict[str
     message = {
         "role": role,
         "content": content,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         **({"metadata": metadata} if metadata else {}),
     }
     history = await append_memory(user_id, message)
@@ -74,7 +74,7 @@ async def update_language(user_id: str, preferred_language: str, last_detected_l
     state = await get_conversation_state(user_id) or {"user_id": user_id}
     state["preferred_language"] = preferred_language
     state["last_detected_language"] = last_detected_language or preferred_language
-    state["language_updated_at"] = datetime.now(timezone.utc).isoformat()
+    state["language_updated_at"] = datetime.now(UTC).isoformat()
     saved = await save_conversation_state(state)
     log_event(
         "language_memory_updated",

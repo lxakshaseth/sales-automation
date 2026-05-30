@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from apscheduler.triggers.date import DateTrigger
 
@@ -31,7 +31,7 @@ async def schedule_inactivity_reminder(user_id: str) -> dict:
     replace_existing=True inside the shared scheduler means every incoming message
     refreshes the timer, which is what lets multiple users run independently.
     """
-    run_at = datetime.now(timezone.utc) + timedelta(minutes=REMINDER_AFTER_MINUTES)
+    run_at = datetime.now(UTC) + timedelta(minutes=REMINDER_AFTER_MINUTES)
     job_id = reminder_job_id(user_id)
     existing_job = scheduler.get_job(job_id)
     if existing_job:
@@ -40,7 +40,7 @@ async def schedule_inactivity_reminder(user_id: str) -> dict:
 
     scheduler.add_job(
         _run_reminder_job,
-        trigger=DateTrigger(run_date=run_at, timezone=timezone.utc),
+        trigger=DateTrigger(run_date=run_at, timezone=UTC),
         id=job_id,
         kwargs={"user_id": user_id},
         replace_existing=True,
