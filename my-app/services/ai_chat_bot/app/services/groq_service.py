@@ -1,11 +1,8 @@
 import asyncio
 import logging
 
-from groq import AsyncGroq
-
 from app.config.settings import settings
 from app.core.performance import measure
-from app.services.language_service import get_language_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -43,33 +40,12 @@ User: I am interested
 Assistant: Awesome. Can I know your preferred meeting time and your business requirements?
 """.strip()
 
-_groq_client: AsyncGroq | None = None
-
-
 class GroqServiceError(RuntimeError):
     """Raised when Groq response generation fails."""
 
 
-def _get_groq_client() -> AsyncGroq:
-    """Reuse one async Groq client per process."""
-    global _groq_client
-
-    if not settings.groq_api_key:
-        raise GroqServiceError("GROQ_API_KEY is not configured")
-
-    if _groq_client is None:
-        _groq_client = AsyncGroq(api_key=settings.groq_api_key)
-
-    return _groq_client
-
-
 async def close_groq_service_client() -> None:
-    """Close the shared Groq client during FastAPI shutdown or tests."""
-    global _groq_client
-
-    if _groq_client is not None:
-        await _groq_client.close()
-        _groq_client = None
+    """Compatibility hook; model providers are owned by the routing layer."""
 
 
 async def generate_sales_reply(
@@ -85,47 +61,31 @@ async def generate_sales_reply(
     layers can enrich the message list without changing the Twilio route.
     """
     try:
-        content = user_message
-        if media_context and media_context.get("media_count"):
-            content = f"{user_message}\n\nMedia context: {media_context}"
+        from app.security import secure_process_request
 
-        history_messages = []
-        if user_id:
-            try:
-                from app.tools.memory_tool import get_memory
-
-                raw_history = await get_memory(user_id)
-                trimmed_history = raw_history[-10:]
-                if trimmed_history and isinstance(trimmed_history[-1], dict) and trimmed_history[-1].get("role") == "user":
-                    trimmed_history = trimmed_history[:-1]
-                history_messages = [
-                    {"role": item["role"], "content": item["content"]}
-                    for item in trimmed_history
-                    if isinstance(item, dict) and item.get("role") in {"user", "assistant"} and item.get("content")
-                ]
-            except Exception:
-                logger.exception("Conversation memory could not be loaded for user_id=%s", user_id)
-
-        async with measure("ai", "generate_sales_reply", model=settings.groq_model):
+        metadata = {"tenant_id": "default", "entrypoint": "generate_sales_reply", "media_context": media_context or {}}
+        async with measure("ai", "generate_sales_reply.secured", model=settings.groq_model):
             response = await asyncio.wait_for(
-                _get_groq_client().chat.completions.create(
-                    model=settings.groq_model,
-                    messages=[
-                        {"role": "system", "content": f"{SYSTEM_PROMPT}\n\n{get_language_prompt(preferred_language)}"},
-                        *history_messages,
-                        {"role": "user", "content": content},
-                    ],
-                    temperature=0.4,
-                    max_tokens=500,
+                secure_process_request(
+                    {
+                        "user_query": user_message,
+                        "user_id": user_id,
+                        "tenant_id": "default",
+                        "channel": "sales_reply",
+                        "preferred_language": preferred_language,
+                        "system_prompt": SYSTEM_PROMPT,
+                        "metadata": metadata,
+                        "timeout_seconds": settings.ai_request_timeout_seconds,
+                    }
                 ),
                 timeout=settings.ai_request_timeout_seconds,
             )
     except Exception as exc:
-        logger.exception("Groq response generation failed for user_id=%s", user_id)
-        raise GroqServiceError("Failed to generate AI response") from exc
+        logger.exception("Secured sales response generation failed for user_id=%s", user_id)
+        raise GroqServiceError("Failed to generate secured AI response") from exc
 
-    content = response.choices[0].message.content
+    content = response.response
     if not content:
-        raise GroqServiceError("Groq returned an empty response")
+        raise GroqServiceError("Security orchestrator returned an empty response")
 
     return content.strip()

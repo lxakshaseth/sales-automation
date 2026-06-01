@@ -40,6 +40,7 @@ class WorkflowStatus(StrEnum):
 class OrchestrationRequest(StrictOrchestrationModel):
     user_query: str
     user_id: str | None = None
+    tenant_id: str = "default"
     session_id: str | None = None
     channel: str = "default"
     preferred_language: str | None = None

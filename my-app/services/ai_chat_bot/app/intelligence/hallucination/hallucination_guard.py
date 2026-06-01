@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from app.core.logger import log_error, log_event
@@ -11,6 +12,8 @@ from app.intelligence.hallucination.models import (
     ValidationResult,
 )
 from app.intelligence.hallucination.validation_pipeline import ValidationPipeline
+
+logger = logging.getLogger(__name__)
 
 
 class HallucinationGuard:
@@ -35,6 +38,26 @@ class HallucinationGuard:
             if not report.valid:
                 fallback = self.generate_safe_fallback(report)
                 response = fallback.response
+                logger.warning(
+                    "fallback_triggered",
+                    extra={
+                        "layer": "hallucination",
+                        "reason": fallback.reason,
+                        "score": report.risk.risk_score,
+                        "hallucination_score": report.risk.risk_score,
+                        "validation_result": report.valid,
+                        "fallback_reason": fallback.reason,
+                        "user_input": data.response[:500],
+                        "tenant_id": data.metadata.get("tenant_id", ""),
+                    },
+                )
+                log_event(
+                    "FALLBACK_TRIGGER_REASON",
+                    layer="hallucination",
+                    reason=fallback.reason,
+                    risk_score=report.risk.risk_score,
+                    risk_level=report.risk.risk_level.value,
+                )
                 log_event("hallucination_fallback_activated", action=fallback.action.value, reason=fallback.reason)
             result = ValidationResult(
                 valid=report.valid,
@@ -48,6 +71,7 @@ class HallucinationGuard:
             log_event("hallucination_check_completed", valid=result.valid, action=result.action.value, risk_level=report.risk.risk_level.value)
             return result
         except Exception as exc:
+            logger.exception("hallucination_guard_failure")
             log_error("Hallucination guard failed; returning production-safe fallback", exc_info=True, error_type=type(exc).__name__)
             report = self.build_validation_report(
                 risk=RiskAssessment(risk_level=RiskLevel.CRITICAL_RISK, risk_score=1.0, factors=["hallucination_guard_failure"]),

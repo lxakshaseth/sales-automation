@@ -3,13 +3,12 @@ import asyncio
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
 from starlette.responses import JSONResponse, PlainTextResponse, Response
 
-from app.agents.main_agent import run_agent
 from app.config.settings import settings
 from app.core.logger import log_error, log_event, log_info
 from app.core.rate_limiter import RateLimitError, check_rate_limit
+from app.security import secure_process_request
 from app.services.ai_media_processor import prepare_media_context
 from app.services.conversation_service import record_assistant_message, record_message_received
-from app.services.groq_service import GroqServiceError, generate_sales_reply
 from app.services.language_service import detect_language
 from app.services.twilio_service import build_twiml_response
 from app.services.whatsapp_cloud_service import (
@@ -110,11 +109,15 @@ async def _process_cloud_message(incoming) -> None:
             message_type=incoming.message_type,
         )
 
-        conversation_state = await record_message_received(
-            user_id=user_id,
-            phone_number=user_id,
-            message=incoming.body,
-        )
+        try:
+            conversation_state = await record_message_received(
+                user_id=user_id,
+                phone_number=user_id,
+                message=incoming.body,
+            )
+        except Exception as exc:
+            log_error("Conversation lifecycle update failed", from_number=user_id, error_type=type(exc).__name__)
+            conversation_state = {}
 
         preferred_language = conversation_state.get("preferred_language") or detect_language(incoming.body)["language_code"]
         media_context = None
@@ -134,13 +137,16 @@ async def _process_cloud_message(incoming) -> None:
         ai_reply = conversation_state.get("language_switch_confirmation")
         agent_result = None
         if not ai_reply:
-            agent_result = await run_agent(
+            secured_response = await _generate_secured_reply_with_timeout(
+                user_message=incoming.body,
                 user_id=user_id,
-                message=incoming.body,
-                preferred_language=preferred_language,
                 media_context=media_context,
+                preferred_language=preferred_language,
+                message_sid=incoming.message_id,
+                channel="whatsapp_cloud",
             )
-            ai_reply = agent_result["reply"]
+            ai_reply = secured_response["reply"]
+            agent_result = secured_response["metadata"]
 
         await send_whatsapp_message(user_id, ai_reply)
         await record_assistant_message(user_id, ai_reply)
@@ -271,13 +277,15 @@ async def _handle_twilio_form_webhook(
                 )
                 ai_reply = AI_FALLBACK_REPLY
             else:
-                ai_reply = await _generate_sales_reply_with_timeout(
+                secured_response = await _generate_secured_reply_with_timeout(
                     user_message=incoming.body,
                     user_id=incoming.from_number,
                     media_context=media_context,
                     preferred_language=preferred_language,
                     message_sid=incoming.message_sid,
+                    channel=incoming.channel,
                 )
+                ai_reply = secured_response["reply"]
 
     try:
         await record_assistant_message(incoming.from_number, ai_reply)
@@ -302,45 +310,61 @@ async def _handle_twilio_form_webhook(
     return Response(content=twiml, media_type="application/xml")
 
 
-async def _generate_sales_reply_with_timeout(
+async def _generate_secured_reply_with_timeout(
     *,
     user_message: str,
     user_id: str,
     media_context: dict | None,
     preferred_language: str,
     message_sid: str,
-) -> str:
+    channel: str,
+) -> dict:
     async with _ai_webhook_semaphore:
         try:
             # Keep webhook latency bounded. Twilio expects a quick response,
             # and load tests should not pile up behind slow model calls.
-            return await asyncio.wait_for(
-                generate_sales_reply(
-                    user_message,
-                    user_id=user_id,
-                    media_context=media_context,
-                    preferred_language=preferred_language,
+            response = await asyncio.wait_for(
+                secure_process_request(
+                    {
+                        "user_query": user_message,
+                        "user_id": user_id,
+                        "tenant_id": "default",
+                        "channel": channel,
+                        "preferred_language": preferred_language,
+                        "metadata": {"tenant_id": "default", "message_sid": message_sid, "media_context": media_context or {}},
+                        "timeout_seconds": settings.ai_webhook_timeout_seconds,
+                    }
                 ),
                 timeout=settings.ai_webhook_timeout_seconds,
             )
+            return {
+                "reply": response.response,
+                "metadata": {
+                    "success": response.success,
+                    "action": response.action,
+                    "security": response.metadata.get("security"),
+                    "security_blocked": response.metadata.get("security_blocked", False),
+                    "trace_steps": [trace.step for trace in response.traces],
+                },
+            }
         except TimeoutError:
             log_error(
-                "Groq AI response timed out",
+                "Secured AI response timed out",
                 message_sid=message_sid,
                 from_number=user_id,
                 preferred_language=preferred_language,
                 timeout_seconds=settings.ai_webhook_timeout_seconds,
             )
-            return AI_FALLBACK_REPLY
-        except GroqServiceError as exc:
+            return {"reply": AI_FALLBACK_REPLY, "metadata": {"success": False, "action": "fallback_response", "error": "timeout"}}
+        except Exception as exc:
             log_error(
-                "Groq AI response failed",
+                "Secured AI response failed",
                 message_sid=message_sid,
                 from_number=user_id,
                 preferred_language=preferred_language,
                 error=str(exc),
             )
-            return "Sorry, I am having trouble responding right now. Please try again shortly."
+            return {"reply": "Sorry, I am having trouble responding right now. Please try again shortly.", "metadata": {"success": False, "action": "fallback_response", "error": str(exc)}}
 
 
 def _parse_twilio_media_count(form_data: dict) -> int:
