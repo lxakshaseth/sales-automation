@@ -38,7 +38,7 @@ class Settings:
     report_history_cache_ttl_seconds: int = int(os.getenv("REPORT_HISTORY_CACHE_TTL_SECONDS", "30"))
     owner_email_cache_ttl_seconds: int = int(os.getenv("OWNER_EMAIL_CACHE_TTL_SECONDS", "30"))
     ai_response_cache_ttl_seconds: int = int(os.getenv("AI_RESPONSE_CACHE_TTL_SECONDS", "300"))
-    redis_operation_timeout_seconds: float = float(os.getenv("REDIS_OPERATION_TIMEOUT_SECONDS", "0.5"))
+    redis_operation_timeout_seconds: float = float(os.getenv("REDIS_OPERATION_TIMEOUT_SECONDS", "5"))
     enable_rate_limit: bool = False if _DISABLE_RATE_LIMIT else _ENABLE_RATE_LIMIT
     groq_api_key: str | None = os.getenv("GROQ_API_KEY")
     groq_model: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")

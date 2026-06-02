@@ -14,6 +14,7 @@ except Exception:  # pragma: no cover - optional dependency fallback
 
 SUPPORTED_LANGUAGES = {
     "en": {"name": "English", "native_name": "English"},
+    "hinglish": {"name": "Hinglish", "native_name": "Hinglish"},
     "hi": {"name": "Hindi", "native_name": "हिंदी"},
     "mr": {"name": "Marathi", "native_name": "मराठी"},
     "es": {"name": "Spanish", "native_name": "Español"},
@@ -23,6 +24,7 @@ SUPPORTED_LANGUAGES = {
 
 LANGDETECT_CODE_MAP = {
     "en": "en",
+    "hinglish": "hinglish",
     "hi": "hi",
     "mr": "mr",
     "es": "es",
@@ -53,6 +55,9 @@ SHORT_PHRASE_LANGUAGE_HINTS = {
     "hello": "en",
     "hi": "en",
     "hey": "en",
+    "hindi": "hi",
+    "hinglish": "hinglish",
+    "english": "en",
     "namaste": "hi",
     "नमस्ते": "hi",
     "नमस्कार": "mr",
@@ -89,6 +94,7 @@ HINDI_HINTS = {
 
 CONFIRMATION_MESSAGES = {
     "en": "Sure, I will continue in English.",
+    "hinglish": "Sure, ab main Hinglish mein baat karunga.",
     "hi": "ज़रूर, अब मैं हिंदी में बात करूँगा।",
     "mr": "नक्की, आता मी मराठीत बोलेन.",
     "es": "Claro, continuaré en español.",

@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from app.core.logger import log_error, log_event
@@ -7,6 +8,8 @@ from app.intelligence.confidence.response_confidence import calculate_response_c
 from app.intelligence.confidence.retrieval_confidence import calculate_retrieval_confidence
 from app.intelligence.confidence.scoring_service import DEFAULT_CONFIDENCE_WEIGHTS, confidence_bucket, normalize_score, weighted_score
 from app.intelligence.confidence.tool_confidence import calculate_tool_confidence
+
+logger = logging.getLogger(__name__)
 
 
 class ConfidenceEngine:
@@ -59,6 +62,19 @@ class ConfidenceEngine:
 
             recommendation = self.fallback_recommendation(overall_confidence)
             if recommendation:
+                threshold = 0.40 if recommendation["action"] == "fallback_response" else 0.60
+                logger.warning(
+                    "fallback_triggered",
+                    extra={
+                        "layer": "confidence",
+                        "reason": recommendation["action"],
+                        "score": overall_confidence,
+                        "confidence_score": overall_confidence,
+                        "threshold": threshold,
+                        "user_input": str(resolved_input.llm_response or "")[:500],
+                        "tenant_id": resolved_input.metadata.get("tenant_id", ""),
+                    },
+                )
                 log_event("confidence_fallback_recommended", confidence=overall_confidence, action=recommendation["action"])
             if overall_confidence < 0.60:
                 log_error("Low confidence warning", confidence=overall_confidence, confidence_level=confidence_level.value)
@@ -122,6 +138,18 @@ class ConfidenceEngine:
         return {}
 
     def production_safe_fallback(self, reason_code: str) -> ConfidenceResult:
+        logger.warning(
+            "fallback_triggered",
+            extra={
+                "layer": "confidence",
+                "reason": reason_code,
+                "score": 0.0,
+                "confidence_score": 0.0,
+                "threshold": 0.40,
+                "user_input": "",
+                "tenant_id": "",
+            },
+        )
         metrics = ConfidenceMetrics(weights=self.weights)
         return ConfidenceResult(
             confidence=0.0,
