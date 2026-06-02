@@ -1,4 +1,3 @@
-import asyncio
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -20,10 +19,9 @@ from app.core.config import (
     RATE_LIMIT_ENABLED,
     RATE_LIMIT_MESSAGES_PER_MINUTE,
     RATE_LIMIT_WINDOW_SECONDS,
-    REDIS_OPERATION_TIMEOUT_SECONDS,
-    REDIS_URL,
 )
 from app.core.logger import log_error, log_event
+from app.core.redis_utils import RedisUnavailableError, create_redis_client, redis_call
 
 RATE_LIMIT_PREFIX = "rate_limit"
 DEFAULT_LIMIT_TYPE = "api"
@@ -72,17 +70,7 @@ def _get_redis_client() -> redis.Redis:
     global _redis_client
 
     if _redis_client is None:
-        if not REDIS_URL:
-            raise RateLimitError("REDIS_URL is not configured")
-
-        _redis_client = redis.from_url(
-            REDIS_URL,
-            decode_responses=True,
-            health_check_interval=30,
-            socket_connect_timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
-            socket_timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
-            retry_on_timeout=True,
-        )
+        _redis_client = create_redis_client()
 
     return _redis_client
 
@@ -130,9 +118,9 @@ async def increment_usage(
         pipe = client.pipeline()
         pipe.incr(key)
         pipe.expire(key, rule.window_seconds)
-        count, _ = await asyncio.wait_for(pipe.execute(), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
-        ttl = await asyncio.wait_for(client.ttl(key), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
-    except (TimeoutError, RedisError) as exc:
+        count, _ = await redis_call("rate_limit_increment", pipe.execute)
+        ttl = await redis_call("rate_limit_ttl", lambda: client.ttl(key))
+    except (RedisUnavailableError, RedisError) as exc:
         log_error("Rate limit increment failed", scope=scope, identifier=identifier, limit_type=limit_type, error_type=type(exc).__name__)
         raise RateLimitError("failed to increment rate limit usage") from exc
 
@@ -192,11 +180,11 @@ async def check_rate_limit(
             count = usage["count"]
             ttl = usage["ttl"]
         else:
-            raw_count = await asyncio.wait_for(client.get(key), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
+            raw_count = await redis_call("rate_limit_get", lambda: client.get(key))
             count = int(raw_count or 0)
-            ttl = await asyncio.wait_for(client.ttl(key), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
+            ttl = await redis_call("rate_limit_ttl", lambda: client.ttl(key))
             ttl = max(0, int(ttl))
-    except (TimeoutError, RedisError) as exc:
+    except (RedisUnavailableError, RedisError) as exc:
         log_error("Rate limit check failed", scope=scope, identifier=identifier, limit_type=limit_type, error_type=type(exc).__name__)
         raise RateLimitError("failed to check rate limit") from exc
 
@@ -232,8 +220,8 @@ async def reset_limit(
     key = _rate_limit_key(scope, identifier, limit_type, rule.window_seconds)
 
     try:
-        deleted = await asyncio.wait_for(_get_redis_client().delete(key), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
-    except (TimeoutError, RedisError) as exc:
+        deleted = await redis_call("rate_limit_reset", lambda: _get_redis_client().delete(key))
+    except (RedisUnavailableError, RedisError) as exc:
         log_error("Rate limit reset failed", scope=scope, identifier=identifier, limit_type=limit_type, error_type=type(exc).__name__)
         raise RateLimitError("failed to reset rate limit") from exc
 

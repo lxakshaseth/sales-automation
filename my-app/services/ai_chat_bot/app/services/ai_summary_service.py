@@ -4,8 +4,8 @@ from typing import Any
 
 from app.config.settings import settings
 from app.core.logger import log_error, log_event
+from app.intelligence.routing import route_request
 from app.models.summary_models import AISummary, LeadAnalysis, TranscriptReport
-from app.services.groq_service import _get_groq_client
 from app.services.language_service import detect_language
 
 AI_REPORT_SYSTEM_PROMPT = """
@@ -111,17 +111,20 @@ async def generate_ai_sales_summary(
     }
 
     try:
-        response = await _get_groq_client().chat.completions.create(
-            model=settings.groq_model,
-            messages=[
-                {"role": "system", "content": AI_REPORT_SYSTEM_PROMPT},
-                {"role": "user", "content": json.dumps(payload, ensure_ascii=False, default=str)},
-            ],
-            temperature=0.15,
-            max_tokens=1400,
-            response_format={"type": "json_object"},
+        response = await route_request(
+            {
+                "messages": [
+                    {"role": "system", "content": AI_REPORT_SYSTEM_PROMPT},
+                    {"role": "user", "content": json.dumps(payload, ensure_ascii=False, default=str)},
+                ],
+                "task_type": "summarization",
+                "preferred_model": settings.groq_model,
+                "temperature": 0.15,
+                "max_tokens": 1400,
+                "metadata": {"user_id": user_id, "schema": "ai_sales_summary"},
+            }
         )
-        content = response.choices[0].message.content or "{}"
+        content = response.content or "{}"
         parsed = _extract_json_object(content)
     except Exception as exc:
         log_error("AI sales report generation failed", user_id=user_id, error_type=type(exc).__name__)

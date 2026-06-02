@@ -5,18 +5,15 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from groq import AsyncGroq
-
-from app.core.config import GROQ_API_KEY, GROQ_TOOL_MODEL
+from app.core.config import GROQ_TOOL_MODEL
 from app.core.tool_router import TOOLS, execute_tool, list_tools
+from app.intelligence.routing import route_request
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_LLM_TIMEOUT_SECONDS = 20.0
 DEFAULT_LLM_RETRIES = 2
 DEFAULT_RETRY_BACKOFF_SECONDS = 0.5
-
-_groq_client: AsyncGroq | None = None
 
 SYSTEM_TOOL_PROMPT = """
 You are an autonomous tool-selection layer for a FastAPI agentic AI chatbot backend.
@@ -105,26 +102,8 @@ def _structured_response(
     }
 
 
-def _get_groq_client() -> AsyncGroq:
-    """Reuse one async Groq client per process for scalable agent execution."""
-    global _groq_client
-
-    if not GROQ_API_KEY:
-        raise AgentExecutorError("GROQ_API_KEY is not configured")
-
-    if _groq_client is None:
-        _groq_client = AsyncGroq(api_key=GROQ_API_KEY)
-
-    return _groq_client
-
-
 async def close_agent_executor_client() -> None:
-    """Close the shared Groq HTTP client during FastAPI shutdown or tests."""
-    global _groq_client
-
-    if _groq_client is not None:
-        await _groq_client.close()
-        _groq_client = None
+    """Compatibility hook; model provider clients are owned by the routing layer."""
 
 
 def _available_tools_for_prompt() -> str:
@@ -162,15 +141,19 @@ def _build_messages(user_message: str, context: dict[str, Any] | None = None, co
 
 async def _call_llm(user_message: str, context: dict[str, Any] | None = None, correction: str | None = None) -> str:
     response = await asyncio.wait_for(
-        _get_groq_client().chat.completions.create(
-            model=GROQ_TOOL_MODEL,
-            messages=_build_messages(user_message, context, correction),
-            temperature=0,
-            max_tokens=600,
+        route_request(
+            {
+                "messages": _build_messages(user_message, context, correction),
+                "task_type": "tool_calling",
+                "preferred_model": GROQ_TOOL_MODEL,
+                "temperature": 0,
+                "max_tokens": 600,
+                "metadata": {"entrypoint": "agent_executor"},
+            }
         ),
         timeout=DEFAULT_LLM_TIMEOUT_SECONDS,
     )
-    return response.choices[0].message.content or ""
+    return response.content or ""
 
 
 def _strip_code_fence(text: str) -> str:

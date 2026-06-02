@@ -1,4 +1,3 @@
-import asyncio
 import json
 from datetime import UTC, datetime
 from typing import Any
@@ -6,11 +5,12 @@ from typing import Any
 import redis.asyncio as redis
 from redis.exceptions import RedisError
 
-from app.core.config import REDIS_CONVERSATION_TTL_SECONDS, REDIS_OPERATION_TIMEOUT_SECONDS, REDIS_URL
+from app.core.config import REDIS_CONVERSATION_TTL_SECONDS, REDIS_URL
 from app.core.event_bus import EVENT_CONVERSATION_CLOSED, EVENT_MESSAGE_RECEIVED, emit_event
 from app.core.logger import log_error, log_event
+from app.core.redis_utils import RedisUnavailableError, create_redis_client, redis_call
 from app.services.language_service import detect_language, should_switch_language
-from app.tools.memory_tool import append_memory, get_memory
+from app.tools.memory_tool import MemoryStoreError, append_memory, get_memory
 
 CONVERSATION_KEY_PREFIX = "agent:conversation"
 ACTIVE_CONVERSATIONS_KEY = "agent:conversation:active"
@@ -20,6 +20,8 @@ DEFAULT_LANGUAGE = "en"
 LANGUAGE_CONFIDENCE_THRESHOLD = 0.65
 
 _redis_client: redis.Redis | None = None
+_local_state_fallback: dict[str, dict[str, Any]] = {}
+_local_memory_fallback: dict[str, list[Any]] = {}
 
 
 class ConversationStateError(RuntimeError):
@@ -46,14 +48,7 @@ def _get_redis_client() -> redis.Redis:
     if _redis_client is None:
         if not REDIS_URL:
             raise ConversationStateError("REDIS_URL is not configured")
-        _redis_client = redis.from_url(
-            REDIS_URL,
-            decode_responses=True,
-            health_check_interval=30,
-            socket_connect_timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
-            socket_timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
-            retry_on_timeout=True,
-        )
+        _redis_client = create_redis_client()
     return _redis_client
 
 
@@ -82,10 +77,10 @@ def _deserialize_state(raw_value: str | bytes | None) -> dict[str, Any] | None:
 async def get_conversation_state(user_id: str) -> dict[str, Any] | None:
     """Read one user's lifecycle state from Redis."""
     try:
-        raw_value = await asyncio.wait_for(_get_redis_client().get(_conversation_key(user_id)), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
-    except (TimeoutError, RedisError) as exc:
+        raw_value = await redis_call("conversation_state_get", lambda: _get_redis_client().get(_conversation_key(user_id)))
+    except (RedisUnavailableError, RedisError, ConversationStateError) as exc:
         log_error("Conversation state read failed", user_id=user_id, error_type=type(exc).__name__)
-        raise ConversationStateError("failed to read conversation state") from exc
+        return _local_state_fallback.get(user_id)
     return _deserialize_state(raw_value)
 
 
@@ -106,20 +101,21 @@ async def save_conversation_state(state: dict[str, Any]) -> dict[str, Any]:
             pipe.srem(ACTIVE_CONVERSATIONS_KEY, user_id)
         else:
             pipe.sadd(ACTIVE_CONVERSATIONS_KEY, user_id)
-        await asyncio.wait_for(pipe.execute(), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
-    except (TimeoutError, RedisError) as exc:
+        await redis_call("conversation_state_save", pipe.execute)
+    except (RedisUnavailableError, RedisError, ConversationStateError) as exc:
         log_error("Conversation state save failed", user_id=user_id, error_type=type(exc).__name__)
-        raise ConversationStateError("failed to save conversation state") from exc
+        _local_state_fallback[user_id] = dict(state)
+        return state
     return state
 
 
 async def list_active_conversation_ids() -> list[str]:
     """Return active user ids for scan-style scheduler checks and future analytics."""
     try:
-        values = await asyncio.wait_for(_get_redis_client().smembers(ACTIVE_CONVERSATIONS_KEY), timeout=REDIS_OPERATION_TIMEOUT_SECONDS)
-    except (TimeoutError, RedisError) as exc:
+        values = await redis_call("conversation_active_list", lambda: _get_redis_client().smembers(ACTIVE_CONVERSATIONS_KEY))
+    except (RedisUnavailableError, RedisError, ConversationStateError) as exc:
         log_error("Active conversation list failed", error_type=type(exc).__name__)
-        raise ConversationStateError("failed to list active conversations") from exc
+        return sorted(_local_state_fallback)
     return sorted(str(value) for value in values)
 
 
@@ -132,14 +128,27 @@ async def record_message_received(user_id: str, phone_number: str, message: str)
     inactivity reminder/auto-close jobs.
     """
     existing = await get_conversation_state(user_id)
+    if existing:
+        log_event(
+            "conversation_state_restored",
+            user_id=user_id,
+            preferred_language=existing.get("preferred_language"),
+            conversation_status=existing.get("conversation_status"),
+        )
     now = _iso_now()
     language_detection = detect_language(message)
     switch_request = should_switch_language(message)
     previous_language = (existing or {}).get("preferred_language") or DEFAULT_LANGUAGE
 
+    previous_status = (existing or {}).get("conversation_status")
+    is_reopening_closed_conversation = previous_status == STATUS_CLOSED
+
     if switch_request.get("should_switch"):
         preferred_language = switch_request["language_code"]
         language_confidence = switch_request["confidence"]
+    elif is_reopening_closed_conversation and previous_language:
+        preferred_language = previous_language
+        language_confidence = (existing or {}).get("language_confidence", 0.0)
     elif not existing or not (existing or {}).get("preferred_language"):
         preferred_language = language_detection["language_code"] or DEFAULT_LANGUAGE
         language_confidence = language_detection["confidence"]
@@ -150,26 +159,41 @@ async def record_message_received(user_id: str, phone_number: str, message: str)
         preferred_language = previous_language
         language_confidence = (existing or {}).get("language_confidence", 0.0)
 
-    state = {
-        "user_id": user_id,
-        "phone_number": phone_number,
-        "last_message_time": now,
-        "reminder_sent": False,
-        "conversation_status": STATUS_OPEN,
-        "conversation_start_time": (existing or {}).get("conversation_start_time") or now,
-        "conversation_end_time": None,
-        "preferred_language": preferred_language,
-        "language_confidence": language_confidence,
-        "last_detected_language": language_detection["language_code"],
-        "last_language_detected": language_detection["language_code"],
-        "last_language_confidence": language_detection["confidence"],
-    }
+    state = dict(existing or {})
+    state.update(
+        {
+            "user_id": user_id,
+            "phone_number": phone_number,
+            "last_message_time": now,
+            "reminder_sent": False,
+            "conversation_status": STATUS_OPEN,
+            "conversation_start_time": state.get("conversation_start_time") or now,
+            "conversation_end_time": None,
+            "preferred_language": preferred_language,
+            "language_confidence": language_confidence,
+            "last_detected_language": language_detection["language_code"],
+            "last_language_detected": language_detection["language_code"],
+            "last_language_confidence": language_detection["confidence"],
+        }
+    )
     if switch_request.get("should_switch"):
         state["language_switch_requested"] = True
         state["language_switch_confirmation"] = switch_request["confirmation_message"]
+    else:
+        state.pop("language_switch_requested", None)
+        state.pop("language_switch_confirmation", None)
 
     await save_conversation_state(state)
-    await append_memory(user_id, {"role": "user", "content": message, "timestamp": now})
+    if is_reopening_closed_conversation:
+        log_event(
+            "conversation_reopened",
+            user_id=user_id,
+            previous_status=previous_status,
+            new_status=STATUS_OPEN,
+            reason="new_inbound_message",
+        )
+    log_event("language_restored", user_id=user_id, preferred_language=preferred_language)
+    await _append_memory_gracefully(user_id, {"role": "user", "content": message, "timestamp": now})
 
     from app.scheduler.close_chat_scheduler import schedule_auto_close
     from app.scheduler.reminder_scheduler import schedule_inactivity_reminder
@@ -199,7 +223,7 @@ async def record_message_received(user_id: str, phone_number: str, message: str)
 
 async def record_assistant_message(user_id: str, message: str) -> list[Any]:
     """Store the assistant reply in Redis memory for future summary and context."""
-    return await append_memory(user_id, {"role": "assistant", "content": message, "timestamp": _iso_now()})
+    return await _append_memory_gracefully(user_id, {"role": "assistant", "content": message, "timestamp": _iso_now()})
 
 
 def inactive_minutes(state: dict[str, Any], now: datetime | None = None) -> float:
@@ -237,4 +261,22 @@ async def close_conversation(user_id: str, summary: dict[str, Any] | None = None
 
 async def get_conversation_history(user_id: str) -> list[Any]:
     """Return Redis JSON-list memory for summary generation and future CRM sync."""
-    return await get_memory(user_id)
+    try:
+        history = await get_memory(user_id)
+        log_event("memory_loaded", user_id=user_id, message_count=len(history))
+        return history
+    except MemoryStoreError as exc:
+        log_error("Memory load failed", user_id=user_id, error_type=type(exc).__name__)
+        return list(_local_memory_fallback.get(user_id, []))
+
+
+async def _append_memory_gracefully(user_id: str, message: Any) -> list[Any]:
+    try:
+        history = await append_memory(user_id, message)
+        log_event("memory_saved", user_id=user_id, message_count=len(history))
+        return history
+    except MemoryStoreError as exc:
+        log_error("Failed to append memory", user_id=user_id, error_type=type(exc).__name__)
+        history = _local_memory_fallback.setdefault(user_id, [])
+        history.append(message)
+        return history

@@ -4,7 +4,8 @@ from typing import Any
 from app.config.settings import settings
 from app.core.event_bus import EVENT_SUMMARY_GENERATED, emit_event
 from app.core.logger import log_error, log_event
-from app.services.groq_service import GroqServiceError, _get_groq_client
+from app.intelligence.routing import route_request
+from app.services.groq_service import GroqServiceError
 from app.services.language_service import detect_language
 
 SUMMARY_SYSTEM_PROMPT = """
@@ -60,26 +61,29 @@ async def generate_conversation_summary(user_id: str, history: list[Any]) -> dic
         history_text = " ".join(str(item.get("content", item)) if isinstance(item, dict) else str(item) for item in history)
         detected_language = detect_language(history_text)
         try:
-            response = await _get_groq_client().chat.completions.create(
-                model=settings.groq_model,
-                messages=[
-                    {"role": "system", "content": SUMMARY_SYSTEM_PROMPT},
-                    {
-                        "role": "user",
-                        "content": json.dumps(
-                            {
-                                "conversation_language": detected_language["language_name"],
-                                "history": history,
-                            },
-                            ensure_ascii=False,
-                        ),
-                    },
-                ],
-                temperature=0.2,
-                max_tokens=500,
-                response_format={"type": "json_object"},
+            response = await route_request(
+                {
+                    "messages": [
+                        {"role": "system", "content": SUMMARY_SYSTEM_PROMPT},
+                        {
+                            "role": "user",
+                            "content": json.dumps(
+                                {
+                                    "conversation_language": detected_language["language_name"],
+                                    "history": history,
+                                },
+                                ensure_ascii=False,
+                            ),
+                        },
+                    ],
+                    "task_type": "summarization",
+                    "preferred_model": settings.groq_model,
+                    "temperature": 0.2,
+                    "max_tokens": 500,
+                    "metadata": {"user_id": user_id, "schema": "conversation_summary"},
+                }
             )
-            content = response.choices[0].message.content or "{}"
+            content = response.content or "{}"
             summary = _parse_summary(content, history)
         except GroqServiceError:
             raise

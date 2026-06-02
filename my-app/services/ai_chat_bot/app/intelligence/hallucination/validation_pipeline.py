@@ -3,9 +3,12 @@ from typing import Any
 from app.core.logger import log_error, log_event
 from app.intelligence.hallucination.fact_checker import FactChecker
 from app.intelligence.hallucination.models import (
+    FactCheckResult,
+    GroundingResult,
     HallucinationReport,
     RiskAssessment,
     RiskLevel,
+    SourceVerification,
     ValidationAction,
     ValidationInput,
     ValidationResult,
@@ -30,6 +33,24 @@ class ValidationPipeline:
     async def run_validation_pipeline(self, validation_input: ValidationInput | dict[str, Any]) -> HallucinationReport:
         try:
             data = validation_input if isinstance(validation_input, ValidationInput) else ValidationInput(**validation_input)
+            confidence = self._resolve_confidence(data)
+            if not self._strict_validation_required(data):
+                log_event(
+                    "FACT_CHECK_SKIPPED",
+                    reason="conversational_response",
+                    request_type=data.metadata.get("request_type"),
+                    retrieved_count=len(data.retrieved_chunks),
+                )
+                log_event(
+                    "HALLUCINATION_SKIPPED",
+                    reason="conversational_response",
+                    request_type=data.metadata.get("request_type"),
+                    retrieved_count=len(data.retrieved_chunks),
+                )
+                report = self._skipped_report(confidence=confidence)
+                log_event("hallucination_validation_result", valid=report.valid, action=report.action.value, risk_level=report.risk.risk_level.value)
+                return report
+
             sources = [*data.retrieved_chunks, *data.tool_outputs, *data.memory_context, *data.system_context]
             source_verification = self.source_verifier.verify_sources(
                 data.response,
@@ -45,7 +66,6 @@ class ValidationPipeline:
                 memory_context=data.memory_context,
             )
             fact_check = self.fact_checker.check_facts(data.response, sources)
-            confidence = self._resolve_confidence(data)
             risk = self._assess_risk(
                 source_coverage=source_verification.coverage,
                 confidence=confidence,
@@ -160,9 +180,50 @@ class ValidationPipeline:
             reasons.append("confidence_threshold_violation")
         return sorted(set(reasons))
 
-    def _failed_report(self, reason: str) -> HallucinationReport:
-        from app.intelligence.hallucination.models import FactCheckResult, GroundingResult, SourceVerification
+    def _strict_validation_required(self, data: ValidationInput) -> bool:
+        metadata = data.metadata or {}
+        request_type = str(metadata.get("request_type") or "").lower()
+        reasoning_mode = str(metadata.get("reasoning_mode") or "").lower()
+        conversational_types = {"", "chat", "greeting", "small_talk", "conversation", "casual_chat"}
+        conversational_modes = {"", "simple_reply"}
 
+        if metadata.get("tool_required") is True or metadata.get("use_rag") is True:
+            return True
+        if data.retrieved_chunks or data.tool_outputs:
+            return True
+        if request_type not in conversational_types or reasoning_mode not in conversational_modes:
+            return True
+        return self._has_strict_factual_claims(data.response)
+
+    def _has_strict_factual_claims(self, response: str) -> bool:
+        lower = response.lower()
+        high_risk_markers = (
+            *self.fact_checker.HALLUCINATION_MARKERS,
+            "according to",
+            "database",
+            "record shows",
+            "guaranteed",
+            "price is",
+            "costs $",
+            "costs ₹",
+            "today's date",
+            "current time",
+        )
+        return any(marker in lower for marker in high_risk_markers)
+
+    def _skipped_report(self, *, confidence: float) -> HallucinationReport:
+        return HallucinationReport(
+            valid=True,
+            risk=RiskAssessment(risk_level=RiskLevel.LOW_RISK, risk_score=0.0, factors=["conversational_validation_skipped"], source_coverage=1.0, confidence=confidence),
+            source_verification=SourceVerification(verified=True, coverage=1.0, matched_claims=[], unsupported_claims=[], evidence_sources=[], missing_sources=[]),
+            grounding=GroundingResult(grounded=True, retrieval_grounded=False, tool_grounded=False, memory_grounded=False),
+            fact_check=FactCheckResult(passed=True, factual_consistency=1.0, verified_claims=[], unsupported_claims=[], hallucination_indicators=[]),
+            confidence=confidence,
+            action=ValidationAction.ALLOW,
+            reasons=["conversational_validation_skipped"],
+        )
+
+    def _failed_report(self, reason: str) -> HallucinationReport:
         risk = RiskAssessment(risk_level=RiskLevel.CRITICAL_RISK, risk_score=1.0, factors=["validation_pipeline_failed"])
         return HallucinationReport(
             valid=False,
