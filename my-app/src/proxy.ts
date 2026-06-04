@@ -28,5 +28,10 @@ export async function proxy(req: NextRequest) {
   }
 }
 export const config = {
-    matcher: ["/api/campaigns/:path*"],
+    matcher: [
+      "/api/campaigns/:path*",
+      "/api/leads/:path*",
+      "/api/templates/:path*",
+    ],
+   
 };
