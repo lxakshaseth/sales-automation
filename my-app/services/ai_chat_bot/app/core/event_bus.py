@@ -10,8 +10,8 @@ from uuid import uuid4
 import redis.asyncio as redis
 from redis.exceptions import RedisError
 
-from app.core.config import REDIS_OPERATION_TIMEOUT_SECONDS, REDIS_URL
 from app.core.logger import get_request_id, log_error, log_event
+from app.core.redis_utils import RedisUnavailableError, create_redis_client, redis_call
 from app.core.retry_handler import RetryConfig, retry_async
 
 EVENT_MESSAGE_RECEIVED = "message_received"
@@ -62,17 +62,7 @@ def _get_redis_client() -> redis.Redis:
     global _redis_client
 
     if _redis_client is None:
-        if not REDIS_URL:
-            raise EventBusError("REDIS_URL is not configured")
-
-        _redis_client = redis.from_url(
-            REDIS_URL,
-            decode_responses=True,
-            health_check_interval=30,
-            socket_connect_timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
-            socket_timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
-            retry_on_timeout=True,
-        )
+        _redis_client = create_redis_client()
 
     return _redis_client
 
@@ -171,11 +161,8 @@ async def handle_event(
 
 async def _publish_to_redis(event: Event, channel: str) -> None:
     try:
-        await asyncio.wait_for(
-            _get_redis_client().publish(channel, json.dumps(event.to_dict(), ensure_ascii=False)),
-            timeout=REDIS_OPERATION_TIMEOUT_SECONDS,
-        )
-    except (TimeoutError, RedisError) as exc:
+        await redis_call("event_publish", lambda: _get_redis_client().publish(channel, json.dumps(event.to_dict(), ensure_ascii=False)))
+    except (RedisUnavailableError, RedisError) as exc:
         log_error("Redis event publish failed", event_name=event.name, event_id=event.event_id, error_type=type(exc).__name__)
         raise EventBusError("failed to publish event to Redis") from exc
 

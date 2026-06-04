@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 from datetime import UTC, datetime
 from typing import Any
@@ -29,6 +30,11 @@ from app.intelligence.prompts.tool_prompts import ToolResultContext, ToolSpec
 from app.intelligence.routing import ModelRouter
 from app.intelligence.structured_outputs.output_parser import parse_structured_response
 from app.intelligence.structured_outputs.structured_models import ToolIntentResponse
+
+logger = logging.getLogger(__name__)
+
+GREETING_INPUTS = {"hi", "hii", "hello", "hey", "good morning", "good evening"}
+GREETING_RESPONSE = "Hello! How can I help you today?"
 
 
 class AIOrchestrator:
@@ -133,6 +139,74 @@ class AIOrchestrator:
         else:
             await self._run_traced(state, "tool_validation", lambda: self._async_value({"tool_required": False}))
 
+        if self._is_greeting(request.user_query):
+            confidence_result = await self._run_traced(
+                state,
+                "confidence_scoring",
+                lambda: calculate_confidence(
+                    {
+                        "retrieval_score": 1.0,
+                        "rerank_score": 1.0,
+                        "chunk_relevance": 1.0,
+                        "chunk_scores": [1.0],
+                        "chunk_count": 1,
+                        "tool_output": {"success": True, "tool_name": "none", "result": {"status": "not_required"}},
+                        "tool_exists": True,
+                        "parameters_validated": True,
+                        "intent_confidence": 1.0,
+                        "llm_response": GREETING_RESPONSE,
+                        "structured_output_valid": True,
+                        "schema_validation_success": True,
+                        "metadata": {"allowlist": "greeting"},
+                    }
+                ),
+            )
+            hallucination = await self._run_traced(
+                state,
+                "hallucination_validation",
+                lambda: self._async_value(
+                    {
+                        "valid": True,
+                        "action": "respond",
+                        "risk_level": "LOW_RISK",
+                        "reason": "greeting_allowlist",
+                    }
+                ),
+            )
+            log_event("GREETING_BYPASS", reason="greeting_allowlist", tenant_id=request.tenant_id)
+            metrics = PipelineMetrics(
+                provider_latency_ms=0.0,
+                token_usage=optimized.report.model_dump(mode="json"),
+                confidence_score=confidence_result.confidence,
+                hallucination_risk=hallucination["risk_level"],
+            )
+            response = await self._run_traced(
+                state,
+                "final_response",
+                lambda: self._async_value(
+                    self.build_response(
+                        request=request,
+                        state=state,
+                        response=GREETING_RESPONSE,
+                        raw_response=GREETING_RESPONSE,
+                        confidence=confidence_result.confidence,
+                        action="respond",
+                        metrics=metrics,
+                        metadata={
+                            "model_provider": "allowlist",
+                            "model": "greeting_allowlist",
+                            "persona": "enterprise",
+                            "facts_preserved": True,
+                            "prompt_builder_invoked": True,
+                            "structured_parser_invoked": False,
+                            "greeting_allowlist": True,
+                        },
+                    )
+                ),
+            )
+            response.traces = state.traces
+            return response
+
         routing_response = await self._run_traced(
             state,
             "routing",
@@ -147,6 +221,58 @@ class AIOrchestrator:
                 }
             ),
         )
+        if not routing_response.success:
+            logger.warning(
+                "fallback_triggered",
+                extra={
+                    "layer": "model_router",
+                    "reason": routing_response.error_type or "routing_failed",
+                    "score": 0.0,
+                    "confidence_score": 0.0,
+                    "user_input": request.user_query,
+                    "tenant_id": request.tenant_id,
+                    "fallback_reason": routing_response.error or "model provider unavailable",
+                },
+            )
+            log_event(
+                "model_router_unavailable",
+                error_type=routing_response.error_type,
+                error=routing_response.error,
+                latency_ms=routing_response.latency_ms,
+            )
+            metrics = PipelineMetrics(
+                provider_latency_ms=routing_response.latency_ms,
+                token_usage=optimized.report.model_dump(mode="json"),
+                confidence_score=0.0,
+                hallucination_risk="NOT_EVALUATED",
+            )
+            response = await self._run_traced(
+                state,
+                "final_response",
+                lambda: self._async_value(
+                    self.build_response(
+                        request=request,
+                        state=state,
+                        response=self._provider_unavailable_text(),
+                        raw_response=routing_response.error or "",
+                        confidence=0.0,
+                        action="fallback_response",
+                        metrics=metrics,
+                        metadata={
+                            "model_provider": routing_response.provider,
+                            "model": routing_response.model,
+                            "routing_error": routing_response.error,
+                            "routing_error_type": routing_response.error_type,
+                            "persona": "enterprise",
+                            "facts_preserved": True,
+                            "prompt_builder_invoked": True,
+                            "structured_parser_invoked": False,
+                        },
+                    )
+                ),
+            )
+            response.traces = state.traces
+            return response
         raw_response = await self._run_traced(state, "llm_generation", lambda: self._async_value(routing_response.content or self._fallback_text("model_router_failed")))
         structured = await self._run_traced(state, "structured_parsing", lambda: self._parse_structured_output(raw_response, plan, decision))
 
@@ -170,11 +296,86 @@ class AIOrchestrator:
                 }
             ),
         )
+        retry_action = "respond"
+        retry_reason: str | None = None
         confidence_action = confidence_result.recommendation.get("action", "continue")
-        if confidence_action == "fallback_response":
-            raw_response = self._fallback_text("low_confidence")
-        elif confidence_action == "request_clarification":
-            raw_response = "I need additional information before I can answer confidently."
+        if confidence_result.fallback_required:
+            logger.warning(
+                "fallback_triggered",
+                extra={
+                    "layer": "confidence",
+                    "reason": confidence_action,
+                    "score": confidence_result.confidence,
+                    "confidence_score": confidence_result.confidence,
+                    "user_input": request.user_query,
+                    "tenant_id": request.tenant_id,
+                    "fallback_reason": "low_confidence_retry_via_groq",
+                },
+            )
+            retry_response = await self._run_traced(
+                state,
+                "low_confidence_groq_retry",
+                lambda: self._retry_via_groq(optimized.final_prompt, request, state),
+            )
+            if not retry_response.success:
+                response = await self._run_traced(
+                    state,
+                    "final_response",
+                    lambda: self._async_value(
+                        self.build_response(
+                            request=request,
+                            state=state,
+                            response=self._professional_fallback_text(),
+                            raw_response=retry_response.error or "",
+                            confidence=0.0,
+                            action="fallback_response",
+                            metrics=PipelineMetrics(
+                                provider_latency_ms=retry_response.latency_ms,
+                                token_usage=optimized.report.model_dump(mode="json"),
+                                confidence_score=0.0,
+                                hallucination_risk="NOT_EVALUATED",
+                            ),
+                            metadata={
+                                "model_provider": retry_response.provider,
+                                "model": retry_response.model,
+                                "routing_error": retry_response.error,
+                                "routing_error_type": retry_response.error_type,
+                                "fallback_reason": "groq_retry_failed",
+                                "persona": "enterprise",
+                                "facts_preserved": True,
+                                "prompt_builder_invoked": True,
+                                "structured_parser_invoked": False,
+                            },
+                        )
+                    ),
+                )
+                response.traces = state.traces
+                return response
+            raw_response = retry_response.content or self._professional_fallback_text()
+            structured = await self._run_traced(state, "retry_structured_parsing", lambda: self._parse_structured_output(raw_response, plan, decision))
+            confidence_result = await self._run_traced(
+                state,
+                "retry_confidence_scoring",
+                lambda: calculate_confidence(
+                    {
+                        "retrieval_score": self._top_retrieval_score(context),
+                        "rerank_score": self._top_retrieval_score(context),
+                        "chunk_relevance": self._top_retrieval_score(context),
+                        "chunk_scores": [float(chunk.get("score", 0.0) or 0.0) for chunk in context.retrieved_chunks],
+                        "chunk_count": len(context.retrieved_chunks),
+                        "tool_output": tool_outputs[0] if tool_outputs else {"success": True, "tool_name": "none", "result": {"status": "not_required"}},
+                        "tool_exists": bool(tool_outputs) if decision.use_tool else True,
+                        "parameters_validated": structured.success,
+                        "intent_confidence": float((structured.data or {}).get("confidence", 0.85)) if structured.success else 0.30,
+                        "llm_response": raw_response,
+                        "structured_output_valid": structured.success,
+                        "schema_validation_success": bool(structured.validation and structured.validation.success),
+                    }
+                ),
+            )
+            routing_response = retry_response
+            retry_action = "retry_via_groq"
+            retry_reason = "low_confidence"
 
         hallucination = await self._run_traced(
             state,
@@ -188,10 +389,144 @@ class AIOrchestrator:
                     "system_context": [{"content": context.system_prompt}],
                     "confidence": confidence_result.confidence,
                     "confidence_result": confidence_result.model_dump(mode="json"),
-                    "metadata": {"workflow_id": state.workflow_id},
+                    "metadata": {
+                        "workflow_id": state.workflow_id,
+                        "tenant_id": request.tenant_id,
+                        "request_type": plan.request_type.value,
+                        "reasoning_mode": plan.mode.value,
+                        "tool_required": decision.use_tool,
+                        "use_rag": decision.use_rag,
+                        "retrieved_count": len(context.retrieved_chunks),
+                    },
                 }
             ),
         )
+        if not hallucination.valid and retry_action != "retry_via_groq":
+            retry_response = await self._run_traced(
+                state,
+                "unsupported_answer_groq_retry",
+                lambda: self._retry_via_groq(optimized.final_prompt, request, state, reason="unsupported_answer"),
+            )
+            if not retry_response.success:
+                response = await self._run_traced(
+                    state,
+                    "final_response",
+                    lambda: self._async_value(
+                        self.build_response(
+                            request=request,
+                            state=state,
+                            response=self._professional_fallback_text(),
+                            raw_response=retry_response.error or raw_response,
+                            confidence=0.0,
+                            action="fallback_response",
+                            metrics=PipelineMetrics(
+                                provider_latency_ms=retry_response.latency_ms,
+                                token_usage=optimized.report.model_dump(mode="json"),
+                                confidence_score=0.0,
+                                hallucination_risk=hallucination.report.risk.risk_level.value,
+                            ),
+                            metadata={
+                                "model_provider": retry_response.provider,
+                                "model": retry_response.model,
+                                "routing_error": retry_response.error,
+                                "routing_error_type": retry_response.error_type,
+                                "fallback_reason": "groq_retry_failed_after_hallucination",
+                                "persona": "enterprise",
+                                "facts_preserved": True,
+                                "prompt_builder_invoked": True,
+                                "structured_parser_invoked": True,
+                            },
+                        )
+                    ),
+                )
+                response.traces = state.traces
+                return response
+
+            raw_response = retry_response.content or self._professional_fallback_text()
+            structured = await self._run_traced(state, "unsupported_retry_structured_parsing", lambda: self._parse_structured_output(raw_response, plan, decision))
+            confidence_result = await self._run_traced(
+                state,
+                "unsupported_retry_confidence_scoring",
+                lambda: calculate_confidence(
+                    {
+                        "retrieval_score": self._top_retrieval_score(context),
+                        "rerank_score": self._top_retrieval_score(context),
+                        "chunk_relevance": self._top_retrieval_score(context),
+                        "chunk_scores": [float(chunk.get("score", 0.0) or 0.0) for chunk in context.retrieved_chunks],
+                        "chunk_count": len(context.retrieved_chunks),
+                        "tool_output": tool_outputs[0] if tool_outputs else {"success": True, "tool_name": "none", "result": {"status": "not_required"}},
+                        "tool_exists": bool(tool_outputs) if decision.use_tool else True,
+                        "parameters_validated": structured.success,
+                        "intent_confidence": float((structured.data or {}).get("confidence", 0.85)) if structured.success else 0.30,
+                        "llm_response": raw_response,
+                        "structured_output_valid": structured.success,
+                        "schema_validation_success": bool(structured.validation and structured.validation.success),
+                    }
+                ),
+            )
+            hallucination = await self._run_traced(
+                state,
+                "unsupported_retry_hallucination_validation",
+                lambda: self.hallucination_guard.validate_response(
+                    {
+                        "response": raw_response,
+                        "retrieved_chunks": context.retrieved_chunks,
+                        "tool_outputs": tool_outputs,
+                        "memory_context": context.chat_history,
+                        "system_context": [{"content": context.system_prompt}],
+                        "confidence": confidence_result.confidence,
+                        "confidence_result": confidence_result.model_dump(mode="json"),
+                        "metadata": {
+                            "workflow_id": state.workflow_id,
+                            "tenant_id": request.tenant_id,
+                            "request_type": plan.request_type.value,
+                            "reasoning_mode": plan.mode.value,
+                            "tool_required": decision.use_tool,
+                            "use_rag": decision.use_rag,
+                            "retrieved_count": len(context.retrieved_chunks),
+                            "retry_reason": "unsupported_answer",
+                        },
+                    }
+                ),
+            )
+            routing_response = retry_response
+            retry_action = "retry_via_groq"
+            retry_reason = "unsupported_answer"
+
+            if not hallucination.valid:
+                response = await self._run_traced(
+                    state,
+                    "final_response",
+                    lambda: self._async_value(
+                        self.build_response(
+                            request=request,
+                            state=state,
+                            response=self._professional_fallback_text(),
+                            raw_response=raw_response,
+                            confidence=confidence_result.confidence,
+                            action="fallback_response",
+                            metrics=PipelineMetrics(
+                                provider_latency_ms=routing_response.latency_ms,
+                                token_usage=optimized.report.model_dump(mode="json"),
+                                confidence_score=confidence_result.confidence,
+                                hallucination_risk=hallucination.report.risk.risk_level.value,
+                            ),
+                            metadata={
+                                "model_provider": routing_response.provider,
+                                "model": routing_response.model,
+                                "fallback_reason": "groq_retry_failed_hallucination_validation",
+                                "persona": "enterprise",
+                                "facts_preserved": False,
+                                "prompt_builder_invoked": True,
+                                "structured_parser_invoked": True,
+                                "low_confidence_retry": False,
+                                "unsupported_answer_retry": True,
+                            },
+                        )
+                    ),
+                )
+                response.traces = state.traces
+                return response
         verified_response = hallucination.response
 
         persona = await self._run_traced(
@@ -225,7 +560,7 @@ class AIOrchestrator:
                     response=persona.response,
                     raw_response=raw_response,
                     confidence=confidence_result.confidence,
-                    action=hallucination.action.value,
+                    action=retry_action if hallucination.valid and retry_action == "retry_via_groq" else hallucination.action.value,
                     metrics=metrics,
                     metadata={
                         "model_provider": routing_response.provider,
@@ -234,6 +569,9 @@ class AIOrchestrator:
                         "facts_preserved": persona.facts_preserved,
                         "prompt_builder_invoked": True,
                         "structured_parser_invoked": True,
+                        "low_confidence_retry": retry_reason == "low_confidence",
+                        "retry_reason": retry_reason,
+                        "unsupported_answer_retry": retry_reason == "unsupported_answer",
                     },
                 )
             ),
@@ -247,6 +585,16 @@ class AIOrchestrator:
     def handle_failure(self, request: OrchestrationRequest, state: WorkflowState, exc: Exception, duration_ms: float) -> OrchestrationResponse:
         state.status = WorkflowStatus.FAILED
         metrics = PipelineMetrics(workflow_duration_ms=duration_ms)
+        logger.warning(
+            "fallback_triggered",
+            extra={
+                "layer": "ai_orchestrator",
+                "reason": "workflow_failure",
+                "score": 0.0,
+                "user_input": request.user_query,
+                "tenant_id": request.tenant_id,
+            },
+        )
         return OrchestrationResponse(
             success=False,
             response=self._fallback_text("workflow_failure"),
@@ -322,8 +670,54 @@ class AIOrchestrator:
         return {"language": normalized, "confidence": 1.0, "source": "orchestration_request", "user_preferred": True}
 
     def _fallback_text(self, reason: str) -> str:
+        logger.warning(
+            "fallback_triggered",
+            extra={
+                "layer": "ai_orchestrator",
+                "reason": reason,
+                "score": 0.0,
+                "user_input": "",
+                "tenant_id": "",
+            },
+        )
         log_event("fallback_activated", reason=reason)
         return "I could not complete the request safely."
+
+    def _provider_unavailable_text(self) -> str:
+        return (
+            "I can still help while the AI provider is unavailable.\n\n"
+            "Could you share what you need help with: products, services, pricing, a demo, or support?"
+        )
+
+    def _professional_fallback_text(self) -> str:
+        return (
+            "Could you tell me a little more about what you need?\n\n"
+            "For example, are you looking for products, services, pricing, a demo, or support?"
+        )
+
+    def _is_greeting(self, text: str) -> bool:
+        return " ".join(str(text or "").strip().lower().split()) in GREETING_INPUTS
+
+    async def _retry_via_groq(self, prompt: str, request: OrchestrationRequest, state: WorkflowState, *, reason: str = "low_confidence"):
+        log_event("groq_retry_started", workflow_id=state.workflow_id, tenant_id=request.tenant_id, retry_reason=reason)
+        response = await self.model_router.route_request(
+            {
+                "prompt": prompt,
+                "task_type": "conversation",
+                "preferred_provider": "groq",
+                "timeout_seconds": request.timeout_seconds,
+                "metadata": {"workflow_id": state.workflow_id, "tenant_id": request.tenant_id, "retry_reason": reason},
+            }
+        )
+        log_event(
+            "groq_retry_completed",
+            success=response.success,
+            provider=response.provider,
+            model=response.model,
+            error_type=response.error_type,
+            retry_reason=reason,
+        )
+        return response
 
     async def _build_prompt(self, request: OrchestrationRequest, context: ContextBundle, decision) -> Any:
         return await build_final_prompt(

@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from typing import Any, Protocol
@@ -12,6 +13,8 @@ from app.intelligence.routing.exceptions import (
     ProviderUnavailableError,
 )
 from app.intelligence.routing.models import ModelCapability, ProviderConfig, ProviderHealth, ProviderState, ProviderStatus, RoutingRequest
+
+logger = logging.getLogger(__name__)
 
 
 class LLMProvider(Protocol):
@@ -43,6 +46,11 @@ class GroqProvider:
 
     async def generate(self, request: RoutingRequest, model: str) -> dict[str, Any]:
         messages = request.messages or [{"role": "user", "content": request.prompt or ""}]
+        token_count = sum(len(str(message.get("content", "")).split()) for message in messages)
+        logger.info(
+            "BEFORE_GROQ_CALL",
+            extra={"provider": self.config.name, "model": model, "token_count": token_count},
+        )
         response = await self._client_or_raise().chat.completions.create(
             model=model,
             messages=messages,
@@ -52,6 +60,10 @@ class GroqProvider:
         content = response.choices[0].message.content
         if not content:
             raise ProviderUnavailableError("provider returned empty response")
+        logger.info(
+            "AFTER_GROQ_CALL",
+            extra={"provider": self.config.name, "model": model, "token_count": token_count, "response_length": len(content)},
+        )
         return {"content": content.strip(), "raw_response": response.model_dump() if hasattr(response, "model_dump") else {}}
 
 
@@ -145,6 +157,9 @@ class ProviderManager:
             raise ProviderUnavailableError(f"provider is not registered: {provider_name}")
         if model_or_alias and model_or_alias in config.model_aliases:
             return config.model_aliases[model_or_alias]
+        known_aliases = {"llama", "mixtral", "gemma", "retrieval_optimized", "lightweight_model"}
+        if model_or_alias in known_aliases and config.default_model:
+            return config.default_model
         if model_or_alias:
             return model_or_alias
         if config.default_model:
@@ -202,6 +217,8 @@ class ProviderManager:
             enabled = os.getenv(f"{prefix}_ENABLED", "true" if name == "groq" else "false").lower() in {"1", "true", "yes", "on"}
             aliases = self._load_model_aliases(prefix)
             default_model = os.getenv(f"{prefix}_DEFAULT_MODEL") or os.getenv(f"{prefix}_MODEL")
+            if name == "groq" and not default_model:
+                default_model = "llama-3.3-70b-versatile"
             self.register_provider(
                 ProviderConfig(
                     name=name,

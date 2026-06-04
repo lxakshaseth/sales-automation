@@ -6,14 +6,16 @@ from fastapi.middleware.gzip import GZipMiddleware
 from app.core.agent_executor import close_agent_executor_client
 from app.core.debugging import DebugRequestMiddleware, install_exception_handlers
 from app.core.event_bus import close_event_bus
-from app.core.llm import ask_llm, close_llm_client
+from app.core.llm import close_llm_client
 from app.core.logger import LoggingMiddleware, configure_logging
 from app.core.performance import PerformanceMiddleware
 from app.core.rate_limiter import close_rate_limiter, install_rate_limit_middleware
+from app.core.redis_utils import validate_redis_startup
 from app.routes.owner_settings import router as owner_settings_router
 from app.routes.reports import router as reports_router
 from app.routes.twilio_webhook import router as twilio_router
 from app.scheduler.followup import shutdown_scheduler, start_scheduler
+from app.security import secure_process_request
 from app.services.conversation_service import close_conversation_client
 from app.services.email_service import EmailServiceError, log_email_startup_validation, send_test_email, validate_email_settings
 from app.services.groq_service import close_groq_service_client
@@ -42,6 +44,7 @@ def print_registered_routes(app: FastAPI) -> None:
 async def lifespan(app: FastAPI):
     configure_logging()
     log_email_startup_validation()
+    await validate_redis_startup()
     print_registered_routes(app)
     await init_owner_settings_db()
     await start_scheduler()
@@ -78,13 +81,18 @@ async def root():
     return {"status": "running"}
 
 @app.get("/ask")
-async def ask(q: str):
-
-    response = await ask_llm(q)
-
-    return {
-        "response": response
-    }
+async def ask(q: str, tenant_id: str = "default", user_id: str | None = None):
+    response = await secure_process_request(
+        {
+            "user_query": q,
+            "user_id": user_id,
+            "tenant_id": tenant_id,
+            "channel": "default",
+            "metadata": {"tenant_id": tenant_id, "entrypoint": "/ask"},
+            "timeout_seconds": 5.0,
+        }
+    )
+    return {"response": response.response, "success": response.success, "action": response.action, "security": response.metadata.get("security")}
 
 
 @app.get("/test-email")

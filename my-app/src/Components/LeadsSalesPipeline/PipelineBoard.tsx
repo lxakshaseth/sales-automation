@@ -342,7 +342,7 @@ export default function PipelineBoard() {
       {pipelineData.map((column, index) => (
         <div
           key={index}
-          className="min-w-[300px] max-w-[300px] h-auto bg-[#111117] border border-[#23232d] rounded-3xl overflow-hidden flex-shrink-0 flex flex-col"
+          className="min-w-[320px] max-w-[320px] h-auto bg-white border border-[#e5e7eb] rounded-3xl overflow-hidden flex-shrink-0 flex flex-col shadow-sm hover:shadow-lg transition-all"
         >
           {/* TOP COLOR LINE */}
           <div
@@ -355,16 +355,16 @@ export default function PipelineBoard() {
             <div className="flex items-start justify-between mb-4 relative">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-white font-bold text-lg">
+                  <h2 className="text-[#111827] font-bold text-lg">
                     {column.title}
                   </h2>
 
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-[#64748b]">
                     {column.count}
                   </span>
                 </div>
 
-                <p className="text-gray-400 text-sm mt-2">
+                <p className="text-[#64748b] text-sm mt-2">
                   {column.amount}
                 </p>
               </div>
@@ -374,7 +374,7 @@ export default function PipelineBoard() {
                 onClick={() =>
                   setOpenMenu(openMenu === index ? null : index)
                 }
-                className="text-gray-500 hover:text-white transition-all text-xl"
+                className="text-[#64748b] hover:text-[#111827] transition-all text-xl"
               >
                 ⋮
               </button>
@@ -383,36 +383,36 @@ export default function PipelineBoard() {
               {openMenu === index && (
                 <div
                   className="
-                    absolute top-10 right-0
-                    w-56
-                    bg-[#141419]
-                    border border-[#24242b]
-                    rounded-2xl
-                    p-2
-                    shadow-2xl
-                    z-50
-                  "
+absolute top-10 right-0
+w-56
+bg-white
+border border-[#e5e7eb]
+rounded-2xl
+p-2
+shadow-xl
+z-50
+"
                 >
                   <div className="space-y-1">
 
                     {/* EDIT */}
                     <button
                       onClick={() => handleEditPipeline(index)}
-                      className="w-full text-left px-4 py-3 rounded-xl text-white hover:bg-[#1f1f27] transition-all"
+                      className="w-full text-left px-4 py-3 rounded-xl text-[#334155] hover:bg-[#f8fafc] transition-all"
                     >
                       Edit Pipeline
                     </button>
 
                     {/* VIEW */}
                     <button
-                      className="w-full text-left px-4 py-3 rounded-xl text-white hover:bg-[#1f1f27] transition-all"
+                      className="w-full text-left px-4 py-3 rounded-xl text-[#334155] hover:bg-[#f8fafc] transition-all"
                     >
                       View Leads
                     </button>
 
                     {/* ADD */}
                     <button
-                      className="w-full text-left px-4 py-3 rounded-xl text-white hover:bg-[#1f1f27] transition-all"
+                      className="w-full text-left px-4 py-3 rounded-xl text-[#334155] hover:bg-[#f8fafc] transition-all"
                     >
                       Add New Lead
                     </button>
@@ -420,7 +420,7 @@ export default function PipelineBoard() {
                     {/* MOVE LEFT */}
                     <button
                       onClick={() => handleMoveLeft(index)}
-                      className="w-full text-left px-4 py-3 rounded-xl text-white hover:bg-[#1f1f27] transition-all"
+                      className="w-full text-left px-4 py-3 rounded-xl text-[#334155] hover:bg-[#f8fafc] transition-all"
                     >
                       Move Left
                     </button>
@@ -428,14 +428,14 @@ export default function PipelineBoard() {
                     {/* MOVE RIGHT */}
                     <button
                       onClick={() => handleMoveRight(index)}
-                      className="w-full text-left px-4 py-3 rounded-xl text-white hover:bg-[#1f1f27] transition-all"
+                      className="w-full text-left px-4 py-3 rounded-xl text-[#334155] hover:bg-[#f8fafc] transition-all"
                     >
                       Move Right
                     </button>
 
                     {/* EXPORT */}
                     <button
-                      className="w-full text-left px-4 py-3 rounded-xl text-white hover:bg-[#1f1f27] transition-all"
+                      className="w-full text-left px-4 py-3 rounded-xl text-[#334155] hover:bg-[#f8fafc] transition-all"
                     >
                       Export Data
                     </button>
@@ -443,7 +443,7 @@ export default function PipelineBoard() {
                     {/* DELETE */}
                     <button
                       onClick={() => handleDeletePipeline(index)}
-                      className="w-full text-left px-4 py-3 rounded-xl text-red-500 hover:bg-[#1f1f27] transition-all"
+                      className="w-full text-left px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all"
                     >
                       Delete Pipeline
                     </button>
@@ -459,34 +459,34 @@ export default function PipelineBoard() {
                 <div
                   key={i}
                   className="
-                    bg-[#181820]
-                    border border-[#2a2a35]
-                    rounded-2xl
-                    p-4
-                    h-[150px]
-                    flex flex-col justify-between
-                    transition-all duration-300
-                    hover:-translate-y-2
-                    hover:shadow-[0_0_25px_rgba(59,130,246,0.25)]
-                    hover:border-blue-500
-                    cursor-pointer
-                  "
+  bg-white
+  border border-[#e5e7eb]
+  rounded-2xl
+  p-4
+  h-[150px]
+  flex flex-col justify-between
+  transition-all duration-300
+  hover:-translate-y-1
+  hover:shadow-lg
+  hover:border-[#7c3aed]
+  cursor-pointer
+"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-white font-semibold text-sm">
+                     <h3 className="text-[#111827] font-semibold text-sm">
                         {lead.name}
                       </h3>
 
-                      <p className="text-gray-400 text-xs mt-1">
+                      <p className="text-[#64748b] text-xs mt-1">
                         {lead.role}
                       </p>
 
-                      <p className="text-gray-500 text-xs mt-1">
+                      <p className="text-[#94a3b8] text-xs mt-1">
                         {lead.company}
                       </p>
 
-                      <p className="text-gray-500 text-xs mt-1">
+                      <p className="text-[#94a3b8] text-xs mt-1">
                         {lead.source}
                       </p>
                     </div>
@@ -503,14 +503,14 @@ export default function PipelineBoard() {
                       {lead.leftAmount}
                     </span>
 
-                    <span className="text-white text-sm font-semibold">
+                    <span className="text-[#111827] text-sm font-semibold">
                       {lead.rightAmount}
                     </span>
                   </div>
                 </div>
               ))}
 
-              <button className="w-full text-violet-400 text-sm font-medium py-2 hover:text-violet-300 transition-all">
+              <button className="w-full text-[#7c3aed] text-sm font-medium py-2 hover:text-[#6d28d9] transition-all">
                 + Add Lead
               </button>
             </div>

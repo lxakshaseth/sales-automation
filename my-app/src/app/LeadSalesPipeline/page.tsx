@@ -29,7 +29,7 @@ export default function LeadSalesPipelinePage() {
       {/* MAIN CONTENT */}
       <main
         className={`flex-1 transition-all duration-300 overflow-y-auto ${
-          isCollapsed ? "ml-[90px]" : "ml-[270px]"
+          isCollapsed ? "ml-22.5" : "ml-67.5"
         }`}
       >
         <div className="p-6 lg:p-8">

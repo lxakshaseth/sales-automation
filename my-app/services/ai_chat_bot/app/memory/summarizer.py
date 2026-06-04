@@ -3,12 +3,13 @@ import json
 from app.config.settings import settings
 from app.core.logger import log_error, log_event
 from app.exceptions.summarization_exceptions import EmptyConversationError, SummaryGenerationError
+from app.intelligence.routing import route_request
 from app.memory.compression import CompressionEngine
 from app.memory.token_optimizer import TokenOptimizer
 from app.models.compression_models import CompressedContext
 from app.models.message_models import ChatMessage
 from app.models.summary_models import ConversationSummary, SummarizationConfig, SummaryMetadata
-from app.services.groq_service import GroqServiceError, _get_groq_client
+from app.services.groq_service import GroqServiceError
 from app.utils.memory_helpers import compression_ratio
 from app.utils.summarization_helpers import extract_keywords, parse_summary_json
 
@@ -111,17 +112,20 @@ class MemorySummarizer:
         return self.token_optimizer.trim_to_budget(summary_text, config.model_copy(update={"max_input_tokens": config.max_summary_tokens}))
 
     async def _generate_llm_summary(self, transcript: str, config: SummarizationConfig) -> dict:
-        response = await _get_groq_client().chat.completions.create(
-            model=config.model_name or settings.groq_model,
-            messages=[
-                {"role": "system", "content": MEMORY_SUMMARY_PROMPT},
-                {"role": "user", "content": json.dumps({"conversation": transcript}, ensure_ascii=False)},
-            ],
-            temperature=0.1,
-            max_tokens=config.max_summary_tokens,
-            response_format={"type": "json_object"},
+        response = await route_request(
+            {
+                "messages": [
+                    {"role": "system", "content": MEMORY_SUMMARY_PROMPT},
+                    {"role": "user", "content": json.dumps({"conversation": transcript}, ensure_ascii=False)},
+                ],
+                "task_type": "summarization",
+                "preferred_model": config.model_name or settings.groq_model,
+                "temperature": 0.1,
+                "max_tokens": config.max_summary_tokens,
+                "metadata": {"schema": "memory_summary"},
+            }
         )
-        return parse_summary_json(response.choices[0].message.content or "{}")
+        return parse_summary_json(response.content or "{}")
 
     def _fallback_summary(self, transcript: str) -> dict:
         compact = " ".join(line.strip() for line in transcript.splitlines() if line.strip())

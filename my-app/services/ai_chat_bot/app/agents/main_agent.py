@@ -4,16 +4,11 @@ from app.agents import tool_router as _agent_tool_router  # noqa: F401 - registe
 from app.agents.workflow_engine import run_workflow
 from app.core.agent_executor import execute_agent_action
 from app.core.logger import log_error, log_event
+from app.security.orchestrator import PROMPT_INJECTION_SIGNATURES
 from app.services.groq_service import GroqServiceError, generate_sales_reply
 from app.services.memory_service import get_recent_history
 
-PROMPT_INJECTION_MARKERS = (
-    "ignore previous instructions",
-    "developer message",
-    "system prompt",
-    "reveal your prompt",
-    "act as chatgpt",
-)
+PROMPT_INJECTION_MARKERS = PROMPT_INJECTION_SIGNATURES
 
 
 def detect_prompt_injection(message: str) -> bool:
