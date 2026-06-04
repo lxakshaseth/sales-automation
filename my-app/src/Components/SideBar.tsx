@@ -42,7 +42,7 @@ interface SidebarMenuItem {
 }
 
 const menu: SidebarMenuItem[] = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/Dashboard", icon: LayoutDashboard },
   { name: "Contacts", href: "/Contacts", icon: Contact },
   { name: "Integration", href: "/Integration", icon: Plug },
   { name: "Agent & Probing", href: "/agent-probing", icon: Headset },
