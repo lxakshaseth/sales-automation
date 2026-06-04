@@ -34,9 +34,9 @@ const leadSchema = new Schema(
     country: {
       type: String,
     },
-    
-    state:{
-      type:String,
+
+    state: {
+      type: String,
     },
 
     timezone: {
@@ -45,13 +45,7 @@ const leadSchema = new Schema(
 
     source: {
       type: String,
-      enum: [
-        "manual",
-        "csv",
-        "website",
-        "facebook",
-        "linkedin",
-      ],
+      enum: ["manual", "csv", "website", "facebook", "linkedin"],
       default: "manual",
     },
 
@@ -89,12 +83,12 @@ const leadSchema = new Schema(
     campaign: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Campaign",
-      required: true,
+      default: null,
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const Lead = mongoose.models.Lead || mongoose.model("Lead", leadSchema);
