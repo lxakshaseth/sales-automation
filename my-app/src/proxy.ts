@@ -31,7 +31,8 @@ export const config = {
     matcher: [
       "/api/campaigns/:path*",
       "/api/leads/:path*",
-      "/api/templates/:path*",
+      // "/api/templates/:path*",
+      "/api/automation/:path*",
     ],
    
 };
