@@ -1,9 +1,7 @@
 import Lead from "./leads.model";
-import Campaign from "../campaign/campaign.model";
 import { NextRequest, NextResponse } from "next/server";
 import csv from "csv-parser";
 import { Readable } from "stream";
-import { startCampaignFlow } from "@/modules/automation/automation.service";
 
 const countryTimezoneMap: Record<string, any> = {
   india: "Asia/Kolkata",
@@ -44,20 +42,9 @@ export const bulkUploadLeadController = async (req: NextRequest) => {
         company,
         country,
         state,
-        campaign,
       } = row;
 
-      if (!email || !campaign) {
-        continue;
-      }
-
-      const campaignExists = await Campaign.exists({
-        _id: campaign,
-      });
-     
-      
-
-      if (!campaignExists) {
+      if (!email) {
         continue;
       }
 
@@ -83,13 +70,10 @@ export const bulkUploadLeadController = async (req: NextRequest) => {
         company,
         country,
         state,
-        campaign,
         timezone,
       });
 
       insertedLeads.push(lead);
-
-      await startCampaignFlow(lead._id.toString());
     }
 
     return NextResponse.json(
