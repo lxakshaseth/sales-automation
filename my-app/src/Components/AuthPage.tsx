@@ -142,7 +142,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
   return (
     <main className="min-h-screen bg-[#F8FAFC] px-4 py-6 text-[#0F172A] sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-7xl items-center justify-center">
-        <section className="grid w-full overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)] lg:min-h-[720px] lg:grid-cols-[45%_55%]">
+        <section className="grid w-full overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)] lg:min-h-180 lg:grid-cols-[45%_55%]">
           <div className="flex flex-col justify-center px-6 py-8 sm:px-10 lg:px-14 xl:px-16">
             <Link
               href="/"
@@ -179,7 +179,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
                       type="text"
                       autoComplete="name"
                       placeholder="Full Name"
-                      className="h-[52px] w-full rounded-2xl border border-[#E2E8F0] bg-white pl-12 pr-4 text-sm text-[#0F172A] outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-[#7C3AED] focus:ring-4 focus:ring-violet-100"
+                      className="h-13 w-full rounded-2xl border border-[#E2E8F0] bg-white pl-12 pr-4 text-sm text-[#0F172A] outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-[#7C3AED] focus:ring-4 focus:ring-violet-100"
                     />
                   </span>
                 </label>
@@ -197,7 +197,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
                     type="email"
                     autoComplete="email"
                     placeholder="Work Email"
-                    className="h-[52px] w-full rounded-2xl border border-[#E2E8F0] bg-white pl-12 pr-4 text-sm text-[#0F172A] outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-[#7C3AED] focus:ring-4 focus:ring-violet-100"
+                    className="h-13 w-full rounded-2xl border border-[#E2E8F0] bg-white pl-12 pr-4 text-sm text-[#0F172A] outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-[#7C3AED] focus:ring-4 focus:ring-violet-100"
                   />
                 </span>
               </label>
@@ -214,7 +214,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
                     type={showPassword ? "text" : "password"}
                     autoComplete={isSignUp ? "new-password" : "current-password"}
                     placeholder="Password"
-                    className="h-[52px] w-full rounded-2xl border border-[#E2E8F0] bg-white pl-12 pr-12 text-sm text-[#0F172A] outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-[#7C3AED] focus:ring-4 focus:ring-violet-100"
+                    className="h-13 w-full rounded-2xl border border-[#E2E8F0] bg-white pl-12 pr-12 text-sm text-[#0F172A] outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-[#7C3AED] focus:ring-4 focus:ring-violet-100"
                   />
                   <button
                     type="button"
