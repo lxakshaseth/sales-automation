@@ -1,27 +1,45 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "../../Components/SideBar";
-import Contact from "@/Components/contacts/Contact";
 
-export default function ContactPage() {
+import SideBar from "@/Components/SideBar";
+
+import Headersection from "@/Components/contacts/Headersection";
+import Contactlist from "@/Components/contacts/Contactlist";
+
+export default function ContactsPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen bg-zinc-50 font-sans dark:bg-zinc-950 overflow-hidden">
-      <Sidebar
+    <div className="flex min-h-screen bg-[#f8fafc] overflow-hidden">
+
+      {/* SIDEBAR */}
+      <SideBar
         isCollapsed={isCollapsed}
-        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+        onToggleCollapse={() =>
+          setIsCollapsed(!isCollapsed)
+        }
       />
-      <main className={`flex flex-1 w-full flex-col py-10 px-8 bg-zinc-50 dark:bg-zinc-950 overflow-y-auto transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
-        <div className="max-w-7xl w-full mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-zinc-900 dark:text-white tracking-tight">Contacts Directory</h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-2">Manage your clients, leads, and team members.</p>
+
+      {/* MAIN CONTENT */}
+      <main
+        className={`flex-1 transition-all duration-300 overflow-y-auto ${
+          isCollapsed ? "ml-[90px]" : "ml-[270px]"
+        }`}
+      >
+        <div className="p-6 lg:p-8">
+
+          {/* HEADER + SEARCH */}
+          <Headersection />
+
+          {/* CONTACTS GRID */}
+          <div className="mt-6">
+            <Contactlist />
           </div>
-          <Contact />
+
         </div>
       </main>
+
     </div>
   );
 }
