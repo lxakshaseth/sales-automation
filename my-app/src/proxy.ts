@@ -32,6 +32,7 @@ export const config = {
       "/api/campaigns/:path*",
       "/api/leads/:path*",
       "/api/templates/:path*",
+      "/api/automation/:path*",
     ],
    
 };
