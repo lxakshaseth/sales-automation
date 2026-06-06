@@ -42,14 +42,14 @@ interface SidebarMenuItem {
 }
 
 const menu: SidebarMenuItem[] = [
-  { name: "Dashboard", href: "/Dashboard", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Campaigns", href: "/Campaign", icon: Megaphone },
   { name: "Contacts", href: "/Contacts", icon: Contact },
+  { name: "Templates", href: "/templates", icon: LayoutTemplate },
   { name: "Integration", href: "/Integration", icon: Plug },
   { name: "Agent & Probing", href: "/agent-probing", icon: Headset },
   { name: "Company", href: "/company", icon: Building2 },
   { name: "Conversation", href: "/conversation", icon: MessageSquare },
-  { name: "Templates", href: "/templates", icon: LayoutTemplate },
-  { name: "Campaigns", href: "/Campaign", icon: Megaphone },
   { name: "Lead & Sales Pipeline", href: "/LeadSalesPipeline", icon: TrendingUp, notificationId: "leads" },
   { name: "Smart Config", href: "/smart-config", icon: Settings },
   { name: "User Management", href: "/UserManagement", icon: Users },
