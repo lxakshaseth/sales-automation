@@ -6,22 +6,23 @@ import { generateToken } from "./generateToken";
 export const registerController = async (req: NextRequest) => {
   try {
     const body = await req.json();
-    const { name, email, password } = body;
+    const { name, email, mobile, password } = body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return NextResponse.json(
-        { success: false, message: "User already exists" },
-        { status: 409 },
+      return NextResponse.json({ success: false, message: "User already exists" },{ status: 400 },
       );
+    }
+    if (!/^[0-9]{10}$/.test(mobile)) {
+      return NextResponse.json({ success: false, message: "Invalid mobile number" },{ status: 400 });
     }
 
     const hashedPassword = await bycrypt.hash(password, 10);
-    const user = await User.create({ name, email, password: hashedPassword });
-    const token = generateToken(user._id.toString());
+    await User.create({ name, email, mobile, password: hashedPassword });
+    // const token = generateToken(user._id.toString());
 
     return NextResponse.json(
-      { success: true, token, data: user },
+      { success: true,  message: "Registration successful", },
       { status: 201 },
     );
   } catch (error: any) {
