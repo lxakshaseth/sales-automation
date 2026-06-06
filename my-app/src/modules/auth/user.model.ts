@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+
 const userSchema = new mongoose.Schema(
     {
         name: {
@@ -10,6 +11,11 @@ const userSchema = new mongoose.Schema(
             type:String,
             required:true,
             unique:true,
+        },
+        mobile:{
+            type:String,
+            required:true,
+            
         },
         password:{
             type:String,

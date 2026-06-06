@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState } from "react";
+
 import {
   UserPlus,
   MessageSquare,
@@ -8,7 +10,12 @@ import {
   Rocket,
   Bell,
   Maximize2,
+  LogOut,
+  User
 } from "lucide-react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+
 
 const cards = [
   {
@@ -49,7 +56,16 @@ const cards = [
   },
 ];
 
+
 export function StatsCards() {
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const router = useRouter()
+
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    toast.success("Logout Succesfully")
+    router.push("/sign-in")
+  }
   return (
     <div>
       {/* HEADER */}
@@ -89,8 +105,34 @@ export function StatsCards() {
               className="text-[#64748b] cursor-pointer"
             />
 
-            <div className="w-11 h-11 rounded-full bg-[#3b82f6] flex items-center justify-center text-white font-semibold">
-              N
+            <div className="relative">
+              <div
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="w-11 h-11 rounded-full bg-[#3b82f6] flex items-center justify-center text-white font-semibold cursor-pointer"
+              >
+              User
+              </div>
+
+              {showProfileMenu && (
+                <div className="absolute right-0 top-14 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+
+                  <button
+                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 text-left"
+                  >
+                    <User size={18} />
+                    <span>Profile</span>
+                  </button>
+
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 text-red-600 text-left"
+                  >
+                    <LogOut size={18} />
+                    <span>Logout</span>
+                  </button>
+
+                </div>
+              )}
             </div>
 
           </div>

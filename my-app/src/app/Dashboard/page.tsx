@@ -1,22 +1,33 @@
 "use client";
 
-import { useState } from "react";
-
+import { useState,useEffect } from "react";
 import SideBar from "@/Components/SideBar";
-
 import {
-  
-  StatsCards
+   StatsCards
 } from "@/Components/dashboard/StatsCards";
 import LiveChatFeed from "@/Components/dashboard/LiveChatFeed";
 import Contacts from "@/Components/dashboard/contacts";
 import PipelineChart from "@/Components/dashboard/PipelineChart";
 import RecentActivities from "@/Components/dashboard/RecentActivities";
 import RecentLeads from "@/Components/dashboard/RecentLeads";
+import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 
 export default function DashboardPage() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const router=useRouter();
 
+
+  const [isCollapsed, setIsCollapsed] = useState(false);
+   useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.replace("/sign-in");
+    }
+  }, [router]);
+
+
+  
   return (
     <div className="flex min-h-screen bg-[#f8fafc] overflow-hidden">
 
@@ -31,7 +42,7 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main
         className={`flex-1 transition-all duration-300 overflow-y-auto ${
-          isCollapsed ? "ml-[90px]" : "ml-[270px]"
+          isCollapsed ? "ml-22.5" : "ml-67.5"
         }`}
       >
         <div className="p-6 lg:p-8">
