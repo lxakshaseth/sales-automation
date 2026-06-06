@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Sidebar from "../Components/SideBar";
-import Dashboard from "../Components/Dashboard";
-import Integration from "../Components/Integration";
+import Dashboard from "./Dashboard/page";
+import Integration from "./Integration/page";
 
 export default function Home() {
   const [isCollapsed, setIsCollapsed] = useState(false);
