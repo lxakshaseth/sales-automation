@@ -62,7 +62,7 @@ export function StatsCards() {
   const router = useRouter()
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
+    sessionStorage.removeItem("token")
     toast.success("Logout Succesfully")
     router.push("/sign-in")
   }

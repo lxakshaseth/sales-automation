@@ -56,7 +56,7 @@ export default function Signup() {
 
       if (response.ok) {
         toast.success("Registration successful");
-        console.log(data);
+        // console.log(data);
 
         setFormData({
           name: "",

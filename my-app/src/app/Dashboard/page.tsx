@@ -11,7 +11,7 @@ import PipelineChart from "@/Components/dashboard/PipelineChart";
 import RecentActivities from "@/Components/dashboard/RecentActivities";
 import RecentLeads from "@/Components/dashboard/RecentLeads";
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+
 
 export default function DashboardPage() {
   const router=useRouter();
@@ -19,7 +19,7 @@ export default function DashboardPage() {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
    useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     if (!token) {
       router.replace("/sign-in");
