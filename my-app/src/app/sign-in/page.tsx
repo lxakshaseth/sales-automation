@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -46,11 +45,11 @@ export default function Signin() {
         sessionStorage.setItem("token", data.token);
         if (rememberMe) {
           localStorage.setItem("savedEmail", formData.email);
-          // localStorage.setItem("savedPassword", formData.password);
+          localStorage.setItem("savedPassword", formData.password);
         }
         else {
           localStorage.removeItem("savedEmail");
-          // localStorage.removeItem("savedPassword");
+          localStorage.removeItem("savedPassword");
         }
 
         setTimeout(() => {
@@ -69,13 +68,13 @@ export default function Signin() {
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("savedEmail");
-    // const savedPassword = localStorage.getItem("savedPassword");
+    const savedPassword = localStorage.getItem("savedPassword");
 
-    if (savedEmail) {
+    if (savedEmail && savedPassword) {
       setFormData((prev) => ({
         ...prev,
         email: savedEmail,
-        // password: savedPassword,
+        password: savedPassword,
       }));
 
       setRememberMe(true);
