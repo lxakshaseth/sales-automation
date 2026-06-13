@@ -23,6 +23,7 @@ import {
   Rocket,
   Search,
   ChevronDown,
+  MessageCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -46,7 +47,8 @@ const menu: SidebarMenuItem[] = [
   { name: "Campaigns", href: "/Campaign", icon: Megaphone },
   { name: "Contacts", href: "/Contacts", icon: Contact },
   { name: "Templates", href: "/templates", icon: LayoutTemplate },
-  { name: "Integration", href: "/Integration", icon: Plug },
+  { name: "WhatsApp", href: "/whatsapp",icon: MessageCircle, },
+  { name: "Integration", href: "/Integration",  icon: Plug },
   { name: "Agent & Probing", href: "/agent-probing", icon: Headset },
   { name: "Company", href: "/company", icon: Building2 },
   { name: "Conversation", href: "/conversation", icon: MessageSquare },
