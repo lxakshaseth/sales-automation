@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
@@ -34,3 +35,120 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+=======
+<div align="center">
+
+# sales-automation
+
+</div>
+
+## Email Microservice - Next.js + BullMQ + Redis
+
+
+This project supports:
+- Email Sending
+- Dynamic Templates
+- Click Tracking
+- Unsubscribe System
+- Email Analytics
+- Queue-Based Processing
+- Redis + BullMQ Workers
+
+---
+
+# Tech Stack
+
+- Next.js
+- TypeScript
+- MongoDB
+- Mongoose
+- Redis
+- BullMQ
+- Nodemailer
+- Docker
+
+---
+
+# Install Dependencies
+
+```bash
+npm install
+```
+
+---
+
+# Start MongoDB
+
+Make sure MongoDB is running locally.
+
+Default:
+```bash
+mongodb://localhost:27017
+```
+
+---
+
+# Start Redis Using Docker
+
+Run Redis container:
+
+```bash
+docker run --name redis-container -p 6379:6379 redis
+```
+
+Verify container:
+
+```bash
+docker ps
+```
+
+---
+
+# Run Development Server
+
+Terminal 1:
+
+```bash
+npm run dev
+```
+
+---
+
+# Run BullMQ Worker
+
+Terminal 2:
+
+```bash
+npm run worker
+```
+
+---
+
+# API Endpoints
+
+## Send Email
+
+```http
+POST /api/email/send
+```
+
+Example:
+
+```json
+{
+  "to": "test@gmail.com",
+  "templateName": "welcome-template",
+  "variables": {
+    "name": "Sudhir"
+  }
+}
+```
+
+---
+
+## Email Analytics
+
+```http
+GET /api/email/analytics
+```
+>>>>>>> origin/main
