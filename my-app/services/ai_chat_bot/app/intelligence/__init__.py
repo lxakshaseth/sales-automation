@@ -1,2 +1,0 @@
-"""Enterprise AI intelligence layer."""
-
