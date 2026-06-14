@@ -59,9 +59,9 @@ export default function SalesFunnel() {
     <motion.div
       initial={{ opacity: 0, y: 25 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white border border-slate-200 rounded-3xl p-6"
+      className="bg-[#141419] border border-[#24242b] rounded-3xl p-6"
     >
-      <h2 className="text-lg font-semibold text-slate-900 mb-6">
+      <h2 className="text-lg font-semibold text-white mb-6">
         Sales Pipeline Funnel
       </h2>
 
