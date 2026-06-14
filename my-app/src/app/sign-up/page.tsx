@@ -45,9 +45,9 @@ export default function Signup() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          mobile: formData.mobile,
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          mobile: formData.mobile.trim(),
           password: formData.password,
         }),
       });
@@ -181,6 +181,18 @@ export default function Signup() {
               {loading ? "Registering..." : "Register"}
             </button>
           </form>
+          <div>
+              <p className="text-center text-sm text-slate-600  mt-6">
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => router.push("/sign-in")}
+                  className="text-violet-600 font-semibold hover:underline"
+                >
+                  Sign In
+                </button>
+              </p>
+          </div>
         </div>
       </div>
     </div>
