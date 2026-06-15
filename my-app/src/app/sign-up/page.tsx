@@ -1,9 +1,9 @@
 "use client";
-
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Rocket, Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
+
 
 export default function Signup() {
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function Signup() {
     password: "",
     confirmPassword: "",
   });
-
+  
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -46,9 +46,9 @@ export default function Signup() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          mobile: formData.mobile,
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          mobile: formData.mobile.trim(),
           password: formData.password,
         }),
       });
@@ -173,7 +173,19 @@ export default function Signup() {
                 >
                   {loading ? "Registering..." : "Register"}
                 </button>
-              </form>
+              </form> 
+              <div>
+                <p className="text-center text-sm text-slate-600 mt-6">
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => router.push("/sign-in")}
+                    className="text-violet-600 font-semibold hover:underline"
+                  >
+                    Sign In
+                  </button>
+                </p>
+              </div>  
             </div>
             <div className="hidden md:flex relative overflow-hidden flex-col justify-end bg-linear-to-br from-violet-700 via-violet-600 to-indigo-700 p-10">
               <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
@@ -187,7 +199,6 @@ export default function Signup() {
 
           </div>
         </div>
-
       </div>
     </div>
   );
