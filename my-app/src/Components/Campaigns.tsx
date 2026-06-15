@@ -4,20 +4,21 @@ import { motion } from "framer-motion";
 import { Megaphone, Mail, MessageCircle, Plus, Search, ChevronLeft, ChevronRight, MoreHorizontal, ArrowUpDown, Pencil, Trash2, X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const allCampaigns = [
-  { id: 1,  name: "Winter Sale Launch",           type: "Promotion",  status: "Completed", audience: 38460, open: "41%", click: "15%", revenue: "₹1,240", progress: 100, enabled: false },
-  { id: 2,  name: "New Arrivals Announcement",    type: "Stock out",  status: "Draft",     audience: null,  open: "-",   click: "-",   revenue: "-",      progress: 0,   enabled: true  },
-  { id: 3,  name: "Holiday Gift Guide",           type: "Newsletter", status: "Sending",   audience: 25458, open: "13%", click: "0.2%",revenue: "₹280",   progress: 80,  enabled: false },
-  { id: 4,  name: "Flash Sale — 24 Hours Only",  type: "Automation", status: "Scheduled", audience: 1450,  open: "14%", click: "11.5%",revenue: "₹878",  progress: 96,  enabled: true  },
-  { id: 5,  name: "Customer winback flow",        type: "Promotion",  status: "Completed", audience: 1250,  open: "14%", click: "11.5%",revenue: "₹878",  progress: 100, enabled: true  },
-  { id: 6,  name: "Back in stock alert",          type: "Stock out",  status: "Scheduled", audience: 1150,  open: "14%", click: "11.5%",revenue: "₹878",  progress: 70,  enabled: true  },
-  { id: 7,  name: "Monthly newsletter - Dec...",  type: "Newsletter", status: "Sending",   audience: 950,   open: "14%", click: "11.5%",revenue: "₹878",  progress: 20,  enabled: false },
-  { id: 8,  name: "Abandoned cart remember",      type: "Promotion",  status: "Sending",   audience: 848,   open: "14%", click: "11.5%",revenue: "₹878",  progress: 80,  enabled: false },
-  { id: 9,  name: "New Arrivals Announcement",    type: "Automation", status: "Draft",     audience: null,  open: "-",   click: "-",   revenue: "-",      progress: 0,   enabled: false },
-  { id: 10, name: "Holiday Gift Guide",           type: "Stock out",  status: "Scheduled", audience: 548,   open: "14%", click: "11.5%",revenue: "₹878",  progress: 50,  enabled: false },
-  { id: 11, name: "Flash Sale — 24 Hours Only",  type: "Newsletter", status: "Sending",   audience: 254,   open: "5%",  click: "9%",  revenue: "₹458",   progress: 80,  enabled: false },
-  { id: 12, name: "Monthly newsletter - Dec...",  type: "Newsletter", status: "Completed", audience: 154,   open: "3%",  click: "7%",  revenue: "₹354",   progress: 100, enabled: false },
+  { id: 1, name: "Winter Sale Launch", type: "Promotion", status: "Completed", audience: 38460, open: "41%", click: "15%", revenue: "₹1,240", progress: 100, enabled: false },
+  { id: 2, name: "New Arrivals Announcement", type: "Stock out", status: "Draft", audience: null, open: "-", click: "-", revenue: "-", progress: 0, enabled: true },
+  { id: 3, name: "Holiday Gift Guide", type: "Newsletter", status: "Sending", audience: 25458, open: "13%", click: "0.2%", revenue: "₹280", progress: 80, enabled: false },
+  { id: 4, name: "Flash Sale — 24 Hours Only", type: "Automation", status: "Scheduled", audience: 1450, open: "14%", click: "11.5%", revenue: "₹878", progress: 96, enabled: true },
+  { id: 5, name: "Customer winback flow", type: "Promotion", status: "Completed", audience: 1250, open: "14%", click: "11.5%", revenue: "₹878", progress: 100, enabled: true },
+  { id: 6, name: "Back in stock alert", type: "Stock out", status: "Scheduled", audience: 1150, open: "14%", click: "11.5%", revenue: "₹878", progress: 70, enabled: true },
+  { id: 7, name: "Monthly newsletter - Dec...", type: "Newsletter", status: "Sending", audience: 950, open: "14%", click: "11.5%", revenue: "₹878", progress: 20, enabled: false },
+  { id: 8, name: "Abandoned cart remember", type: "Promotion", status: "Sending", audience: 848, open: "14%", click: "11.5%", revenue: "₹878", progress: 80, enabled: false },
+  { id: 9, name: "New Arrivals Announcement", type: "Automation", status: "Draft", audience: null, open: "-", click: "-", revenue: "-", progress: 0, enabled: false },
+  { id: 10, name: "Holiday Gift Guide", type: "Stock out", status: "Scheduled", audience: 548, open: "14%", click: "11.5%", revenue: "₹878", progress: 50, enabled: false },
+  { id: 11, name: "Flash Sale — 24 Hours Only", type: "Newsletter", status: "Sending", audience: 254, open: "5%", click: "9%", revenue: "₹458", progress: 80, enabled: false },
+  { id: 12, name: "Monthly newsletter - Dec...", type: "Newsletter", status: "Completed", audience: 154, open: "3%", click: "7%", revenue: "₹354", progress: 100, enabled: false },
 ];
 
 const STATUS_TABS = ["All", "Drafts", "Scheduled", "Sending", "Complete"];
@@ -25,12 +26,23 @@ const PAGE_SIZE = 8;
 
 const statusColor: Record<string, string> = {
   Completed: "bg-emerald-100 text-emerald-700 border border-emerald-200",
-  Draft:     "bg-orange-100 text-orange-600 border border-orange-200",
-  Sending:   "bg-blue-100 text-blue-600 border border-blue-200",
+  Draft: "bg-orange-100 text-orange-600 border border-orange-200",
+  Sending: "bg-blue-100 text-blue-600 border border-blue-200",
   Scheduled: "bg-violet-100 text-violet-700 border border-violet-200",
 };
 
 export default function Campaigns() {
+
+
+  const router = useRouter();
+  useEffect(() => {
+    const token = sessionStorage.getItem("token")
+    if (!token) {
+      router.replace("/sign-in")
+    }
+  }, [])
+
+
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("All");
   const [page, setPage] = useState(1);
@@ -62,11 +74,11 @@ export default function Campaigns() {
   const filtered = allCampaigns.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchTab =
-      activeTab === "All"      ? true :
-      activeTab === "Drafts"   ? c.status === "Draft" :
-      activeTab === "Scheduled"? c.status === "Scheduled" :
-      activeTab === "Sending"  ? c.status === "Sending" :
-      activeTab === "Complete" ? c.status === "Completed" : true;
+      activeTab === "All" ? true :
+        activeTab === "Drafts" ? c.status === "Draft" :
+          activeTab === "Scheduled" ? c.status === "Scheduled" :
+            activeTab === "Sending" ? c.status === "Sending" :
+              activeTab === "Complete" ? c.status === "Completed" : true;
     return matchSearch && matchTab;
   });
 
@@ -151,11 +163,10 @@ export default function Campaigns() {
             <button
               key={tab}
               onClick={() => { setActiveTab(tab); setPage(1); }}
-              className={`px-5 py-2 text-sm font-medium rounded-t-xl transition-colors ${
-                activeTab === tab
+              className={`px-5 py-2 text-sm font-medium rounded-t-xl transition-colors ${activeTab === tab
                   ? "bg-zinc-900 text-white"
                   : "text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50"
-              }`}
+                }`}
             >
               {tab}
             </button>
@@ -202,10 +213,12 @@ export default function Campaigns() {
                 </th>
                 {[
                   { label: "Campaign", sort: true },
-                  { label: "Type",     sort: true },
-                  { label: "Status",   sort: true },
-                  { label: "Click",    sort: false },
-                  { label: "",         sort: false },
+                  { label: "Type", sort: true },
+                  { label: "Status", sort: true },
+                  { label: "Open", sort: true },
+                  { label: "Click", sort: false },
+                  { label: "Progress", sort: true },
+                  { label: "", sort: false },
                 ].map((col) => (
                   <th key={col.label} className="px-4 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide whitespace-nowrap">
                     <span className="flex items-center gap-1">
@@ -219,7 +232,7 @@ export default function Campaigns() {
             <tbody>
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-16 text-zinc-400 text-sm">
+                  <td colSpan={7} className="text-center py-16 text-zinc-400 text-sm">
                     No campaigns found
                   </td>
                 </tr>
@@ -255,8 +268,22 @@ export default function Campaigns() {
                         {c.status}
                       </span>
                     </td>
+                    {/* Open */}
+                    <td className="px-4 py-3 text-sm text-zinc-700">{c.open}</td>
                     {/* Click */}
                     <td className="px-4 py-3 text-sm text-zinc-700">{c.click}</td>
+                    {/* Progress */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2 min-w-[100px]">
+                        <div className="flex-1 h-1.5 bg-zinc-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-violet-500 rounded-full"
+                            style={{ width: `${c.progress}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-zinc-500 w-8 text-right">{c.progress}%</span>
+                      </div>
+                    </td>
                     {/* Actions */}
                     <td className="px-4 py-3">
                       <div className="relative" ref={openMenuId === c.id ? menuRef : null}>
@@ -309,9 +336,8 @@ export default function Campaigns() {
                 <button
                   key={n}
                   onClick={() => setPage(n)}
-                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                    page === n ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-100"
-                  }`}
+                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${page === n ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-100"
+                    }`}
                 >
                   {n}
                 </button>

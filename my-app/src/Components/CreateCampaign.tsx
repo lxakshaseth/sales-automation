@@ -5,6 +5,7 @@ import { Mail, Send, Save, FileText, Check, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { getTemplates, Template } from "@/services/template.service";
+import { createCampaign } from "@/services/campaign.service";
 
 export default function CreateCampaign() {
   const [campaignName, setCampaignName] = useState("");
@@ -37,18 +38,94 @@ export default function CreateCampaign() {
     t.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
     t.subject?.toLowerCase().includes(templateSearch.toLowerCase())
   );
+  
+  
 
-  async function handleSaveDraft() {
+ async function handleSaveDraft() {
+  try {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 1000));
+
+    const token = sessionStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const payload = {
+      name: campaignName,
+      description: campaignCategory,
+      status: "draft",
+      funnel: [
+        {
+          step: "email",
+          action: "welcome_email",
+          waitHours: 0,
+          enabled: true,
+        },
+      ],
+      emailTemplates: selectedTemplateId
+        ? [selectedTemplateId]
+        : [],
+    };
+
+    await createCampaign(payload, token);
+
+    alert("Draft saved successfully!");
+  } catch (error) {
+    console.error(error);
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Failed to save draft"
+    );
+  } finally {
     setSaving(false);
   }
+}
 
-  async function handleLaunch() {
+ async function handleLaunch() {
+  try {
     setLaunching(true);
-    await new Promise((r) => setTimeout(r, 1000));
+
+    const token = sessionStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
+
+    const payload = {
+      name: campaignName,
+      description: campaignCategory,
+      status: "active",
+      funnel: [
+        {
+          step: "email",
+          action: "welcome_email",
+          waitHours: 0,
+          enabled: true,
+        },
+      ],
+      emailTemplates: selectedTemplateId
+        ? [selectedTemplateId]
+        : [],
+    };
+
+    const response = await createCampaign(payload, token);
+
+    console.log(response);
+    alert("Campaign launched successfully!");
+  } catch (error) {
+    console.error(error);
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Failed to launch campaign"
+    );
+  } finally {
     setLaunching(false);
   }
+}
 
   return (
     <div className="flex flex-col gap-8 pb-10">
