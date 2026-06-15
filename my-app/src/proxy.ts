@@ -34,5 +34,4 @@ export const config = {
       "/api/templates/:path*",
       "/api/automation/:path*",
     ],
-   
 };

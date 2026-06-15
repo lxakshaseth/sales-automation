@@ -47,12 +47,17 @@ const menu: SidebarMenuItem[] = [
   { name: "Campaigns", href: "/Campaign", icon: Megaphone },
   { name: "Contacts", href: "/Contacts", icon: Contact },
   { name: "Templates", href: "/templates", icon: LayoutTemplate },
-  { name: "WhatsApp", href: "/whatsapp",icon: MessageCircle, },
-  { name: "Integration", href: "/Integration",  icon: Plug },
+  { name: "WhatsApp", href: "/whatsapp", icon: MessageCircle },
+  { name: "Integration", href: "/Integration", icon: Plug },
   { name: "Agent & Probing", href: "/agent-probing", icon: Headset },
   { name: "Company", href: "/company", icon: Building2 },
   { name: "Conversation", href: "/conversation", icon: MessageSquare },
-  { name: "Lead & Sales Pipeline", href: "/LeadSalesPipeline", icon: TrendingUp, notificationId: "leads" },
+  {
+    name: "Lead & Sales Pipeline",
+    href: "/LeadSalesPipeline",
+    icon: TrendingUp,
+    notificationId: "leads",
+  },
   { name: "Smart Config", href: "/smart-config", icon: Settings },
   { name: "User Management", href: "/UserManagement", icon: Users },
   { name: "Master", href: "/Master", icon: Database },
@@ -67,7 +72,15 @@ interface SidebarItemProps {
   onToggleCollapse?: () => void;
 }
 
-function SidebarItem({ item, count, isCollapsed, isPermanentlyCollapsed, pathname, onClick, onToggleCollapse }: SidebarItemProps) {
+function SidebarItem({
+  item,
+  count,
+  isCollapsed,
+  isPermanentlyCollapsed,
+  pathname,
+  onClick,
+  onToggleCollapse,
+}: SidebarItemProps) {
   const Icon = item.icon;
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -75,12 +88,10 @@ function SidebarItem({ item, count, isCollapsed, isPermanentlyCollapsed, pathnam
 
   // Check active state
   const isChildActive = hasSubmenu
-    ? item.items?.some(sub => pathname === sub.href)
+    ? item.items?.some((sub) => pathname === sub.href)
     : false;
 
   const isActive = item.href ? pathname === item.href : isChildActive;
-
-  
 
   const handleParentClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (hasSubmenu) {
@@ -101,7 +112,7 @@ function SidebarItem({ item, count, isCollapsed, isPermanentlyCollapsed, pathnam
       <Link
         href={item.href || "#"}
         onClick={handleParentClick}
-        className={`relative group rounded-2xl flex items-center min-h-12 ${isCollapsed ? 'justify-center' : 'justify-start'}`}
+        className={`relative group rounded-2xl flex items-center min-h-12 ${isCollapsed ? "justify-center" : "justify-start"}`}
       >
         {/* Active Background */}
         {isActive && (
@@ -116,12 +127,15 @@ function SidebarItem({ item, count, isCollapsed, isPermanentlyCollapsed, pathnam
           />
         )}
 
-        <div className={`relative z-10 flex items-center gap-3.5 px-4 py-3 ${isCollapsed ? 'justify-center w-full px-0' : 'w-full'}`}>
+        <div
+          className={`relative z-10 flex items-center gap-3.5 px-4 py-3 ${isCollapsed ? "justify-center w-full px-0" : "w-full"}`}
+        >
           <Icon
-            className={`w-5 h-5 shrink-0 transition-all ${isActive
-              ? "text-white"
-              : "text-slate-400 group-hover:text-violet-600"
-              }`}
+            className={`w-5 h-5 shrink-0 transition-all ${
+              isActive
+                ? "text-white"
+                : "text-slate-400 group-hover:text-violet-600"
+            }`}
             strokeWidth={isActive ? 2.5 : 2}
           />
 
@@ -133,10 +147,11 @@ function SidebarItem({ item, count, isCollapsed, isPermanentlyCollapsed, pathnam
                 animate={{ opacity: 1, width: "auto" }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.2 }}
-                className={`text-sm font-medium whitespace-nowrap overflow-hidden flex-1 ${isActive
-                  ? "text-white font-semibold"
-                  : "text-slate-600 group-hover:text-slate-900"
-                  }`}
+                className={`text-sm font-medium whitespace-nowrap overflow-hidden flex-1 ${
+                  isActive
+                    ? "text-white font-semibold"
+                    : "text-slate-600 group-hover:text-slate-900"
+                }`}
               >
                 {item.name}
               </motion.span>
@@ -145,13 +160,16 @@ function SidebarItem({ item, count, isCollapsed, isPermanentlyCollapsed, pathnam
 
           {!isCollapsed && hasSubmenu && (
             <ChevronDown
-              className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isActive ? "text-white/80" : "text-slate-400"
-                } ${isExpanded ? 'rotate-180' : ''}`}
+              className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
+                isActive ? "text-white/80" : "text-slate-400"
+              } ${isExpanded ? "rotate-180" : ""}`}
             />
           )}
 
           {count > 0 && (
-            <div className={`absolute ${isCollapsed ? 'top-1 right-1' : 'right-10'} flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-white`}>
+            <div
+              className={`absolute ${isCollapsed ? "top-1 right-1" : "right-10"} flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-white`}
+            >
               {count}
             </div>
           )}
@@ -176,16 +194,21 @@ function SidebarItem({ item, count, isCollapsed, isPermanentlyCollapsed, pathnam
                     key={sub.href}
                     href={sub.href}
                     onClick={(e) => onClick(e, sub.href)}
-                    className={`flex items-center pl-4 pr-4 py-2.5 text-sm transition-colors rounded-xl mx-2 group/sub ${isSubActive
-                      ? "text-violet-600 font-medium bg-violet-50"
-                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                      }`}
+                    className={`flex items-center pl-4 pr-4 py-2.5 text-sm transition-colors rounded-xl mx-2 group/sub ${
+                      isSubActive
+                        ? "text-violet-600 font-medium bg-violet-50"
+                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                    }`}
                   >
                     <div className="w-5 h-5 mr-3.5 flex items-center justify-center">
                       {SubIcon ? (
-                        <SubIcon className={`w-4 h-4 shrink-0 transition-colors ${isSubActive ? 'text-violet-600' : 'text-slate-400 group-hover/sub:text-slate-600'}`} />
+                        <SubIcon
+                          className={`w-4 h-4 shrink-0 transition-colors ${isSubActive ? "text-violet-600" : "text-slate-400 group-hover/sub:text-slate-600"}`}
+                        />
                       ) : (
-                        <span className={`w-1.5 h-1.5 rounded-full ${isSubActive ? 'bg-violet-600' : 'bg-slate-300'}`} />
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${isSubActive ? "bg-violet-600" : "bg-slate-300"}`}
+                        />
                       )}
                     </div>
                     {sub.name}
@@ -226,7 +249,7 @@ export default function Sidebar({
 
   const handleNavigation = (
     e: React.MouseEvent<HTMLAnchorElement>,
-    href: string
+    href: string,
   ) => {
     e.preventDefault();
     router.push(href);
@@ -238,19 +261,21 @@ export default function Sidebar({
   // Flatten menu for search, preserve hierarchy otherwise
   const displayMenu = searchQuery
     ? menu.reduce((acc: SidebarMenuItem[], item) => {
-      // Parent match
-      if (item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        acc.push(item);
-      }
-      // Children match
-      else if (item.items) {
-        const matchingChildren = item.items.filter((sub) =>
-          sub.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        matchingChildren.forEach((sub) => acc.push({ ...sub, icon: item.icon }));
-      }
-      return acc;
-    }, [])
+        // Parent match
+        if (item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+          acc.push(item);
+        }
+        // Children match
+        else if (item.items) {
+          const matchingChildren = item.items.filter((sub) =>
+            sub.name.toLowerCase().includes(searchQuery.toLowerCase()),
+          );
+          matchingChildren.forEach((sub) =>
+            acc.push({ ...sub, icon: item.icon }),
+          );
+        }
+        return acc;
+      }, [])
     : menu;
 
   const isEffectivelyCollapsed = isCollapsed && !isHovered;
@@ -261,7 +286,7 @@ export default function Sidebar({
       <button
         onClick={onToggleCollapse}
         className={`md:hidden fixed top-3 left-4 z-60 p-2 bg-white rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm transition-all ${
-          !isCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          !isCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"
         }`}
       >
         <Menu size={20} />
@@ -282,10 +307,15 @@ export default function Sidebar({
 
       <motion.aside
         initial={false}
-        animate={{ width: isMobile ? 280 : (isEffectivelyCollapsed ? 80 : 256) }}
-        transition={{ duration: 0.4, type: "spring", stiffness: 90, damping: 20 }}
+        animate={{ width: isMobile ? 280 : isEffectivelyCollapsed ? 80 : 256 }}
+        transition={{
+          duration: 0.4,
+          type: "spring",
+          stiffness: 90,
+          damping: 20,
+        }}
         className={`fixed left-0 top-0 h-screen bg-white/95 backdrop-blur-xl border-r border-slate-200 shadow-2xl z-50 overflow-hidden flex flex-col transition-transform duration-300 md:translate-x-0 max-md:w-70! ${
-          isCollapsed ? 'max-md:-translate-x-full' : 'max-md:translate-x-0'
+          isCollapsed ? "max-md:-translate-x-full" : "max-md:translate-x-0"
         }`}
         onMouseEnter={() => {
           if (isCollapsed && !isMobile) {
@@ -301,14 +331,20 @@ export default function Sidebar({
         }}
       >
         {/* ================= HEADER ================= */}
-        <div className={`flex items-center h-20 shrink-0 transition-all duration-300 ${isEffectivelyCollapsed && !isMobile ? 'justify-center px-0' : 'justify-between px-6'}`}>
+        <div
+          className={`flex items-center h-20 shrink-0 transition-all duration-300 ${isEffectivelyCollapsed && !isMobile ? "justify-center px-0" : "justify-between px-6"}`}
+        >
           <div
-            className={`flex items-center gap-3 overflow-hidden cursor-pointer ${isEffectivelyCollapsed && !isMobile ? 'w-full h-full justify-center group' : ''}`}
+            className={`flex items-center gap-3 overflow-hidden cursor-pointer ${isEffectivelyCollapsed && !isMobile ? "w-full h-full justify-center group" : ""}`}
             onClick={isCollapsed && !isMobile ? onToggleCollapse : undefined}
             title={isCollapsed && !isMobile ? "Expand Sidebar" : undefined}
           >
             <div className="w-10 h-10 bg-linear-to-br from-violet-600 to-purple-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-violet-600/30 group-hover:scale-105 transition-transform duration-200">
-              {isEffectivelyCollapsed && !isMobile ? <Menu className="w-5 h-5 text-white" /> : <Rocket className="w-5 h-5 text-white" />}
+              {isEffectivelyCollapsed && !isMobile ? (
+                <Menu className="w-5 h-5 text-white" />
+              ) : (
+                <Rocket className="w-5 h-5 text-white" />
+              )}
             </div>
             <AnimatePresence>
               {(!isEffectivelyCollapsed || isMobile) && (
@@ -322,7 +358,6 @@ export default function Sidebar({
                     <span>Sales</span>
                     <span className="text-violet-600">Automation</span>
                   </span>
-
                 </motion.div>
               )}
             </AnimatePresence>
@@ -339,7 +374,9 @@ export default function Sidebar({
         </div>
 
         {/* ================= SEARCH ================= */}
-        <div className={`px-4 mb-2 transition-all duration-300 ${isEffectivelyCollapsed && !isMobile ? 'flex justify-center' : ''}`}>
+        <div
+          className={`px-4 mb-2 transition-all duration-300 ${isEffectivelyCollapsed && !isMobile ? "flex justify-center" : ""}`}
+        >
           {isEffectivelyCollapsed && !isMobile ? (
             <button
               onClick={onToggleCollapse}
@@ -364,34 +401,30 @@ export default function Sidebar({
 
         {/* ================= NAVIGATION ================= */}
         <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
-          {displayMenu.length > 0 ? (
-            displayMenu.map((item) => {
-              const isParent = !!item.items;
-              const count = 0;
+          {displayMenu.length > 0
+            ? displayMenu.map((item) => {
+                const isParent = !!item.items;
+                const count = 0;
 
-              return (
-                <SidebarItem
-                  key={item.name}
-                  item={item}
-                  count={count}
-                  isCollapsed={isEffectivelyCollapsed && !isMobile}
-                  isPermanentlyCollapsed={isCollapsed && !isMobile}
-                  pathname={pathname}
-                  onClick={handleNavigation}
-                  onToggleCollapse={onToggleCollapse}
-                />
-              );
-            })
-          ) : (
-            (!isEffectivelyCollapsed || isMobile) && (
-              <div className="px-4 py-8 text-center">
-                <p className="text-sm text-slate-500">No modules found</p>
-              </div>
-            )
-          )}
+                return (
+                  <SidebarItem
+                    key={item.name}
+                    item={item}
+                    count={count}
+                    isCollapsed={isEffectivelyCollapsed && !isMobile}
+                    isPermanentlyCollapsed={isCollapsed && !isMobile}
+                    pathname={pathname}
+                    onClick={handleNavigation}
+                    onToggleCollapse={onToggleCollapse}
+                  />
+                );
+              })
+            : (!isEffectivelyCollapsed || isMobile) && (
+                <div className="px-4 py-8 text-center">
+                  <p className="text-sm text-slate-500">No modules found</p>
+                </div>
+              )}
         </nav>
-
-        
       </motion.aside>
     </>
   );
