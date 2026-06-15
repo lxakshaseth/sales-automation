@@ -130,7 +130,7 @@ export default function Campaigns() {
           </div>
         </div>
         <Link
-          href="/Campaign/create"
+          href="/Campaign/create-campaign"
           className="w-full sm:w-auto flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors shadow-sm shadow-violet-600/20 text-sm"
         >
           <Plus size={16} />
@@ -204,9 +204,7 @@ export default function Campaigns() {
                   { label: "Campaign", sort: true },
                   { label: "Type",     sort: true },
                   { label: "Status",   sort: true },
-                  { label: "Open",     sort: true },
                   { label: "Click",    sort: false },
-                  { label: "Progress", sort: true },
                   { label: "",         sort: false },
                 ].map((col) => (
                   <th key={col.label} className="px-4 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide whitespace-nowrap">
@@ -221,7 +219,7 @@ export default function Campaigns() {
             <tbody>
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-16 text-zinc-400 text-sm">
+                  <td colSpan={5} className="text-center py-16 text-zinc-400 text-sm">
                     No campaigns found
                   </td>
                 </tr>
@@ -257,22 +255,8 @@ export default function Campaigns() {
                         {c.status}
                       </span>
                     </td>
-                    {/* Open */}
-                    <td className="px-4 py-3 text-sm text-zinc-700">{c.open}</td>
                     {/* Click */}
                     <td className="px-4 py-3 text-sm text-zinc-700">{c.click}</td>
-                    {/* Progress */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 min-w-[100px]">
-                        <div className="flex-1 h-1.5 bg-zinc-200 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-violet-500 rounded-full"
-                            style={{ width: `${c.progress}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-zinc-500 w-8 text-right">{c.progress}%</span>
-                      </div>
-                    </td>
                     {/* Actions */}
                     <td className="px-4 py-3">
                       <div className="relative" ref={openMenuId === c.id ? menuRef : null}>
