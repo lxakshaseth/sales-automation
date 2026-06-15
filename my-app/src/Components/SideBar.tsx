@@ -16,6 +16,7 @@ import {
   Menu,
   ChevronLeft,
   LogOut,
+  Settings,
   Rocket,
   Search,
   ChevronDown,
