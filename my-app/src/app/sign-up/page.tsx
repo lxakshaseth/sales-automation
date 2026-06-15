@@ -3,11 +3,10 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { Rocket } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff } from "lucide-react";
+
 
 export default function Signup() {
   const router = useRouter();
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -17,7 +16,6 @@ export default function Signup() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -153,25 +151,17 @@ export default function Signup() {
               className="w-full border border-gray-300 rounded-lg p-3 mb-4 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
 
-             <div className="relative mb-4">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                required
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                disabled={loading}
-               className="w-full border border-gray-300 rounded-lg p-3 pr-12 text-black focus:outline-none focus:ring-2 focus:ring-violet-500 [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden" />
+            <input
+              type="password"
+              name="password"
+              required
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              disabled={loading}
+              className="w-full border border-gray-300 rounded-lg p-3 mb-4 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
+            />
 
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                {showPassword ? <EyeOff></EyeOff> : <Eye></Eye>}
-             </button>
-            </div>
-    
             <input
               type="password"
               name="confirmPassword"
