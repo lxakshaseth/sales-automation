@@ -97,7 +97,7 @@ export default function Signup() {
           <div className="grid md:grid-cols-2">
             <div className="p-8 flex flex-col justify-center">
               <h2 className="text-2xl font-bold text-center text-slate-900 mb-6">
-                Sign Up
+                Sign Up!
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
