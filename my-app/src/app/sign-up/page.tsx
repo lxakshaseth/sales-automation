@@ -1,16 +1,9 @@
 "use client";
-<<<<<<< HEAD
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { Rocket, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-=======
->>>>>>> origin/main2
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
-import { Rocket, Eye, EyeOff } from "lucide-react";
 
 export default function Signup() {
   const router = useRouter();
@@ -22,7 +15,7 @@ export default function Signup() {
     password: "",
     confirmPassword: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
+  
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -180,7 +173,19 @@ export default function Signup() {
                 >
                   {loading ? "Registering..." : "Register"}
                 </button>
-              </form>
+              </form> 
+              <div>
+                <p className="text-center text-sm text-slate-600 mt-6">
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => router.push("/sign-in")}
+                    className="text-violet-600 font-semibold hover:underline"
+                  >
+                    Sign In
+                  </button>
+                </p>
+              </div>  
             </div>
             <div className="hidden md:flex relative overflow-hidden flex-col justify-end bg-linear-to-br from-violet-700 via-violet-600 to-indigo-700 p-10">
               <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
@@ -194,104 +199,6 @@ export default function Signup() {
 
           </div>
         </div>
-
-<<<<<<< HEAD
-
-        <div className="w-full max-w-2xl rounded-2xl bg-white/90 backdrop-blur-md p-8 shadow-2xl border border-white/20">
-          <h2 className="text-2xl font-bold text-center text-slate-900 mb-6">
-            Sign Up
-          </h2>
-
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              name="name"
-              required
-              placeholder="Name"
-              value={formData.name}
-              onChange={handleChange}
-              disabled={loading}
-              className="w-full border border-gray-300 rounded-lg p-3 mb-4 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
-            />
-
-            <input
-              type="email"
-              name="email"
-              required
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              disabled={loading}
-              className="w-full border border-gray-300 rounded-lg p-3 mb-4 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
-            />
-            <input
-              type="tel"
-              name="mobile"
-              required
-              maxLength={10}
-
-              placeholder="Mobile No"
-              value={formData.mobile}
-              onChange={handleChange}
-              disabled={loading}
-              className="w-full border border-gray-300 rounded-lg p-3 mb-4 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
-            />
-
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                required
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                disabled={loading}
-                className="w-full border border-gray-300 rounded-lg p-3 mb-4 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/3 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
-                {showPassword ? <EyeOff /> : <Eye />}
-              </button>
-            </div>
-
-              <input
-                type="password"
-                name="confirmPassword"
-                required
-                placeholder="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                disabled={loading}
-                className="w-full border border-gray-300 rounded-lg p-3 mb-6 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
-              />
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#7C3AED] text-white py-3 rounded-lg font-semibold hover:bg-violet-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Registering..." : "Register"}
-            </button>
-          </form>
-          <div>
-              <p className="text-center text-sm text-slate-600  mt-6">
-                Already have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => router.push("/sign-in")}
-                  className="text-violet-600 font-semibold hover:underline"
-                >
-                  Sign In
-                </button>
-              </p>
-          </div>
-        </div>
-=======
->>>>>>> origin/main2
       </div>
     </div>
   );
