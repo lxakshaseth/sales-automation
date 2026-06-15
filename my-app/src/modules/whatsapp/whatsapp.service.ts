@@ -55,6 +55,7 @@ export async function saveInboundMessage({
     direction: "INBOUND",
     type: "text",
     rawPayload,
+    status: "RECEIVED",
   });
 }
 
@@ -123,8 +124,63 @@ export async function getChatByWaId(waId: string) {
 export async function getContacts() {
   await connectDB();
 
-  return Contact.find()
-    .sort({
-      lastMessageAt: -1,
-    });
+  return Contact.find().sort({
+    lastMessageAt: -1,
+  });
+}
+
+export async function markMessagesAsRead(waId: string) {
+  await connectDB();
+
+  const contact = await Contact.findOne({
+    waId,
+  });
+
+  if (!contact) return;
+
+  const unreadMessages = await Message.find({
+    contactId: contact._id,
+    direction: "INBOUND",
+    status: "RECEIVED",
+  });
+
+  for (const msg of unreadMessages) {
+    try {
+      await fetch(
+        `https://graph.facebook.com/v25.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            status: "read",
+            message_id: msg.waMessageId,
+          }),
+        },
+      );
+
+      msg.status = "READ";
+
+      await msg.save();
+    } catch (error) {
+      console.error("Failed to mark message as read", error);
+    }
+  }
+}
+
+export async function updateContactName(contactId: string, customName: string) {
+  await connectDB();
+
+  return Contact.findByIdAndUpdate(
+    contactId,
+    {
+      customName,
+    },
+    {
+      new: true,
+    },
+  );
 }

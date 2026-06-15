@@ -2,13 +2,14 @@ import {
   upsertContact,
   saveInboundMessage,
   updateMessageStatus,
-  getContacts, 
-  getChatByWaId, 
+  getContacts,
+  getChatByWaId,
+  markMessagesAsRead,
+  updateContactName,
 } from "./whatsapp.service";
 
 export async function handleIncomingMessage(payload: any) {
-
-    console.log("handleIncomingMessage called");
+  console.log("handleIncomingMessage called");
   const value = payload.entry?.[0]?.changes?.[0]?.value;
 
   const contacts = value?.contacts || [];
@@ -46,15 +47,19 @@ export async function handleStatusUpdate(payload: any) {
     waMessageId: status.id,
     status: status.status,
   });
-  
 }
 
 export async function getContactsController() {
   return await getContacts();
 }
 
-export async function getChatController(
-  waId: string,
-) {
+export async function getChatController(waId: string) {
   return await getChatByWaId(waId);
+}
+
+export async function updateContactNameController(
+  contactId: string,
+  customName: string,
+) {
+  return updateContactName(contactId, customName);
 }

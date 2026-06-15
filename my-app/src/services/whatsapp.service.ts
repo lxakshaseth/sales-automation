@@ -2,6 +2,7 @@ export interface Contact {
   _id: string;
   waId: string;
   name?: string;
+  customName?: string;
   phone?: string;
   lastMessageAt: string;
   createdAt: string;
@@ -21,9 +22,7 @@ export interface Message {
 }
 
 function getAuthHeaders() {
-  const token = sessionStorage.getItem(
-    "token",
-  );
+  const token = sessionStorage.getItem("token");
 
   return {
     "Content-Type": "application/json",
@@ -32,42 +31,46 @@ function getAuthHeaders() {
 }
 
 export async function getContacts() {
-  const response = await fetch(
-    "/api/whatsapp/contacts",
-    {
-      headers: getAuthHeaders(),
-    },
-  );
+  const response = await fetch("/api/whatsapp/contacts", {
+    headers: getAuthHeaders(),
+  });
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(
-      data.message ||
-        "Failed to fetch contacts",
-    );
+    throw new Error(data.message || "Failed to fetch contacts");
   }
 
   return data;
 }
 
-export async function getChatByWaId(
-  waId: string,
-) {
-  const response = await fetch(
-    `/api/whatsapp/chat/${waId}`,
-    {
-      headers: getAuthHeaders(),
-    },
-  );
+export async function updateContactName(contactId: string, customName: string) {
+  const response = await fetch(`/api/whatsapp/contacts/${contactId}`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      customName,
+    }),
+  });
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(
-      data.message ||
-        "Failed to fetch chat",
-    );
+    throw new Error(data.message || "Failed to update contact");
+  }
+
+  return data;
+}
+
+export async function getChatByWaId(waId: string) {
+  const response = await fetch(`/api/whatsapp/chat/${waId}`, {
+    headers: getAuthHeaders(),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch chat");
   }
 
   return data;
@@ -80,26 +83,29 @@ export async function sendMessage({
   to: string;
   message: string;
 }) {
-  const response = await fetch(
-    "/api/whatsapp/send",
-    {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        to,
-        message,
-      }),
-    },
-  );
+  const response = await fetch("/api/whatsapp/send", {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      to,
+      message,
+    }),
+  });
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(
-      data.message ||
-        "Failed to send message",
-    );
+    throw new Error(data.message || "Failed to send message");
   }
 
   return data;
+}
+
+export async function markChatAsRead(waId: string) {
+  const response = await fetch(`/api/whatsapp/chat/${waId}/read`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+
+  return response.json();
 }

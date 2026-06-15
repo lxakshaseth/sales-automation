@@ -54,7 +54,7 @@ export default function Signin() {
         }
 
         setTimeout(() => {
-          router.push("/Dashboard");
+          router.push("/");
         }, 1000);
       } else {
         toast.error(data.message || "Login failed");
