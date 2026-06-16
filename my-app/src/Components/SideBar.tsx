@@ -16,6 +16,7 @@ import {
   Menu,
   ChevronLeft,
   LogOut,
+  Settings,
   Rocket,
   Search,
   ChevronDown,
@@ -46,6 +47,7 @@ const menu: SidebarMenuItem[] = [
   { name: "WhatsApp", href: "/whatsapp", icon: MessageCircle },
   { name: "Integration", href: "/Integration", icon: Plug },
   { name: "Lead & Sales Pipeline", href: "/LeadSalesPipeline", icon: TrendingUp, notificationId: "leads" },
+  { name: "Smart Config", href: "/SmartConfig", icon: Settings },
   { name: "User Management", href: "/UserManagement", icon: Users },
   { name: "Master", href: "/Master", icon: Database },
 ];
@@ -336,7 +338,7 @@ export default function Sidebar({
             <AnimatePresence>
               {(!isEffectivelyCollapsed || isMobile) && (
                 <motion.div
-                  initial={{ opacity: 0, width: 0 }}
+                  initial={false}
                   animate={{ opacity: 1, width: "auto" }}
                   exit={{ opacity: 0, width: 0 }}
                   className="flex flex-col overflow-hidden"
