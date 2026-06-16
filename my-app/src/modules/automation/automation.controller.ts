@@ -78,14 +78,10 @@ export const assignMultipleLeadsController =
           campaignId,
         );
 
-      const totalAssigned = Array.isArray(leads)
-        ? leads.length
-        : (leads?.assignedLeads?.length ?? 0);
-
       return NextResponse.json(
         {
           success: true,
-          totalAssigned,
+          totalAssigned: leads.length,
           data: leads,
         },
         {
