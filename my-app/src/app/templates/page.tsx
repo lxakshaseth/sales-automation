@@ -3,8 +3,8 @@
 import { useState } from "react";
 
 import SideBar from "@/Components/SideBar";
+import TopBar from "@/Components/top";
 
-import HeaderSection from "@/Components/templates/HeaderSection";
 import TemplatesTable from "@/Components/templates/TemplatesTable";
 
 export default function TemplatesPage() {
@@ -23,11 +23,16 @@ export default function TemplatesPage() {
         }`}
       >
         <div className="p-6 lg:p-8">
-          <HeaderSection />
+
+          <TopBar
+            title="Template Management"
+            description="Create, manage, and organize reusable email templates for campaigns and automation."
+          />
 
           <div className="mt-6">
             <TemplatesTable />
           </div>
+
         </div>
       </main>
     </div>
