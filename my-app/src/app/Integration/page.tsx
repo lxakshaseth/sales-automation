@@ -11,7 +11,7 @@ import {
   Plus,
 } from "lucide-react";
 
-import IntegrationCards from "@/Components/Integration/IntegrationCards";
+import IntegrationCards from "@/Components/integration/IntegrationCards";
 
 export default function IntegrationPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
