@@ -6,6 +6,8 @@ import { X } from "lucide-react";
 
 import toast from "react-hot-toast";
 
+import TemplateEditor from "./TemplateEditor";
+
 import { createTemplate } from "@/services/template.service";
 
 type CreateTemplateModalProps = {
@@ -27,6 +29,42 @@ export default function CreateTemplateModal({
   const [loading, setLoading] = useState(false);
 
   const [error, setError] = useState("");
+
+  const [editor, setEditor] = useState<any>(null);
+
+  const VARIABLES = [
+    {
+      label: "First Name",
+      value: "{{firstName}}",
+    },
+    {
+      label: "Last Name",
+      value: "{{lastName}}",
+    },
+    {
+      label: "Email",
+      value: "{{email}}",
+    },
+    {
+      label: "Company",
+      value: "{{company}}",
+    },
+    {
+      label: "Phone",
+      value: "{{phone}}",
+    },
+  ];
+
+  const SUBJECT_VARIABLES = [
+    {
+      label: "First Name",
+      value: "{{firstName}}",
+    },
+    {
+      label: "Last Name",
+      value: "{{lastName}}",
+    },
+  ];
 
   if (!isOpen) return null;
 
@@ -60,7 +98,7 @@ export default function CreateTemplateModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl border border-[#eef2f7] overflow-hidden">
+      <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] shadow-2xl border border-[#eef2f7] overflow-hidden flex flex-col">
         {/* HEADER */}
         <div className="flex items-start justify-between px-8 py-6 border-b border-[#eef2f7]">
           <div>
@@ -82,7 +120,7 @@ export default function CreateTemplateModal({
         </div>
 
         {/* BODY */}
-        <div className="p-8 space-y-5">
+        <div className="p-8 space-y-5 overflow-y-auto flex-1">
           <div>
             <label className="block text-sm font-semibold text-[#111827] mb-2">
               Template Name
@@ -117,32 +155,71 @@ export default function CreateTemplateModal({
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[#111827] mb-2">
-                Subject
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold text-[#111827]">
+                  Subject
+                </label>
+              </div>
 
               <input
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="Welcome {{firstName}}"
+                placeholder="Welcome [firstName] [lastName]!"
                 className="w-full border border-[#d7dce5] rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500 transition-all duration-200"
               />
+
+              <div className="flex flex-wrap gap-2 mb-3 pt-2">
+                {SUBJECT_VARIABLES.map((variable) => (
+                  <button
+                    key={variable.value}
+                    type="button"
+                    onClick={() =>
+                      setSubject((prev) => `${prev}${variable.value}`)
+                    }
+                    className="px-3 py-1.5 text-sm rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                  >
+                    {variable.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-[#111827] mb-2">
-              Body
-            </label>
+            <div>
+              <div className="flex items-center justify-between mb-2"></div>
 
-            <textarea
-              rows={8}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="<h1>Hello {{firstName}}</h1><p>Welcome to {{company}}</p>"
-              className="w-full border border-[#d7dce5] rounded-xl px-4 py-3 resize-none outline-none focus:ring-2 focus:ring-violet-500 transition-all duration-200"
-            />
+              <label className="block text-sm font-semibold text-[#111827] mb-2">
+                Body
+              </label>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {VARIABLES.map((variable) => (
+                  <button
+                    key={variable.value}
+                    type="button"
+                    onClick={() => {
+                      if (!editor) return;
+
+                      editor
+                        .chain()
+                        .focus()
+                        .insertContent(variable.value)
+                        .run();
+                    }}
+                    className="px-3 py-1.5 text-sm rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition"
+                  >
+                    {variable.label}
+                  </button>
+                ))}
+              </div>
+
+              <TemplateEditor
+                content={body}
+                onChange={setBody}
+                onEditorReady={setEditor}
+              />
+            </div>
           </div>
 
           {error && (

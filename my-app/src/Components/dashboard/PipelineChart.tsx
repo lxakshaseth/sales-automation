@@ -46,7 +46,7 @@ export default function PipelineChart() {
       </div>
 
       {/* Chart */}
-      <div className="h-[320px]">
+      <div style={{ height: 320 }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={pipelineData}

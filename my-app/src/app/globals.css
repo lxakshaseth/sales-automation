@@ -55,3 +55,16 @@ select:disabled,
 input:disabled {
   cursor: not-allowed;
 }
+
+.ProseMirror {
+  min-height: 350px;
+  outline: none;
+}
+
+.ProseMirror p {
+  margin: 0;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
