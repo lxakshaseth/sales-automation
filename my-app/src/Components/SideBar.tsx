@@ -15,12 +15,14 @@ import {
   Database,
   Menu,
   ChevronLeft,
-  LogOut,
   Settings,
   Rocket,
   Search,
   ChevronDown,
   MessageCircle,
+  Mail,
+  MessageSquare,
+  HelpCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -43,7 +45,16 @@ const menu: SidebarMenuItem[] = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Campaigns", href: "/Campaign", icon: Megaphone },
   { name: "Contacts", href: "/Contacts", icon: Contact },
-  { name: "Templates", href: "/templates", icon: LayoutTemplate },
+  {
+    name: "Templates",
+    icon: LayoutTemplate,
+    items: [
+      { name: "WhatsApp Templates", href: "/templates/whatsapp", icon: MessageCircle },
+      { name: "Email Templates", href: "/templates/email", icon: Mail },
+      { name: "SMS Templates", href: "/templates/sms", icon: MessageSquare },
+      { name: "AI Calling Scripts", href: "/templates/ai-calling", icon: HelpCircle },
+    ],
+  },
   { name: "WhatsApp", href: "/whatsapp", icon: MessageCircle },
   { name: "Integration", href: "/Integration", icon: Plug },
   { name: "Lead & Sales Pipeline", href: "/LeadSalesPipeline", icon: TrendingUp, notificationId: "leads" },
@@ -51,6 +62,7 @@ const menu: SidebarMenuItem[] = [
   { name: "User Management", href: "/UserManagement", icon: Users },
   { name: "Master", href: "/Master", icon: Database },
 ];
+
 interface SidebarItemProps {
   item: SidebarMenuItem;
   count: number;
@@ -319,7 +331,7 @@ export default function Sidebar({
           }
         }}
       >
-        {/* ================= HEADER ================= */}
+        {/* HEADER*/}
         <div
           className={`flex items-center h-20 shrink-0 transition-all duration-300 ${isEffectivelyCollapsed && !isMobile ? "justify-center px-0" : "justify-between px-6"}`}
         >
@@ -362,7 +374,7 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* ================= SEARCH ================= */}
+        {/*SEARCH*/}
         <div
           className={`px-4 mb-2 transition-all duration-300 ${isEffectivelyCollapsed && !isMobile ? "flex justify-center" : ""}`}
         >
@@ -388,11 +400,10 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* ================= NAVIGATION ================= */}
+        {/*NAVIGATION  */}
         <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
           {displayMenu.length > 0
             ? displayMenu.map((item) => {
-                const isParent = !!item.items;
                 const count = 0;
 
                 return (
