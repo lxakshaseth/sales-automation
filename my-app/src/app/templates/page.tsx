@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import SideBar from "@/Components/SideBar";
-import TopBar from "@/Components/top";
+import TopBar from "@/Components/Topbar";
 
 import TemplatesTable from "@/Components/templates/TemplatesTable";
 
