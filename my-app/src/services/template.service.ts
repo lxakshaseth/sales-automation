@@ -10,8 +10,19 @@ export interface Template {
 
 const BASE_URL = "/api/templates";
 
+function getAuthHeaders() {
+  const token = sessionStorage.getItem("token");
+
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 export async function getTemplates() {
-  const response = await fetch(BASE_URL);
+  const response = await fetch(BASE_URL, {
+    headers: getAuthHeaders(),
+  });
 
   const data = await response.json();
 
@@ -23,7 +34,9 @@ export async function getTemplates() {
 }
 
 export async function getTemplateById(id: string) {
-  const response = await fetch(`${BASE_URL}/${id}`);
+  const response = await fetch(`${BASE_URL}/${id}`, {
+    headers: getAuthHeaders(),
+  });
 
   const data = await response.json();
 
@@ -42,9 +55,7 @@ export async function createTemplate(template: {
 }) {
   const response = await fetch(BASE_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify(template),
   });
 
@@ -60,9 +71,7 @@ export async function createTemplate(template: {
 export async function updateTemplate(id: string, template: Partial<Template>) {
   const response = await fetch(`${BASE_URL}/${id}`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify(template),
   });
 
@@ -78,6 +87,7 @@ export async function updateTemplate(id: string, template: Partial<Template>) {
 export async function deleteTemplate(id: string) {
   const response = await fetch(`${BASE_URL}/${id}`, {
     method: "DELETE",
+    headers: getAuthHeaders(),
   });
 
   const data = await response.json();
