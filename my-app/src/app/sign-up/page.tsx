@@ -199,10 +199,37 @@ export default function Signup() {
           🚀 Smart CRM Platform
           </span>
 
-        <div className="flex-1"></div>
+              <h2 className="mt-6 text-5xl font-bold leading-tight text-white">
+                  Welcome <br />
+                  Back
+                </h2>
+
+              <div className="mt-10 space-y-4 text-lg text-white">
+
+                <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                <p>Easy Account Setup</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                <p>Secure Authentication</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                <p>Access to Dashboard</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                <p>Start Managing Leads</p>
+                </div>
+              </div>
+          </div>
  
         {/* Bottom Cards */}
-         <div className="grid grid-cols-2 gap-4">
+         <div className="mt-10 grid grid-cols-2 gap-4">
           <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-4">
            <p className="text-violet-200 text-sm">Leads Managed</p>
            <h3 className="text-2xl font-bold text-white">10K+</h3>
@@ -220,7 +247,7 @@ export default function Signup() {
 
           </div>
         </div>
-      </div>
     
+
   );
 }
