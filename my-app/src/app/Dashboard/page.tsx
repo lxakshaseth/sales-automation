@@ -3,6 +3,7 @@
 import {
    StatsCards
 } from "@/Components/dashboard/StatsCards";
+import TopBar from "@/Components/Topbar";
 import LiveChatFeed from "@/Components/dashboard/LiveChatFeed";
 import Contacts from "@/Components/dashboard/contacts";
 import PipelineChart from "@/Components/dashboard/PipelineChart";
@@ -12,9 +13,16 @@ import RecentLeads from "@/Components/dashboard/RecentLeads";
 export default function Dashboard() {
   return (
     <>
-      <StatsCards />
+  <TopBar
+    title="Dashboard Overview"
+    description="Monitor leads, conversations, campaigns, contacts and sales performance."
+  />
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4 mt-4">
+  <div className="mt-6">
+    <StatsCards />
+  </div>
+
+  <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4 mt-4">
         <LiveChatFeed />
         <Contacts />
       </div>
