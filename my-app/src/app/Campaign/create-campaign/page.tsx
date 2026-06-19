@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Sidebar from "../../../Components/SideBar";
+
 import CreateCampaign from "../../../Components/CreateCampaign";
 
 export default function CreateCampaignPage() {
@@ -18,7 +19,7 @@ export default function CreateCampaignPage() {
           isCollapsed ? "md:ml-20" : "md:ml-64"
         }`}
       >
-        <div className="max-w-5xl w-full mx-auto">
+        <div className="w-full">
           <CreateCampaign />
         </div>
       </main>

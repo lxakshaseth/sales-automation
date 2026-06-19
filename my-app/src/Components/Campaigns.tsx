@@ -88,7 +88,7 @@ export default function Campaigns() {
   return (
     <div className="flex flex-col gap-8">
       {/* Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
         {[
           { title: "Total Active", value: "3", icon: Megaphone, color: "text-violet-500", bg: "bg-violet-100" },
           { title: "Emails Sent", value: "27,000", icon: Mail, color: "text-blue-500", bg: "bg-blue-100" },
