@@ -3,9 +3,9 @@
 import { useState } from "react";
 
 import SideBar from "@/Components/SideBar";
+import TopBar from "@/Components/Topbar";
 
 import {
-  HeaderSection,
   StatsCards,
 } from "@/Components/smartconfig/StatsCards";
 
@@ -37,8 +37,11 @@ export default function SmartConfigPage() {
       >
         <div className="p-6 lg:p-8">
 
-          {/* HEADER */}
-          <HeaderSection />
+          {/* TOPBAR */}
+          <TopBar
+            title="Smart Config"
+            description="Manage workflows, AI settings, automation rules, notification systems, and business logic."
+          />
 
           {/* STATS */}
           <div className="mt-6">

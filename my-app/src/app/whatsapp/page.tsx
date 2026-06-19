@@ -3,8 +3,8 @@
 import { useState } from "react";
 
 import SideBar from "@/Components/SideBar";
+import TopBar from "@/Components/Topbar";
 
-import WhatsAppHeader from "@/Components/whatsapp/WhatsAppHeader";
 import WhatsAppLayout from "@/Components/whatsapp/WhatsAppLayout";
 
 export default function WhatsAppPage() {
@@ -29,7 +29,10 @@ export default function WhatsAppPage() {
       >
         <div className="p-6 lg:p-8">
 
-          <WhatsAppHeader />
+          <TopBar
+            title="WhatsApp Conversations"
+            description="Manage customer conversations, send messages, and track delivery status in real time."
+          />
 
           <div className="mt-6">
             <WhatsAppLayout />

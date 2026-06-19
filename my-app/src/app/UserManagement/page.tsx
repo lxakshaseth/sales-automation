@@ -3,8 +3,8 @@
 import { useState } from "react";
 
 import SideBar from "@/Components/SideBar";
+import TopBar from "@/Components/Topbar";
 
-import HeaderSection from "@/Components/userManagement/HeaderSection";
 import StatsCards from "@/Components/userManagement/StatsCards";
 import UsersTable from "@/Components/userManagement/UsersTable";
 import RoleManagement from "@/Components/userManagement/RoleManagement";
@@ -32,8 +32,11 @@ export default function UserManagementPage() {
       >
         <div className="p-6 lg:p-8">
 
-          {/* HEADER */}
-          <HeaderSection />
+          {/* TOPBAR */}
+          <TopBar
+            title="User Management"
+            description="Handle users, permissions, roles, access control, authentication, and team monitoring."
+          />
 
           {/* STATS */}
           <div className="mt-6">
