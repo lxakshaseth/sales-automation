@@ -5,10 +5,14 @@ import { useState } from "react";
 import SideBar from "@/Components/SideBar";
 import TopBar from "@/Components/Topbar";
 
+import Headersection from "@/Components/contacts/Headersection";
 import Contactlist from "@/Components/contacts/Contactlist";
 
 export default function ContactsPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc] overflow-hidden">
@@ -35,9 +39,25 @@ export default function ContactsPage() {
             description="Manage your clients, leads, and team members."
           />
 
-          {/* CONTACTS GRID */}
+          {/* HEADER + SEARCH */}
           <div className="mt-6">
-            <Contactlist />
+            <Headersection
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onAddContact={() => setIsAddingContact(true)}
+              onImportSuccess={() => setRefreshKey((k) => k + 1)}
+            />
+          </div>
+
+          {/* CONTACTS LIST */}
+          <div className="mt-6">
+            <Contactlist
+              key={refreshKey}
+              searchQuery={searchQuery}
+              isAddingContact={isAddingContact}
+              onCloseAddContact={() => setIsAddingContact(false)}
+              onImportSuccess={() => setRefreshKey((k) => k + 1)}
+            />
           </div>
 
         </div>
