@@ -1,33 +1,21 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, Edit2, Trash2 } from "lucide-react";
 import CreateTemplateModal from "./CreateTemplateModal";
-import TemplateActionMenu from "./TemplateActionMenu";
 import TemplatePreviewModal from "./TemplatePreviewModal";
-import EditTemplateModal from "./EditTemplateModal";
 import DeleteTemplateDialog from "./DeleteTemplateDialog";
 
 import { useEffect, useState } from "react";
-
 import { getTemplates, Template } from "@/services/template.service";
 
 export default function TemplatesTable() {
-  const [isEditOpen, setIsEditOpen] = useState(false);
-
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
-    null,
-  );
-
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isWorkspaceViewOpen, setIsWorkspaceViewOpen] = useState(false);
 
   const [templates, setTemplates] = useState<Template[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -37,9 +25,7 @@ export default function TemplatesTable() {
   async function fetchTemplates() {
     try {
       setLoading(true);
-
       const response = await getTemplates();
-
       setTemplates(response.data);
     } catch (error: any) {
       setError(error.message);
@@ -48,130 +34,91 @@ export default function TemplatesTable() {
     }
   }
 
-  if (loading) {
+  if (isWorkspaceViewOpen) {
     return (
-      <div className="bg-white rounded-3xl border border-[#e7ebf3] shadow-sm p-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-48 bg-gray-200 rounded-xl" />
-
-          <div className="h-16 bg-gray-100 rounded-xl" />
-
-          <div className="h-16 bg-gray-100 rounded-xl" />
-
-          <div className="h-16 bg-gray-100 rounded-xl" />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white rounded-3xl border border-[#e7ebf3] shadow-sm p-6">
-        <p className="text-red-500">{error}</p>
-      </div>
+      <CreateTemplateModal
+        isOpen={true}
+        onClose={() => {
+          setIsWorkspaceViewOpen(false);
+          setSelectedTemplate(null);
+        }}
+        onSuccess={fetchTemplates}
+        initialData={selectedTemplate}
+      />
     );
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-[#e7ebf3] shadow-sm p-6">
-      {/* HEADER */}
-      <div className="flex items-start justify-between mb-6">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-[26px] font-bold text-[#111827]">Templates</h2>
-
-          <p className="text-gray-500 text-sm mt-1">
-            Manage your email templates
-          </p>
+          <h1 className="text-[32px] font-bold text-[#111827]">Email Templates</h1>
+          <p className="text-gray-500 text-sm mt-0.5">Manage and monitor your email templates efficiently.</p>
         </div>
 
         <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="h-11 px-5 rounded-xl border border-violet-200 text-violet-600 bg-violet-50 hover:bg-violet-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 font-medium"
+          onClick={() => {
+            setSelectedTemplate(null);
+            setIsWorkspaceViewOpen(true);
+          }}
+          className="h-11 px-5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold flex items-center gap-2 transition-all shadow-sm"
         >
           <Plus size={18} />
           Create Template
         </button>
       </div>
 
-      {/* EMPTY STATE */}
-      {templates.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-[280px] border border-dashed border-[#d7dce5] rounded-2xl bg-gradient-to-b from-white to-[#fafbff]">
-          <div className="w-16 h-16 rounded-2xl bg-violet-100 flex items-center justify-center mb-4">
-            <Plus size={28} className="text-violet-600" />
+      {loading ? (
+        <div className="bg-white rounded-3xl border border-[#e7ebf3] shadow-sm p-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 w-48 bg-gray-200 rounded-xl" />
+            <div className="h-16 bg-gray-100 rounded-xl" />
           </div>
-
-          <h3 className="text-lg font-semibold text-[#111827]">
-            No Templates Yet
-          </h3>
-
-          <p className="text-gray-500 mt-1">Create your first email template</p>
+        </div>
+      ) : error ? (
+        <div className="bg-white rounded-3xl border border-[#e7ebf3] shadow-sm p-6">
+          <p className="text-red-500">{error}</p>
         </div>
       ) : (
-        <div className="overflow-visible rounded-2xl border border-[#e9edf5] shadow-sm">
-          <table className="w-full">
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gradient-to-r from-[#f8fafc] to-[#fdfdff] border-b border-[#e9edf5]">
-                <th className="px-6 py-4 text-left text-xs font-semibold text-[#64748b] uppercase">
-                  Name
-                </th>
-
-                <th className="px-6 py-4 text-left text-xs font-semibold text-[#64748b] uppercase">
-                  Type
-                </th>
-
-                <th className="px-6 py-4 text-left text-xs font-semibold text-[#64748b] uppercase">
-                  Subject
-                </th>
-
-                <th className="px-6 py-4 text-left text-xs font-semibold text-[#64748b] uppercase">
-                  Created
-                </th>
-
-                <th className="px-6 py-4 text-center text-xs font-semibold text-[#64748b] uppercase">
-                  Actions
-                </th>
+              <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50">
+                <th className="px-6 py-4">Template Name</th>
+                <th className="px-6 py-4">Type</th>
+                <th className="px-6 py-4">Subject</th>
+                <th className="px-6 py-4 text-center w-32">Actions</th>
               </tr>
             </thead>
-
-            <tbody>
+            <tbody className="divide-y divide-gray-50 text-sm font-semibold text-slate-800">
               {templates.map((template) => (
-                <tr
-                  key={template._id}
-                  className="border-b border-[#edf1f7] hover:bg-[#fafbfc] hover:shadow-sm transition-all duration-200"
-                >
-                  <td className="px-6 py-5 font-semibold text-[#111827]">
-                    {template.name}
-                  </td>
-
+                <tr key={template._id} className="hover:bg-gray-50/40 transition-colors">
+                  <td className="px-6 py-5 text-[#111827]">{template.name}</td>
+                  <td className="px-6 py-5 text-gray-400 font-normal capitalize">{template.type || "email"}</td>
+                  <td className="px-6 py-5 text-gray-500 font-normal truncate max-w-xs">{template.subject}</td>
                   <td className="px-6 py-5">
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 border border-violet-200">
-                      {template.type}
-                    </span>
-                  </td>
-
-                  <td className="px-6 py-5 text-gray-600 max-w-[300px] truncate">
-                    {template.subject}
-                  </td>
-
-                  <td className="px-6 py-5 text-gray-600">
-                    {new Date(template.createdAt).toLocaleDateString()}
-                  </td>
-
-                  <td className="px-6 py-5 text-center relative overflow-visible">
-                    <TemplateActionMenu
-                      onView={() => {
-                        setSelectedTemplate(template);
-                        setIsPreviewOpen(true);
-                      }}
-                      onEdit={() => {
-                        setSelectedTemplate(template);
-                        setIsEditOpen(true);
-                      }}
-                      onDelete={() => {
-                        setSelectedTemplate(template);
-                        setIsDeleteOpen(true);
-                      }}
-                    />
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedTemplate(template);
+                          setIsWorkspaceViewOpen(true);
+                        }}
+                        title="Edit Template"
+                        className="p-2 text-gray-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-all"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedTemplate(template);
+                          setIsDeleteOpen(true);
+                        }}
+                        title="Delete Template"
+                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -181,15 +128,10 @@ export default function TemplatesTable() {
       )}
 
       <div className="mt-5 flex items-center justify-between">
-        <div className="text-sm font-medium text-violet-600">
+        <div className="text-sm font-medium text-violet-600 px-2">
           Total: {templates.length}
         </div>
       </div>
-      <CreateTemplateModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={fetchTemplates}
-      />
 
       <TemplatePreviewModal
         template={selectedTemplate}
@@ -198,16 +140,6 @@ export default function TemplatesTable() {
           setIsPreviewOpen(false);
           setSelectedTemplate(null);
         }}
-      />
-
-      <EditTemplateModal
-        template={selectedTemplate}
-        isOpen={isEditOpen}
-        onClose={() => {
-          setIsEditOpen(false);
-          setSelectedTemplate(null);
-        }}
-        onSuccess={fetchTemplates}
       />
 
       <DeleteTemplateDialog
