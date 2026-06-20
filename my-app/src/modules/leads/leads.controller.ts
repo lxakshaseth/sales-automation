@@ -71,12 +71,14 @@ export const createLeadController = async (req: NextRequest) => {
     const body = await req.json();
     const { country, state, campaign, email } = body;
 
-    const campaignExists = await Campaign.exists({ _id: campaign });
-    if (!campaignExists)
-      return NextResponse.json(
-        { success: false, message: "Campaign not found" },
-        { status: 404 },
-      );
+    if (campaign) {
+      const campaignExists = await Campaign.exists({ _id: campaign });
+      if (!campaignExists)
+        return NextResponse.json(
+          { success: false, message: "Campaign not found" },
+          { status: 404 },
+        );
+    }
 
     const checkLeadEmail = await Lead.exists({ email });
 
@@ -94,7 +96,9 @@ export const createLeadController = async (req: NextRequest) => {
         : countryData?.[state?.toLowerCase()];
     const createLead = await Lead.create({ ...body, timezone });
 
-    await startCampaignFlow(createLead._id.toString());
+    if (campaign) {
+      await startCampaignFlow(createLead._id.toString());
+    }
 
     const currentTime = DateTime.now().setZone(createLead.timezone).toString();
 
@@ -266,6 +270,47 @@ export const deleteLeadController = async (
     }
     return NextResponse.json(
       { success: true, message: "Deleted successfully" },
+      { status: 200 },
+    );
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 },
+    );
+  }
+};
+
+export const bulkDeleteLeadsController = async (req: NextRequest) => {
+  try {
+    const body = await req.json();
+    const { ids } = body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "No contact IDs provided" },
+        { status: 400 },
+      );
+    }
+
+    const validIds = ids.filter((id: string) =>
+      mongoose.Types.ObjectId.isValid(id),
+    );
+
+    if (validIds.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "No valid IDs provided" },
+        { status: 400 },
+      );
+    }
+
+    const result = await Lead.deleteMany({ _id: { $in: validIds } });
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: `${result.deletedCount} contacts deleted successfully`,
+        deletedCount: result.deletedCount,
+      },
       { status: 200 },
     );
   } catch (error: any) {
