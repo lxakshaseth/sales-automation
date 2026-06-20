@@ -5,7 +5,7 @@ import { useState } from "react";
 import SideBar from "@/Components/SideBar";
 import TopBar from "@/Components/Topbar";
 
-import IntegrationCards from "@/Components/integration/IntegrationCards";
+import IntegrationCards from "@/Components/Integration/IntegrationCards";
 
 export default function IntegrationPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
