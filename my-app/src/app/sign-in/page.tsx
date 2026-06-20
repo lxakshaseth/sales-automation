@@ -44,6 +44,7 @@ export default function Signin() {
       if (response.ok) {
         toast.success("Login successful");
         sessionStorage.setItem("token", data.token);
+        sessionStorage.setItem("user", JSON.stringify(data.data));
         if (rememberMe) {
           localStorage.setItem("savedEmail", formData.email);
           localStorage.setItem("savedPassword", formData.password);
