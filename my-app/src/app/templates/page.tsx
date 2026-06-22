@@ -2,8 +2,12 @@
 
 import { useState } from "react";
 import SideBar from "@/Components/SideBar";
+<<<<<<< Updated upstream
 import TopBar from "@/Components/Topbar";
 
+=======
+import HeaderSection from "@/Components/templates/HeaderSection";
+>>>>>>> Stashed changes
 import TemplatesTable from "@/Components/templates/TemplatesTable";
 
 export default function TemplatesPage() {
