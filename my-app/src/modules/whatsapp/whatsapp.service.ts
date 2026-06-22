@@ -44,7 +44,7 @@ export async function saveInboundMessage({
   contactId: string;
   waMessageId: string;
   message: string;
-  rawPayload: any;
+  rawPayload: unknown;
 }) {
   await connectDB();
 
@@ -68,7 +68,7 @@ export async function saveOutboundMessage({
   contactId: string;
   waMessageId: string;
   message: string;
-  rawPayload: any;
+  rawPayload: unknown;
 }) {
   await connectDB();
 
@@ -81,6 +81,40 @@ export async function saveOutboundMessage({
     rawPayload,
     status: "SENT",
   });
+}
+
+export async function sendWhatsAppTextMessage({
+  to,
+  message,
+}: {
+  to: string;
+  message: string;
+}) {
+  const response = await fetch(
+    `https://graph.facebook.com/v25.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to,
+        type: "text",
+        text: { body: message },
+      }),
+    },
+  );
+
+  const data = await response.json();
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data,
+  };
 }
 
 export async function updateMessageStatus({
@@ -124,9 +158,34 @@ export async function getChatByWaId(waId: string) {
 export async function getContacts() {
   await connectDB();
 
-  return Contact.find().sort({
+  const contacts = await Contact.find().sort({
     lastMessageAt: -1,
   });
+
+  return Promise.all(
+    contacts.map(async (contact) => {
+      const [lastMessage, unreadCount] = await Promise.all([
+        Message.findOne({
+          contactId: contact._id,
+        })
+          .sort({ createdAt: -1 })
+          .lean(),
+        Message.countDocuments({
+          contactId: contact._id,
+          direction: "INBOUND",
+          status: "RECEIVED",
+        }),
+      ]);
+
+      return {
+        ...contact.toObject(),
+        lastMessage: lastMessage?.message || "",
+        lastMessageDirection: lastMessage?.direction,
+        lastMessageCreatedAt: lastMessage?.createdAt,
+        unreadCount,
+      };
+    }),
+  );
 }
 
 export async function markMessagesAsRead(waId: string) {
@@ -146,21 +205,36 @@ export async function markMessagesAsRead(waId: string) {
 
   for (const msg of unreadMessages) {
     try {
-      await fetch(
-        `https://graph.facebook.com/v25.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
-            "Content-Type": "application/json",
+      if (
+        process.env.WHATSAPP_ACCESS_TOKEN &&
+        process.env.WHATSAPP_PHONE_NUMBER_ID
+      ) {
+        const response = await fetch(
+          `https://graph.facebook.com/v25.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              status: "read",
+              message_id: msg.waMessageId,
+            }),
           },
-          body: JSON.stringify({
-            messaging_product: "whatsapp",
-            status: "read",
-            message_id: msg.waMessageId,
-          }),
-        },
-      );
+        );
+
+        if (!response.ok) {
+          const body = await response.text().catch(() => "");
+
+          console.warn("[whatsapp:read] Graph read receipt failed", {
+            status: response.status,
+            body,
+            waMessageId: msg.waMessageId,
+          });
+        }
+      }
 
       msg.status = "READ";
 
@@ -178,6 +252,23 @@ export async function updateContactName(contactId: string, customName: string) {
     contactId,
     {
       customName,
+    },
+    {
+      new: true,
+    },
+  );
+}
+
+export async function updateContactAiEnabled(
+  contactId: string,
+  aiEnabled: boolean,
+) {
+  await connectDB();
+
+  return Contact.findByIdAndUpdate(
+    contactId,
+    {
+      aiEnabled,
     },
     {
       new: true,
