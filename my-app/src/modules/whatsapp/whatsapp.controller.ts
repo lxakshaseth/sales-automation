@@ -5,8 +5,13 @@ import {
   getContacts,
   getChatByWaId,
   markMessagesAsRead,
+  saveOutboundMessage,
+  sendWhatsAppTextMessage,
+  updateContactAiEnabled,
   updateContactName,
 } from "./whatsapp.service";
+import { generateSalesReply } from "@/modules/whatsapp/ai-reply.service";
+import { startConversationLifecycle } from "@/modules/whatsapp/conversation-lifecycle.service";
 
 export async function handleIncomingMessage(payload: any) {
   console.log("handleIncomingMessage called");
@@ -31,6 +36,41 @@ export async function handleIncomingMessage(payload: any) {
     waMessageId: msg.id,
     message: msg?.text?.body,
     rawPayload: payload,
+  });
+
+  await startConversationLifecycle(contact._id.toString());
+
+  if (!contact.aiEnabled || !msg?.text?.body?.trim()) {
+    return;
+  }
+
+  const chat = await getChatByWaId(contact.waId);
+  const reply = await generateSalesReply({
+    message: msg.text.body,
+    waId: contact.waId,
+    history: chat?.messages || [],
+  });
+
+  const sendResult = await sendWhatsAppTextMessage({
+    to: contact.waId,
+    message: reply,
+  });
+
+  if (!sendResult.ok) {
+    console.error("[whatsapp:ai] Failed to send AI reply", {
+      waId: contact.waId,
+      status: sendResult.status,
+      data: sendResult.data,
+    });
+
+    return;
+  }
+
+  await saveOutboundMessage({
+    contactId: contact._id,
+    waMessageId: sendResult.data?.messages?.[0]?.id,
+    message: reply,
+    rawPayload: sendResult.data,
   });
 }
 
@@ -62,4 +102,11 @@ export async function updateContactNameController(
   customName: string,
 ) {
   return updateContactName(contactId, customName);
+}
+
+export async function updateContactAiEnabledController(
+  contactId: string,
+  aiEnabled: boolean,
+) {
+  return updateContactAiEnabled(contactId, aiEnabled);
 }

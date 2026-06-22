@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ArrowLeft,
+  Bot,
   Check,
   CheckCheck,
   MessageCircle,
@@ -19,6 +20,7 @@ import {
   getChatByWaId,
   isAbortError,
   markChatAsRead,
+  updateContactAiEnabled,
   updateContactName,
 } from "@/services/whatsapp.service";
 
@@ -50,6 +52,7 @@ export default function ChatWindow({
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [customName, setCustomName] = useState("");
   const [assistantReplying, setAssistantReplying] = useState(false);
+  const [aiToggleSaving, setAiToggleSaving] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -234,7 +237,7 @@ export default function ChatWindow({
 
       lastReadKeyRef.current = "";
 
-      console.error("[whatsapp:chat] read:failure", {
+      console.warn("[whatsapp:chat] read:failure", {
         waId,
         error,
       });
@@ -273,6 +276,7 @@ export default function ChatWindow({
       setMessages([]);
       setErrorMessage("");
       setAssistantReplying(false);
+      setAiToggleSaving(false);
 
       if (!selectedContact) {
         setLoading(false);
@@ -375,6 +379,41 @@ export default function ChatWindow({
     }
   }
 
+  async function handleAiToggle() {
+    if (!selectedContact || aiToggleSaving) {
+      return;
+    }
+
+    const nextAiEnabled = !selectedContact.aiEnabled;
+    const controller = new AbortController();
+
+    try {
+      setAiToggleSaving(true);
+
+      const response = await updateContactAiEnabled(
+        selectedContact._id,
+        nextAiEnabled,
+        {
+          signal: controller.signal,
+          timeoutMs: 15000,
+        },
+      );
+
+      onContactUpdated(response.data);
+    } catch (error) {
+      if (!isAbortError(error)) {
+        console.error("[whatsapp:chat] ai-toggle:failure", {
+          contactId: selectedContact._id,
+          error,
+        });
+
+        setErrorMessage("Unable to update AI mode. Please try again.");
+      }
+    } finally {
+      setAiToggleSaving(false);
+    }
+  }
+
   function renderStatusIcon(status?: string) {
     switch (status) {
       case "SENT":
@@ -456,16 +495,20 @@ export default function ChatWindow({
     [messages],
   );
 
+  function isSavedMessage(message: Message | null | undefined): message is Message {
+    return Boolean(message?._id);
+  }
+
   async function handleMessageSent(data: {
-    inboundMessage: Message;
-    outboundMessage: Message;
+    inboundMessage?: Message;
+    outboundMessage?: Message;
   }) {
     setMessages((currentMessages) => {
       const nextMessages = [
         ...currentMessages,
         data.inboundMessage,
         data.outboundMessage,
-      ];
+      ].filter(isSavedMessage);
       const messagesById = new Map<string, Message>();
 
       for (const message of nextMessages) {
@@ -659,6 +702,42 @@ export default function ChatWindow({
               <p className="text-sm text-gray-500">{selectedContact.phone}</p>
             </div>
           </div>
+
+          <button
+            type="button"
+            role="switch"
+            aria-checked={Boolean(selectedContact.aiEnabled)}
+            disabled={aiToggleSaving}
+            onClick={handleAiToggle}
+            className={`flex h-11 min-w-[154px] items-center justify-between gap-3 rounded-xl border px-3 text-sm font-semibold transition ${
+              selectedContact.aiEnabled
+                ? "border-green-200 bg-green-50 text-green-700"
+                : "border-[#e7ebf3] bg-white text-gray-600 hover:bg-[#f8fafc]"
+            } ${aiToggleSaving ? "cursor-not-allowed opacity-70" : ""}`}
+            title={
+              selectedContact.aiEnabled
+                ? "AI is replying to this customer"
+                : "Human will reply manually"
+            }
+          >
+            <span className="flex items-center gap-2">
+              <Bot size={17} />
+              {selectedContact.aiEnabled ? "AI Enabled" : "AI Disabled"}
+            </span>
+
+            <span
+              className={`relative h-5 w-9 rounded-full transition ${
+                selectedContact.aiEnabled ? "bg-green-500" : "bg-gray-300"
+              }`}
+              aria-hidden="true"
+            >
+              <span
+                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition ${
+                  selectedContact.aiEnabled ? "left-4" : "left-0.5"
+                }`}
+              />
+            </span>
+          </button>
 
           <button
             onClick={() => {
