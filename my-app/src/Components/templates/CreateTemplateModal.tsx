@@ -363,8 +363,8 @@ export default function CreateTemplateModal({
                   I
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-gray-900">Indux Technology Platform</h4>
-                  <p className="text-[10px] text-gray-400">to customer sequence</p>
+                  <h4 className="text-xs font-bold text-gray-900">Indux Technology </h4>
+        
                 </div>
               </div>
 
