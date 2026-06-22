@@ -4,6 +4,8 @@ import {
   getContactsController,
 } from "@/modules/whatsapp/whatsapp.controller";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const contacts =
@@ -12,6 +14,10 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: contacts,
+    }, {
+      headers: {
+        "Cache-Control": "no-store",
+      },
     });
   } catch {
     return NextResponse.json(

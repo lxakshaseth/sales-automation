@@ -20,11 +20,6 @@ export default function Home() {
   }, [router])
 
 
-
-
-
-
-
   return (
     <div className="flex h-screen bg-zinc-50 font-sans overflow-hidden">
       <Sidebar
@@ -32,7 +27,7 @@ export default function Home() {
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       />
       <main className={`flex flex-1 w-full flex-col py-10 px-8 bg-zinc-50 overflow-y-auto transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
-        <div className="max-w-7xl w-full mx-auto">
+        <div className="max-w-[1700px] w-full mx-auto">
           <Dashboard />
         </div>
       </main>

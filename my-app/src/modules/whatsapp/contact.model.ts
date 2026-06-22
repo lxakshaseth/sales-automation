@@ -20,6 +20,37 @@ const ContactSchema = new mongoose.Schema(
       type: String,
     },
 
+    aiEnabled: {
+      type: Boolean,
+      default: false,
+    },
+
+    conversationStatus: {
+      type: String,
+      enum: ["OPEN", "CLOSED"],
+      default: "OPEN",
+    },
+
+    lifecycleRunId: {
+      type: String,
+    },
+
+    lastInboundAt: {
+      type: Date,
+    },
+
+    reminderSentAt: {
+      type: Date,
+    },
+
+    closedAt: {
+      type: Date,
+    },
+
+    summarySentAt: {
+      type: Date,
+    },
+
     lastMessageAt: {
       type: Date,
     },
