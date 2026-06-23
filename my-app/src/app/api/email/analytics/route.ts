@@ -12,17 +12,11 @@ export async function GET() {
     const sentEmails = await Email.countDocuments({ status: "SENT" });
     const failedEmails = await Email.countDocuments({ status: "FAILED" });
     const totalClicks = await EmailEvent.countDocuments({ type: "CLICK" });
-    const totalOpens = await EmailEvent.countDocuments({ type: "OPEN" });
     const totalUnsubscribed = await Unsubscribed.countDocuments();
 
     const clickThroughRate =
       sentEmails > 0
         ? ((totalClicks / sentEmails) * 100).toFixed(2)
-        : "0";
-
-    const openRate =
-      sentEmails > 0
-        ? ((totalOpens / sentEmails) * 100).toFixed(2)
         : "0";
 
     return NextResponse.json(
@@ -31,10 +25,8 @@ export async function GET() {
         sentEmails,
         failedEmails,
         totalClicks,
-        totalOpens,
         totalUnsubscribed,
         clickThroughRate: `${clickThroughRate}%`,
-        openRate: `${openRate}%`,
       },
       { status: 200 }
     );
