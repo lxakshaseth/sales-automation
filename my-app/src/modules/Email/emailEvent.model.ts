@@ -10,7 +10,7 @@ const EmailEventSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["CLICK", "UNSUBSCRIBE"],
+      enum: ["CLICK", "UNSUBSCRIBE", "OPEN"],
       required: true,
     },
 
