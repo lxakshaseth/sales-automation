@@ -1,32 +1,45 @@
 "use client";
 
-import {
-   StatsCards
-} from "@/Components/dashboard/StatsCards";
-import LiveChatFeed from "@/Components/dashboard/LiveChatFeed";
-import Contacts from "@/Components/dashboard/contacts";
-import PipelineChart from "@/Components/dashboard/PipelineChart";
-import RecentActivities from "@/Components/dashboard/RecentActivities";
-import RecentLeads from "@/Components/dashboard/RecentLeads";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import SideBar from "@/Components/SideBar";
+import EmailStats from "@/Components/dashboard/EmailStats";
 
-export default function Dashboard() {
+export default function DashboardPage() {
+  const router = useRouter();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      router.replace("/sign-in");
+    }
+  }, [router]);
+
   return (
-    <>
-      <StatsCards />
+    <div className="flex min-h-screen bg-[#f8fafc] overflow-hidden">
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4 mt-4">
-        <LiveChatFeed />
-        <Contacts />
-      </div>
+      {/* Sidebar */}
+      <SideBar
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+      />
 
-      <div className="mt-4 pb-6">
-        <PipelineChart />
-      </div>
+      {/* Main Content */}
+      <main
+        className={`flex-1 transition-all duration-300 overflow-y-auto ${
+          isCollapsed ? "ml-22.5" : "ml-67.5"
+        }`}
+      >
+        <div className="p-6 lg:p-8">
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-4 pb-6">
-        <RecentLeads />
-        <RecentActivities />
-      </div>
-    </>
+          {/* Email Stats */}
+          <div className="mt-6 pb-8 max-w-3xl">
+            <EmailStats />
+          </div>
+
+        </div>
+      </main>
+    </div>
   );
 }

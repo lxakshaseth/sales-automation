@@ -2,14 +2,20 @@ import { NextResponse } from "next/server";
 
 import { markMessagesAsRead } from "@/modules/whatsapp/whatsapp.service";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(
-  req: Request,
+  _req: Request,
   {
     params,
   }: {
-    params: Promise<{
-      waId: string;
-    }>;
+    params:
+      | Promise<{
+          waId: string;
+        }>
+      | {
+          waId: string;
+        };
   },
 ) {
   try {
@@ -20,10 +26,15 @@ export async function POST(
     return NextResponse.json({
       success: true,
     });
-  } catch {
+  } catch (error) {
+    console.error("[whatsapp:read] route failed", {
+      error,
+    });
+
     return NextResponse.json(
       {
         success: false,
+        message: "Failed to mark chat as read",
       },
       {
         status: 500,

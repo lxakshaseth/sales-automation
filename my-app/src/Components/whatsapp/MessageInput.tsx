@@ -11,12 +11,16 @@ import {
 
 type MessageInputProps = {
   selectedContact: Contact;
-  onMessageSent: () => void;
+  onMessageSent: (
+    data: Awaited<ReturnType<typeof sendMessage>>["data"],
+  ) => Promise<void> | void;
+  onSendingChange?: (sending: boolean) => void;
 };
 
 export default function MessageInput({
   selectedContact,
   onMessageSent,
+  onSendingChange,
 }: MessageInputProps) {
   const [message, setMessage] =
     useState("");
@@ -25,36 +29,41 @@ export default function MessageInput({
     useState(false);
 
   async function handleSend() {
-    if (!message.trim()) return;
+    const cleanMessage = message.trim();
+
+    if (sending || !cleanMessage) return;
 
     try {
       setSending(true);
+      onSendingChange?.(true);
 
-      await sendMessage({
+      const response = await sendMessage({
         to: selectedContact.waId,
-        message,
+        message: cleanMessage,
       });
 
       setMessage("");
 
-      await onMessageSent();
+      await onMessageSent(response.data);
     } catch (error) {
       console.error(error);
     } finally {
       setSending(false);
+      onSendingChange?.(false);
     }
   }
 
   async function handleKeyDown(
     e: React.KeyboardEvent<HTMLInputElement>,
   ) {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       await handleSend();
     }
   }
 
   return (
-    <div className="border-t border-[#e7ebf3] p-4 bg-white">
+    <div className="shrink-0 border-t border-[#e7ebf3] p-4 bg-white">
 
       <div className="flex gap-3">
 
@@ -66,6 +75,7 @@ export default function MessageInput({
           }
           onKeyDown={handleKeyDown}
           placeholder="Type a message..."
+          disabled={sending}
           className="flex-1 h-12 px-4 rounded-xl border border-[#e7ebf3] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
 
