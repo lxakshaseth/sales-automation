@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose";  // Importing the Mongoose library for MongoDB object modeling
 
 const connectDB = async () => {
   try {

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server"; // Importing NextRequest and NextResponse from the Next.js server module to handle HTTP requests and responses
 import connectDB from "@/lib/db";
 import Contact from "@/modules/whatsapp/contact.model";
 import {

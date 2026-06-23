@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";  // Importing Google fonts Geist and Geist Mono from the next/font/google module for use in the application
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 

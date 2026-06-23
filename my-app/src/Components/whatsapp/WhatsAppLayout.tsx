@@ -1,4 +1,4 @@
-"use client";
+"use client"; // This directive indicates that the file is a client-side component in Next.js
 
 import { useState } from "react";
 
