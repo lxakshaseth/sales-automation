@@ -1,7 +1,7 @@
 export interface Contact {
   _id: string;
   waId: string;
-  name?: string;
+  name?: string;    // The name of the contact as provided by WhatsApp
   customName?: string;
   phone?: string;
   aiEnabled?: boolean;

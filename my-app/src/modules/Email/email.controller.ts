@@ -1,5 +1,5 @@
 import Email from "./email.model";
-import { sendEmailService } from "./email.service";
+import { sendEmailService } from "./email.service"; // Importing the sendEmailService function from the email service module to handle sending emails
 import Unsubscribed from "./unsubscribed.model";
 import { injectTrackingLinks } from "./email.util";
 import Template from "./template.model";

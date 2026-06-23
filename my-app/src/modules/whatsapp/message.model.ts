@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const MessageSchema = new mongoose.Schema(
   {
-    contactId: {
+    contactId: {    // The ID of the contact this message is associated with
       type: mongoose.Schema.Types.ObjectId,
       ref: "Contact",
       required: true,

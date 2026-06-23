@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
-  getContactsController,
+  getContactsController,    //get
 } from "@/modules/whatsapp/whatsapp.controller";
 
 export const dynamic = "force-dynamic";

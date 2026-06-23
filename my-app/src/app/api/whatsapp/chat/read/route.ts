@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { markMessagesAsRead } from "@/modules/whatsapp/whatsapp.service";
+import { markMessagesAsRead } from "@/modules/whatsapp/whatsapp.service"; // Import the function to mark messages as read from the WhatsApp service module
 
 export const dynamic = "force-dynamic";
 

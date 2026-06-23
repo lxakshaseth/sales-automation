@@ -5,7 +5,7 @@ import Message from "@/modules/whatsapp/message.model";
 export async function upsertContact({
   waId,
   name,
-  phone,
+  phone,   //phone number of the contact
 }: {
   waId: string;
   name?: string;
