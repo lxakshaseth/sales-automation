@@ -46,10 +46,9 @@ export default function LeadAgingWidget() {
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-purple-200 p-6 shadow-sm h-[500px] flex flex-col">
-      <div className="mb-5 shrink-0">
-        <h2 className="text-lg font-semibold text-slate-900">Lead Tracker</h2>
-        <p className="text-sm text-slate-500 mt-0.5">Stalled Leads</p>
+      <div className="bg-[#beaffc] rounded-xl border border-black p-3 h-[300px] w-[450px] flex flex-col">
+      <div className=" mb-2 shrink-0">
+        <h2 className="text-lg text-center font-semibold text-black">Lead Tracker</h2>
       </div>
 
       {loading ? (
@@ -57,29 +56,25 @@ export default function LeadAgingWidget() {
       ) : leads.length === 0 ? (
         <p className="text-slate-500 text-sm">No Leads Found</p>
       ) : (
-        <div className="flex-1 overflow-y-auto rounded-2xl border border-slate-300">
+        <div className="flex-1 overflow-y-auto rounded-2xl border border-slate-500">
           <table
-            className="w-full text-sm table-fixed"
+            className="w-full bg-white text-sm table-fixed"
             style={{ borderCollapse: "collapse" }}
           >
             <colgroup>
-              <col style={{ width: "34%" }} />
-              <col style={{ width: "20%" }} />
-              <col style={{ width: "28%" }} />
-              <col style={{ width: "18%" }} />
+              <col style={{ width: "42%" }} />
+              <col style={{ width: "33%" }} />
+              <col style={{ width: "24%" }} />
             </colgroup>
             <thead className="sticky top-0 bg-slate-50 z-10">
               <tr>
-                <th className="text-left font-medium  px-4 py-3 border-b border-slate-200">
+                <th className="text-left font-medium  px-6 py-3 border-b border-slate-200">
                   Name
                 </th>
-                <th className="text-left font-medium  px-4 py-3 border-b border-slate-200">
-                  Stage
-                </th>
-                <th className="text-left font-medium  px-4 py-3 border-b border-slate-200">
+                <th className="text-left font-medium  py-3 border-b border-slate-200">
                   Recent Activity
                 </th>
-                <th className="text-left font-medium  px-4 py-3 border-b border-slate-200">
+                <th className="text-left font-medium  px-8 py-3 border-b border-slate-200">
                   Days
                 </th>
               </tr>
@@ -98,12 +93,7 @@ export default function LeadAgingWidget() {
                       {lead.email}
                     </div>
                   </td>
-                  <td className="px-4 py-3 overflow-hidden">
-                    <span className="inline-flex items-center max-w-full px-2 py-1 rounded-full text-xs bg-violet-100 text-violet-700 truncate">
-                      {lead.stage}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-slate-500 truncate">
+                  <td className="px-7 py-3 text-xs truncate">
                     {/^email/i.test(lead.lastActivity)
                       ? "Email"
                       : /^sms|^text/i.test(lead.lastActivity)

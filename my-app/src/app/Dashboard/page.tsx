@@ -4,7 +4,6 @@ import {
   DashboardHeader
 } from "@/Components/dashboard/StatsCards";
 import LeadAgingWidget from "@/Components/dashboard/LeadAgingWidget";
-import StatsCards from "@/Components/userManagement/StatsCards";
 
 export default function Dashboard() {
   return (
