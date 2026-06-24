@@ -99,7 +99,7 @@ status: status,
     const payload = {
       name: campaignName,
       description: campaignCategory,
-      status: "status",
+      status: status,
       funnel: [
         {
           step: "email",
