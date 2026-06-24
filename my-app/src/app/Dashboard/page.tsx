@@ -1,17 +1,38 @@
 "use client";
 
-import {
-  DashboardHeader
-} from "@/Components/dashboard/StatsCards";
+import { DashboardHeader } from "@/Components/dashboard/StatsCards";
 import LeadAgingWidget from "@/Components/dashboard/LeadAgingWidget";
+import EmailStats from "@/Components/dashboard/EmailStats";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function Dashboard() {
+export default function DashboardPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+
+    if (!token) {
+      router.replace("/sign-in");
+    }
+  }, [router]);
+
   return (
-    <>
-      <DashboardHeader />
-      <div className="mt-4 pb-6">
-        <LeadAgingWidget />
-      </div>
-    </>
+    <div className="min-h-screen w-full">
+      <main className="w-full">
+        <div className=" w-full">
+          <DashboardHeader />
+
+          <div className="mt-6 w-full">
+            <EmailStats />
+          </div>
+
+          <div className="mt-6 w-full">
+            <LeadAgingWidget />
+          </div>
+
+        </div>
+      </main>
+    </div>
   );
 }

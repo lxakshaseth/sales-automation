@@ -8,25 +8,6 @@ import {
   BellRing,
 } from "lucide-react";
 
-export function HeaderSection() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mb-5"
-    >
-      <h1 className="text-[42px] font-bold text-[#111827] leading-none">
-        Smart Config
-      </h1>
-
-      <p className="mt-2 text-[14px] text-[#64748b]">
-        Manage workflows, AI settings, automation rules,
-        notification systems, and business logic.
-      </p>
-    </motion.div>
-  );
-}
-
 const cards = [
   {
     title: "Automation Rules",

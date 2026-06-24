@@ -1,5 +1,5 @@
 "use client";
-
+import TopBar from "@/Components/Topbar";
 import { useState, useEffect } from "react";
 import { Mail, Send, Save, FileText, Check, Search } from "lucide-react";
 import { motion } from "framer-motion";
@@ -18,6 +18,8 @@ export default function CreateCampaign() {
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateSearch, setTemplateSearch] = useState("");
+  const [description, setDescription] = useState("");
+const [status, setStatus] = useState("active");
 
   useEffect(() => {
     async function fetchTemplates() {
@@ -53,8 +55,8 @@ export default function CreateCampaign() {
 
     const payload = {
       name: campaignName,
-      description: campaignCategory,
-      status: "draft",
+      description: description,
+status: status,
       funnel: [
         {
           step: "email",
@@ -97,7 +99,7 @@ export default function CreateCampaign() {
     const payload = {
       name: campaignName,
       description: campaignCategory,
-      status: "active",
+      status: "status",
       funnel: [
         {
           step: "email",
@@ -120,7 +122,7 @@ export default function CreateCampaign() {
     alert(
       error instanceof Error
         ? error.message
-        : "Failed to launch campaign"
+        : "Failed to Create campaign"
     );
   } finally {
     setLaunching(false);
@@ -153,7 +155,7 @@ export default function CreateCampaign() {
             className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-medium transition-all shadow-sm shadow-violet-600/20 disabled:opacity-50"
           >
             <Send size={16} />
-            {launching ? "Launching..." : "Launch Campaign"}
+            {launching ? "Launching..." : "Create Campaign"}
           </button>
         </div>
       </div>
@@ -179,57 +181,96 @@ export default function CreateCampaign() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Campaign Name */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">
-              Campaign Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={campaignName}
-              onChange={(e) => setCampaignName(e.target.value)}
-              placeholder="Enter campaign name"
-              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all placeholder:text-zinc-400"
-            />
-          </div>
 
-          {/* Campaign Category */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">Campaign Category</label>
-            <select
-              value={campaignCategory}
-              onChange={(e) => setCampaignCategory(e.target.value)}
-              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-zinc-700 bg-white"
-            >
-              <option value="Promotional">Promotional</option>
-              <option value="Transactional">Transactional</option>
-              <option value="Newsletter">Newsletter</option>
-              <option value="Welcome">Welcome</option>
-              <option value="Re-engagement">Re-engagement</option>
-            </select>
-          </div>
+  {/* Campaign Name */}
+  <div>
+    <label className="block text-sm font-medium text-zinc-700 mb-2">
+      Campaign Name <span className="text-red-500">*</span>
+    </label>
+    <input
+      type="text"
+      value={campaignName}
+      onChange={(e) => setCampaignName(e.target.value)}
+      placeholder="Enter campaign name"
+      className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
+    />
+  </div>
 
-          {/* Schedule */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">Schedule</label>
-            <div className="flex gap-3">
-              <input
-                type="date"
-                value={scheduleDate}
-                onChange={(e) => setScheduleDate(e.target.value)}
-                className="flex-1 border border-zinc-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-zinc-700"
-              />
-              <input
-                type="time"
-                value={scheduleTime}
-                onChange={(e) => setScheduleTime(e.target.value)}
-                className="w-36 border border-zinc-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-zinc-700"
-              />
-            </div>
-          </div>
-        </div>
-      </motion.div>
+  {/* Description */}
+  <div>
+    <label className="block text-sm font-medium text-zinc-700 mb-2">
+      Description <span className="text-red-500">*</span>
+    </label>
+    <textarea
+      value={description}
+      onChange={(e) => setDescription(e.target.value)}
+      placeholder="Enter campaign description"
+      rows={3}
+      className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm resize-none"
+    />
+  </div>
 
+  {/* Status */}
+  <div>
+    <label className="block text-sm font-medium text-zinc-700 mb-2">
+      Status <span className="text-red-500">*</span>
+    </label>
+    <select
+      value={status}
+      onChange={(e) => setStatus(e.target.value)}
+      className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm bg-white"
+    >
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+  </div>
+
+  {/* Campaign Category */}
+  <div>
+    <label className="block text-sm font-medium text-zinc-700 mb-2">
+      Campaign Category
+    </label>
+    <select
+      value={campaignCategory}
+      onChange={(e) => setCampaignCategory(e.target.value)}
+      className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm bg-white"
+    >
+      <option value="Promotional">Promotional</option>
+      <option value="Transactional">Transactional</option>
+      <option value="Newsletter">Newsletter</option>
+      <option value="Welcome">Welcome</option>
+      <option value="Re-engagement">Re-engagement</option>
+    </select>
+  </div>
+
+  {/* Schedule Date */}
+  <div>
+    <label className="block text-sm font-medium text-zinc-700 mb-2">
+      Schedule Date <span className="text-red-500">*</span>
+    </label>
+    <input
+      type="date"
+      value={scheduleDate}
+      onChange={(e) => setScheduleDate(e.target.value)}
+      className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
+    />
+  </div>
+
+  {/* Schedule Time */}
+  <div>
+    <label className="block text-sm font-medium text-zinc-700 mb-2">
+      Schedule Time <span className="text-red-500">*</span>
+    </label>
+    <input
+      type="time"
+      value={scheduleTime}
+      onChange={(e) => setScheduleTime(e.target.value)}
+      className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
+    />
+  </div>
+
+</div>
+</motion.div>
       {/* Select Template Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -247,75 +288,101 @@ export default function CreateCampaign() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative mt-6 mb-5">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search templates..."
-            value={templateSearch}
-            onChange={(e) => setTemplateSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 border border-zinc-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all placeholder:text-zinc-400"
-          />
-        </div>
+        <div className="flex items-center justify-between mt-6 mb-5 gap-4">
 
-        {/* Templates Grid */}
-        {templatesLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse h-28 bg-zinc-100 rounded-xl" />
-            ))}
-          </div>
-        ) : filteredTemplates.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-14 border border-dashed border-zinc-200 rounded-xl">
-            <div className="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center mb-3">
-              <FileText size={22} className="text-violet-400" />
+  <div className="relative flex-1">
+    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
+
+    <input
+      type="text"
+      placeholder="Search templates..."
+      value={templateSearch}
+      onChange={(e) => setTemplateSearch(e.target.value)}
+      className="w-full pl-9 pr-4 py-2.5 border border-zinc-200 rounded-xl text-sm"
+    />
+  </div>
+
+  <Link
+    href="/templates"   
+    className="px-4 py-2 border border-violet-300 text-white rounded-xl font-medium bg-violet-600 hover:bg-violet-700"
+  >
+    + Create Template
+  </Link>
+
+</div>
+        {filteredTemplates.length > 0 && (
+  <div className="mt-6 border border-zinc-200 rounded-xl overflow-hidden">
+    
+    <div className="grid grid-cols-12 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-700 border-b">
+      <div className="col-span-4">Template Name</div>
+      <div className="col-span-4">Subject</div>
+      <div className="col-span-2">Type</div>
+      <div className="col-span-2">Last Updated</div>
+    </div>
+
+    {filteredTemplates.map((template) => {
+      const isSelected = selectedTemplateId === template._id;
+
+      return (
+        <button
+          key={template._id}
+          onClick={() =>
+            setSelectedTemplateId(
+              isSelected ? null : template._id
+            )
+          }
+          className={`w-full grid grid-cols-12 px-4 py-4 border-b text-left hover:bg-zinc-50 transition ${
+            isSelected ? "bg-violet-50" : ""
+          }`}
+        >
+          <div className="col-span-4 flex items-center gap-3">
+            <input
+              type="radio"
+              checked={isSelected}
+              readOnly
+              className="accent-violet-600"
+            />
+            <div>
+              <p className="font-medium text-zinc-900">
+                {template.name}
+              </p>
             </div>
-            <p className="text-zinc-500 text-sm font-medium">No templates found</p>
-            <Link href="/templates" className="mt-2 text-xs text-violet-600 hover:underline">
-              Go to Templates to create one
-            </Link>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredTemplates.map((template) => {
-              const isSelected = selectedTemplateId === template._id;
-              return (
-                <button
-                  key={template._id}
-                  onClick={() => setSelectedTemplateId(isSelected ? null : template._id)}
-                  className={`relative text-left p-4 rounded-xl border-2 transition-all duration-200 group ${
-                    isSelected
-                      ? "border-violet-500 bg-violet-50 shadow-sm shadow-violet-100"
-                      : "border-zinc-200 hover:border-violet-300 hover:bg-zinc-50"
-                  }`}
-                >
-                  {isSelected && (
-                    <span className="absolute top-3 right-3 w-5 h-5 rounded-full bg-violet-600 flex items-center justify-center">
-                      <Check size={11} className="text-white" strokeWidth={3} />
-                    </span>
-                  )}
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                      template.type === "email"
-                        ? "bg-blue-100 text-blue-700"
-                        : template.type === "sms"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-orange-100 text-orange-700"
-                    }`}>
-                      {template.type.toUpperCase()}
-                    </span>
-                  </div>
-                  <p className="text-sm font-semibold text-zinc-900 truncate">{template.name}</p>
-                  {template.subject && (
-                    <p className="text-xs text-zinc-500 mt-1 truncate">{template.subject}</p>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
 
+          <div className="col-span-4 text-sm text-zinc-600">
+            {template.subject || "-"}
+          </div>
+
+          <div className="col-span-2">
+            <span
+  className={`px-2 py-1 rounded-md text-xs font-medium ${
+    template.type?.toLowerCase() === "email"
+      ? "bg-blue-100 text-blue-700"
+      : template.type?.toLowerCase() === "whatsapp"
+      ? "bg-green-100 text-green-700"
+      : template.type?.toLowerCase() === "sms"
+      ? "bg-orange-100 text-orange-700"
+      : "bg-zinc-100 text-zinc-700"
+  }`}
+>
+  {template.type}
+</span>
+          </div>
+
+          <div className="col-span-2 text-sm text-zinc-600">
+  {template.updatedAt
+    ? new Date(template.updatedAt).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "--"}
+</div>
+        </button>
+      );
+    })}
+  </div>
+)}
         {selectedTemplateId && (
           <p className="mt-4 text-xs text-violet-600 font-medium">
             ✓ Template selected: {templates.find((t) => t._id === selectedTemplateId)?.name}

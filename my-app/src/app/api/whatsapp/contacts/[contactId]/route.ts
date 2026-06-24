@@ -4,6 +4,7 @@ import {
 } from "next/server";
 
 import {
+  updateContactAiEnabledController,
   updateContactNameController,
 } from "@/modules/whatsapp/whatsapp.controller";
 
@@ -21,14 +22,24 @@ export async function PATCH(
     const { contactId } =
       await params;
 
-    const { customName } =
+    const { aiEnabled, customName } =
       await req.json();
 
-    const contact =
-      await updateContactNameController(
+    let contact = null;
+
+    if (typeof customName === "string") {
+      contact = await updateContactNameController(
         contactId,
         customName,
       );
+    }
+
+    if (typeof aiEnabled === "boolean") {
+      contact = await updateContactAiEnabledController(
+        contactId,
+        aiEnabled,
+      );
+    }
 
     return NextResponse.json({
       success: true,

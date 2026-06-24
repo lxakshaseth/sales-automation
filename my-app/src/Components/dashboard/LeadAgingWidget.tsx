@@ -15,6 +15,7 @@ interface LeadAging {
 export default function LeadAgingWidget() {
   const [leads, setLeads] = useState<LeadAging[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     fetch("/api/dashboard/lead-aging")
@@ -31,90 +32,142 @@ export default function LeadAgingWidget() {
 
   const getBadgeColor = (days: number) => {
     if (days <= 3) {
-      return "bg-green-100 text-green-700 border border-green-300";
+      return "bg-green-50 text-green-600 border border-green-200";
     }
-
     if (days <= 7) {
-      return "bg-yellow-100 text-yellow-700 border border-yellow-300";
+      return "bg-yellow-50 text-yellow-600 border border-yellow-200";
     }
-
     if (days <= 14) {
-      return "bg-orange-100 text-orange-700 border border-orange-300";
+      return "bg-orange-50 text-orange-600 border border-orange-200";
     }
-
-    return "bg-red-100 text-red-700 border border-red-300";
+    return "bg-red-50 text-red-600 border border-red-200";
   };
 
-  return (
-      <div className="bg-[#beaffc] rounded-xl border border-black p-3 h-[300px] w-[450px] flex flex-col">
-      <div className=" mb-2 shrink-0">
-        <h2 className="text-lg text-center font-semibold text-black">Lead Tracker</h2>
+  const renderTable = (leadsToRender: LeadAging[]) => (
+    <table
+      className="w-full text-sm table-fixed"
+      style={{ borderCollapse: "collapse" }}
+    >
+      <colgroup>
+        <col style={{ width: "42%" }} />
+        <col style={{ width: "33%" }} />
+        <col style={{ width: "25%" }} />
+      </colgroup>
+      <thead className="sticky top-0 bg-gray-50 z-10">
+        <tr>
+          <th className="text-left font-medium text-gray-400 text-xs px-4 py-2.5">
+            Name
+          </th>
+          <th className="text-left font-medium text-gray-400 text-xs py-2.5">
+            Recent Activity
+          </th>
+          <th className="text-left font-medium text-gray-400 text-xs px-7 py-2.5">
+            Days
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {leadsToRender.map((lead) => (
+          <tr
+            key={lead.id}
+            className="border-t border-gray-100 hover:bg-gray-50/60 transition-colors"
+          >
+            <td className="px-4 py-3 overflow-hidden">
+              <div className="font-semibold text-gray-900 truncate text-sm">
+                {lead.name}
+              </div>
+              <div className="text-xs text-gray-400 truncate">
+                {lead.email}
+              </div>
+            </td>
+            <td className="py-3 text-sm text-gray-600 truncate">
+              {/^email/i.test(lead.lastActivity)
+                ? "Email"
+                : /^sms|^text/i.test(lead.lastActivity)
+                ? "SMS"
+                : lead.lastActivity}
+            </td>
+            <td className="px-4 py-3 text-left">
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getBadgeColor(
+                  lead.agingDays
+                )}`}
+              >
+                {lead.agingDays} Days
+              </span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+return (
+    <>
+      <div className="bg-white border border-gray-500 rounded-2xl p-4 shadow-sm flex flex-col w-full max-w-1/2 h-[320px] sm:h-[360px] min-h-0 min-w-0 relative transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.03] hover:shadow-2xl hover:shadow-gray-400/50 hover:z-20 cursor-default">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3 px-1 shrink-0">
+          <h2 className="text-base font-semibold text-gray-900">
+            Lead Tracker
+          </h2>
+          <button
+            onClick={() => setShowAll(true)}
+            className="text-xs font-medium text-violet-600 hover:text-violet-700"
+          >
+            View All
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="text-slate-400 text-sm px-1 py-4">Loading...</div>
+        ) : leads.length === 0 ? (
+          <p className="text-slate-400 text-sm px-1 py-4">No Leads Found</p>
+        ) : (
+          <div className="rounded-xl border border-gray-100 overflow-y-auto flex-1 min-h-0">
+            {renderTable(leads)}
+          </div>
+        )}
       </div>
 
-      {loading ? (
-        <div className="text-slate-500 text-sm">Loading...</div>
-      ) : leads.length === 0 ? (
-        <p className="text-slate-500 text-sm">No Leads Found</p>
-      ) : (
-        <div className="flex-1 overflow-y-auto rounded-2xl border border-slate-500">
-          <table
-            className="w-full bg-white text-sm table-fixed"
-            style={{ borderCollapse: "collapse" }}
+      {/* View All Modal */}
+      {showAll && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-6"
+          onClick={() => setShowAll(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-4 shadow-sm flex flex-col w-full max-w-3xl h-[85vh] min-h-0"
+            onClick={(e) => e.stopPropagation()}
           >
-            <colgroup>
-              <col style={{ width: "42%" }} />
-              <col style={{ width: "33%" }} />
-              <col style={{ width: "24%" }} />
-            </colgroup>
-            <thead className="sticky top-0 bg-slate-50 z-10">
-              <tr>
-                <th className="text-left font-medium  px-6 py-3 border-b border-slate-200">
-                  Name
-                </th>
-                <th className="text-left font-medium  py-3 border-b border-slate-200">
-                  Recent Activity
-                </th>
-                <th className="text-left font-medium  px-8 py-3 border-b border-slate-200">
-                  Days
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {leads.map((lead) => (
-                <tr
-                  key={lead.id}
-                  className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors"
-                >
-                  <td className="px-4 py-3 overflow-hidden">
-                    <div className="font-semibold text-slate-900 truncate">
-                      {lead.name}
-                    </div>
-                    <div className="text-xs text-slate-400 truncate">
-                      {lead.email}
-                    </div>
-                  </td>
-                  <td className="px-7 py-3 text-xs truncate">
-                    {/^email/i.test(lead.lastActivity)
-                      ? "Email"
-                      : /^sms|^text/i.test(lead.lastActivity)
-                      ? "SMS"
-                      : lead.lastActivity}
-                  </td>
-                  <td className="px-4 py-3 text-left">
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getBadgeColor(
-                        lead.agingDays
-                      )}`}
-                    >
-                      {lead.agingDays} Days
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-3 px-1 shrink-0">
+              <h2 className="text-base font-semibold text-gray-900">
+                Lead Tracker
+              </h2>
+              <button
+                onClick={() => setShowAll(false)}
+                className="text-xs font-medium text-gray-500 hover:text-gray-800 border border-gray-300 rounded-full w-7 h-7 flex items-center justify-center shrink-0"
+              >
+                ✕
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="text-slate-400 text-sm px-1 py-4">
+                Loading...
+              </div>
+            ) : leads.length === 0 ? (
+              <p className="text-slate-400 text-sm px-1 py-4">
+                No Leads Found
+              </p>
+            ) : (
+              <div className="rounded-xl border border-gray-100 overflow-y-auto flex-1 min-h-0">
+                {renderTable(leads)}
+              </div>
+            )}
+          </div>
         </div>
       )}
-    </div>
-  );
+    </>
+);
 }
