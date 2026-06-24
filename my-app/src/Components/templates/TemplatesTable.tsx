@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Edit2, Trash2, CheckSquare, X } from "lucide-react";
+import { Plus, Edit2, Trash2, CheckSquare, X, Eye } from "lucide-react";
 import CreateTemplateModal from "./CreateTemplateModal";
 import TemplatePreviewModal from "./TemplatePreviewModal";
 import DeleteTemplateDialog from "./DeleteTemplateDialog";
@@ -13,7 +13,8 @@ export default function TemplatesTable() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [isWorkspaceViewOpen, setIsWorkspaceViewOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
 
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,20 +35,15 @@ export default function TemplatesTable() {
       const response = await getTemplates();
       setTemplates(response.data);
       setSelectedIds([]);
-    } catch (error: any) {
-      setError(error.message);
+    } catch (err) {
+      setError("Failed to fetch templates");
+      toast.error("Failed to load templates");
     } finally {
       setLoading(false);
     }
   }
 
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  const toggleSelectAll = () => {
+  const handleSelectAll = () => {
     if (selectedIds.length === templates.length) {
       setSelectedIds([]);
     } else {
@@ -55,157 +51,142 @@ export default function TemplatesTable() {
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) {
-      toast.error("Please select at least one template");
-      return;
+  const handleSelectOne = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((item) => item !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
     }
-    
-    const confirmDelete = window.confirm(`Are you sure you want to delete ${selectedIds.length} selected template(s)?`);
-    if (!confirmDelete) return;
+  };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
     try {
       setIsBulkDeleting(true);
-      await Promise.all(selectedIds.map((id) => deleteTemplate(id)));
+      for (const id of selectedIds) {
+        await deleteTemplate(id);
+      }
       toast.success("Selected templates deleted successfully");
-      setIsSelectionMode(false);
       fetchTemplates();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete some templates");
     } finally {
       setIsBulkDeleting(false);
     }
   };
 
-  /* Cancel selection mode */
-  const handleCancelSelection = () => {
-    setIsSelectionMode(false);
-    setSelectedIds([]);
-  };
-
-  if (isWorkspaceViewOpen) {
-    return (
-      <CreateTemplateModal
-        isOpen={true}
-        onClose={() => {
-          setIsWorkspaceViewOpen(false);
-          setSelectedTemplate(null);
-        }}
-        onSuccess={fetchTemplates}
-        initialData={selectedTemplate}
-      />
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-[32px] font-bold text-[#111827]">Email Templates</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Manage and monitor your email templates efficiently.</p>
-        </div>
+    <div className="bg-white rounded-3xl border border-[#eef2f7] p-6 shadow-sm">
+      {/* TOOLBAR */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setIsSelectionMode(!isSelectionMode);
+              setSelectedIds([]);
+            }}
+            className={`px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
+              isSelectionMode
+                ? "bg-violet-50 border-violet-200 text-violet-700"
+                : "border-[#d7dce5] text-[#4b5563] hover:bg-gray-50"
+            }`}
+          >
+            {isSelectionMode ? <X size={16} /> : <CheckSquare size={16} />}
+            {isSelectionMode ? "Cancel Selection" : "Select Multiple"}
+          </button>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-          {!isSelectionMode ? (
-            <>
-              <button
-                onClick={() => setIsSelectionMode(true)}
-                className="h-11 px-5 rounded-xl border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold flex items-center gap-2 transition-all shadow-sm"
-              >
-                <CheckSquare size={18} />
-                Select
-              </button>
-
-              <button
-                onClick={() => {
-                  setSelectedTemplate(null);
-                  setIsWorkspaceViewOpen(true);
-                }}
-                className="h-11 px-5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold flex items-center gap-2 transition-all shadow-sm"
-              >
-                <Plus size={18} />
-                Create Template
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={handleCancelSelection}
-                className="h-11 px-5 rounded-xl border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold flex items-center gap-2 transition-all shadow-sm"
-              >
-                <X size={18} />
-                Cancel
-              </button>
-
-              <button
-                onClick={handleBulkDelete}
-                disabled={isBulkDeleting || selectedIds.length === 0}
-                className="h-11 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold flex items-center gap-2 transition-all shadow-sm disabled:opacity-50"
-              >
-                <Trash2 size={18} />
-                Delete Selected ({selectedIds.length})
-              </button>
-            </>
+          {isSelectionMode && selectedIds.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+              className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 disabled:opacity-50"
+            >
+              <Trash2 size={16} />
+              Delete Selected ({selectedIds.length})
+            </button>
           )}
         </div>
+
+        <button
+          onClick={() => {
+            setEditData(null);
+            setIsCreateOpen(true);
+          }}
+          className="w-full sm:w-auto px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
+        >
+          <Plus size={16} />
+          Create Template
+        </button>
       </div>
 
+      {/* TABLE */}
       {loading ? (
-        <div className="bg-white rounded-3xl border border-[#e7ebf3] shadow-sm p-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 w-48 bg-gray-200 rounded-xl" />
-            <div className="h-16 bg-gray-100 rounded-xl" />
-          </div>
-        </div>
+        <div className="py-20 text-center text-gray-500 font-medium">Loading templates...</div>
       ) : error ? (
-        <div className="bg-white rounded-3xl border border-[#e7ebf3] shadow-sm p-6">
-          <p className="text-red-500">{error}</p>
-        </div>
+        <div className="py-20 text-center text-red-500 font-medium">{error}</div>
+      ) : templates.length === 0 ? (
+        <div className="py-20 text-center text-gray-400 font-medium">No templates found. Create one to get started!</div>
       ) : (
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto rounded-2xl border border-[#eef2f7]">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50">
-      
+              <tr className="bg-[#fafbfc] border-b border-[#eef2f7]">
                 {isSelectionMode && (
-                  <th className="px-6 py-4 w-12">
+                  <th className="p-4 w-12 text-center">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 accent-violet-600 cursor-pointer"
-                      checked={templates.length > 0 && selectedIds.length === templates.length}
-                      onChange={toggleSelectAll}
+                      checked={selectedIds.length === templates.length && templates.length > 0}
+                      onChange={handleSelectAll}
+                      className="rounded border-gray-300 text-violet-600 focus:ring-violet-500 h-4 w-4"
                     />
                   </th>
                 )}
-                <th className="px-6 py-4">Template Name</th>
-                <th className="px-6 py-4">Type</th>
-                <th className="px-6 py-4">Subject</th>
-                <th className="px-6 py-4 text-center w-32">Actions</th>
+                <th className="p-4 text-xs uppercase tracking-wider text-[#6b7280] font-semibold">Name</th>
+                <th className="p-4 text-xs uppercase tracking-wider text-[#6b7280] font-semibold">Type</th>
+                <th className="p-4 text-xs uppercase tracking-wider text-[#6b7280] font-semibold">Subject</th>
+                <th className="p-4 text-xs uppercase tracking-wider text-[#6b7280] font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50 text-sm font-semibold text-slate-800">
+            <tbody className="divide-y divide-[#eef2f7]">
               {templates.map((template) => (
-                <tr key={template._id} className="hover:bg-gray-50/40 transition-colors">
-                  {/* Conditionally show row checkbox */}
+                <tr key={template._id} className="hover:bg-gray-50 transition-colors">
                   {isSelectionMode && (
-                    <td className="px-6 py-5">
+                    <td className="p-4 text-center">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 accent-violet-600 cursor-pointer"
                         checked={selectedIds.includes(template._id)}
-                        onChange={() => toggleSelect(template._id)}
+                        onChange={() => handleSelectOne(template._id)}
+                        className="rounded border-gray-300 text-violet-600 focus:ring-violet-500 h-4 w-4"
                       />
                     </td>
                   )}
-                  <td className="px-6 py-5 text-[#111827]">{template.name}</td>
-                  <td className="px-6 py-5 text-gray-400 font-normal capitalize">{template.type || "email"}</td>
-                  <td className="px-6 py-5 text-gray-500 font-normal truncate max-w-xs">{template.subject}</td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center justify-center gap-2">
+                  <td className="p-4 font-semibold text-[#111827]">{template.name}</td>
+                  <td className="p-4">
+                    <span className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 capitalize">
+                      {template.type}
+                    </span>
+                  </td>
+                  <td className="p-4 text-gray-500 max-w-xs truncate">{template.subject || "—"}</td>
+                  <td className="p-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {/* VIEW BUTTON */}
                       <button
                         onClick={() => {
                           setSelectedTemplate(template);
-                          setIsWorkspaceViewOpen(true);
+                          setIsPreviewOpen(true);
+                        }}
+                        disabled={isSelectionMode}
+                        title="View Template"
+                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-30 disabled:hover:bg-transparent"
+                      >
+                        <Eye size={16} />
+                      </button>
+
+                      {/* EDIT BUTTON */}
+                      <button
+                        onClick={() => {
+                          setEditData(template);
+                          setIsCreateOpen(true);
                         }}
                         disabled={isSelectionMode}
                         title="Edit Template"
@@ -213,6 +194,8 @@ export default function TemplatesTable() {
                       >
                         <Edit2 size={16} />
                       </button>
+
+                      {/* DELETE BUTTON */}
                       <button
                         onClick={() => {
                           setSelectedTemplate(template);
@@ -238,6 +221,17 @@ export default function TemplatesTable() {
           Total: {templates.length} {isSelectionMode && selectedIds.length > 0 && `(${selectedIds.length} selected)`}
         </div>
       </div>
+
+      {/* MODALS */}
+      <CreateTemplateModal
+        isOpen={isCreateOpen}
+        onClose={() => {
+          setIsCreateOpen(false);
+          setEditData(null);
+        }}
+        onSuccess={fetchTemplates}
+        initialData={editData}
+      />
 
       <TemplatePreviewModal
         template={selectedTemplate}
