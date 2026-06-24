@@ -7,18 +7,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 const allCampaigns = [
-  { id: 1, name: "Winter Sale Launch", type: "Promotion", status: "Completed", audience: 38460, open: "41%", click: "15%", revenue: "₹1,240", progress: 100, enabled: false },
-  { id: 2, name: "New Arrivals Announcement", type: "Stock out", status: "Draft", audience: null, open: "-", click: "-", revenue: "-", progress: 0, enabled: true },
-  { id: 3, name: "Holiday Gift Guide", type: "Newsletter", status: "Sending", audience: 25458, open: "13%", click: "0.2%", revenue: "₹280", progress: 80, enabled: false },
-  { id: 4, name: "Flash Sale — 24 Hours Only", type: "Automation", status: "Scheduled", audience: 1450, open: "14%", click: "11.5%", revenue: "₹878", progress: 96, enabled: true },
-  { id: 5, name: "Customer winback flow", type: "Promotion", status: "Completed", audience: 1250, open: "14%", click: "11.5%", revenue: "₹878", progress: 100, enabled: true },
-  { id: 6, name: "Back in stock alert", type: "Stock out", status: "Scheduled", audience: 1150, open: "14%", click: "11.5%", revenue: "₹878", progress: 70, enabled: true },
-  { id: 7, name: "Monthly newsletter - Dec...", type: "Newsletter", status: "Sending", audience: 950, open: "14%", click: "11.5%", revenue: "₹878", progress: 20, enabled: false },
-  { id: 8, name: "Abandoned cart remember", type: "Promotion", status: "Sending", audience: 848, open: "14%", click: "11.5%", revenue: "₹878", progress: 80, enabled: false },
-  { id: 9, name: "New Arrivals Announcement", type: "Automation", status: "Draft", audience: null, open: "-", click: "-", revenue: "-", progress: 0, enabled: false },
-  { id: 10, name: "Holiday Gift Guide", type: "Stock out", status: "Scheduled", audience: 548, open: "14%", click: "11.5%", revenue: "₹878", progress: 50, enabled: false },
-  { id: 11, name: "Flash Sale — 24 Hours Only", type: "Newsletter", status: "Sending", audience: 254, open: "5%", click: "9%", revenue: "₹458", progress: 80, enabled: false },
-  { id: 12, name: "Monthly newsletter - Dec...", type: "Newsletter", status: "Completed", audience: 154, open: "3%", click: "7%", revenue: "₹354", progress: 100, enabled: false },
+  { id: 1, name: "Winter Sale Launch", type: "Promotion", status: "Completed", audience: 38460, open: "41%", click: "15%", revenue: "₹1,240", progress: 100},
+  { id: 2, name: "New Arrivals Announcement", type: "Stock out", status: "Draft", audience: null, open: "-", click: "-", revenue: "-", progress: 0 },
+  { id: 3, name: "Holiday Gift Guide", type: "Newsletter", status: "Sending", audience: 25458, open: "13%", click: "0.2%", revenue: "₹280", progress: 80},
+  { id: 4, name: "Flash Sale — 24 Hours Only", type: "Automation", status: "Scheduled", audience: 1450, open: "14%", click: "11.5%", revenue: "₹878", progress: 96},
+  { id: 5, name: "Customer winback flow", type: "Promotion", status: "Completed", audience: 1250, open: "14%", click: "11.5%", revenue: "₹878", progress: 100},
+  { id: 6, name: "Back in stock alert", type: "Stock out", status: "Scheduled", audience: 1150, open: "14%", click: "11.5%", revenue: "₹878", progress: 70},
+  { id: 7, name: "Monthly newsletter - Dec...", type: "Newsletter", status: "Sending", audience: 950, open: "14%", click: "11.5%", revenue: "₹878", progress: 20},
+  { id: 8, name: "Abandoned cart remember", type: "Promotion", status: "Sending", audience: 848, open: "14%", click: "11.5%", revenue: "₹878", progress: 80 },
+  { id: 9, name: "New Arrivals Announcement", type: "Automation", status: "Draft", audience: null, open: "-", click: "-", revenue: "-", progress: 0 },
+  { id: 10, name: "Holiday Gift Guide", type: "Stock out", status: "Scheduled", audience: 548, open: "14%", click: "11.5%", revenue: "₹878", progress: 50 },
+  { id: 11, name: "Flash Sale — 24 Hours Only", type: "Newsletter", status: "Sending", audience: 254, open: "5%", click: "9%", revenue: "₹458", progress: 80 },
+  { id: 12, name: "Monthly newsletter - Dec...", type: "Newsletter", status: "Completed", audience: 154, open: "3%", click: "7%", revenue: "₹354", progress: 100 },
 ];
 
 const STATUS_TABS = ["All", "Drafts", "Scheduled", "Sending", "Complete"];
@@ -46,13 +46,7 @@ export default function Campaigns() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("All");
   const [page, setPage] = useState(1);
-  const [enabledMap, setEnabledMap] = useState<Record<number, boolean>>(
-    () => Object.fromEntries(allCampaigns.map(c => [c.id, c.enabled]))
-  );
-
-  function toggleEnabled(id: number) {
-    setEnabledMap(prev => ({ ...prev, [id]: !prev[id] }));
-  }
+ 
 
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editCampaign, setEditCampaign] = useState<typeof allCampaigns[0] | null>(null);
@@ -120,16 +114,7 @@ export default function Campaigns() {
         className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm"
       >
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-          <div className="relative w-full sm:w-56">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search campaigns..."
-              value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-              className="w-full pl-9 pr-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
-            />
-          </div>
+         
           <div className="flex bg-zinc-100 p-1 rounded-xl w-full sm:w-auto">
             {["All", "Email", "WhatsApp"].map(f => (
               <button
@@ -186,7 +171,7 @@ export default function Campaigns() {
             />
           </div>
           <select className="text-sm border border-zinc-200 rounded-xl px-3 py-2 bg-zinc-50 text-zinc-600 outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all">
-            <option>All statuses</option>
+            <option>All status</option>
             <option>Completed</option>
             <option>Draft</option>
             <option>Sending</option>
@@ -212,14 +197,17 @@ export default function Campaigns() {
                   <input type="checkbox" className="rounded border-zinc-300 accent-violet-600" />
                 </th>
                 {[
-                  { label: "Campaign", sort: true },
-                  { label: "Type", sort: true },
-                  { label: "Status", sort: true },
-                  { label: "Open", sort: true },
-                  { label: "Click", sort: false },
-                  { label: "Progress", sort: true },
-                  { label: "", sort: false },
-                ].map((col) => (
+  { label: "Campaign", sort: true },
+{ label: "Type", sort: true },
+{ label: "Status", sort: true },
+{ label: "Audience", sort: true },
+{ label: "Revenue", sort: true },
+{ label: "Open", sort: true },
+{ label: "Click", sort: false },
+{ label: "Progress", sort: true },
+{ label: "", sort: false },
+]
+.map((col) => (
                   <th key={col.label} className="px-4 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide whitespace-nowrap">
                     <span className="flex items-center gap-1">
                       {col.label}
@@ -245,19 +233,12 @@ export default function Campaigns() {
                     <td className="px-4 py-3">
                       <input type="checkbox" className="rounded border-zinc-300 accent-violet-600" />
                     </td>
-                    {/* Campaign name + toggle */}
+                    {/* Campaign name */}
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-3 min-w-[200px]">
-                        <button
-                          onClick={() => toggleEnabled(c.id)}
-                          style={{ minWidth: "36px" }}
-                          className={`h-5 w-9 rounded-full transition-all duration-200 flex-shrink-0 relative ${enabledMap[c.id] ? "bg-violet-600" : "bg-zinc-300"}`}
-                        >
-                          <span className={`absolute top-[2px] left-[2px] w-[14px] h-[14px] bg-white rounded-full shadow transition-transform duration-200 ${enabledMap[c.id] ? "translate-x-[16px]" : "translate-x-0"}`} />
-                        </button>
-                        <span className="text-sm font-medium text-zinc-800 truncate max-w-[150px]">{c.name}</span>
-                      </div>
-                    </td>
+  <span className="text-sm font-medium text-zinc-800">
+    {c.name}
+  </span>
+</td>
                     {/* Type */}
                     <td className="px-4 py-3">
                       <span className="text-sm text-zinc-600">{c.type}</span>
@@ -268,6 +249,12 @@ export default function Campaigns() {
                         {c.status}
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-sm text-zinc-700">
+  {c.audience ? c.audience.toLocaleString() : "-"}
+</td>
+<td className="px-4 py-3 text-sm text-zinc-700 font-medium">
+  {c.revenue}
+</td>
                     {/* Open */}
                     <td className="px-4 py-3 text-sm text-zinc-700">{c.open}</td>
                     {/* Click */}

@@ -6,8 +6,10 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { getTemplates, Template } from "@/services/template.service";
 import { createCampaign } from "@/services/campaign.service";
+import { useRouter } from "next/navigation";
 
 export default function CreateCampaign() {
+  const router = useRouter();
   const [campaignName, setCampaignName] = useState("");
   const [campaignCategory, setCampaignCategory] = useState("Promotional");
   const [scheduleDate, setScheduleDate] = useState("2025-05-28");
@@ -41,8 +43,6 @@ const [status, setStatus] = useState("active");
     t.subject?.toLowerCase().includes(templateSearch.toLowerCase())
   );
   
-  
-
  async function handleSaveDraft() {
   try {
     setSaving(true);
@@ -99,7 +99,7 @@ status: status,
     const payload = {
       name: campaignName,
       description: campaignCategory,
-      status: "status",
+      status: status,
       funnel: [
         {
           step: "email",
@@ -117,6 +117,7 @@ status: status,
 
     console.log(response);
     alert("Campaign launched successfully!");
+    router.push("/Campaign");
   } catch (error) {
     console.error(error);
     alert(
