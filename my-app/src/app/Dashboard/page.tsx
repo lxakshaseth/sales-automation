@@ -1,32 +1,38 @@
 "use client";
 
-import {
-   StatsCards
-} from "@/Components/dashboard/StatsCards";
-import LiveChatFeed from "@/Components/dashboard/LiveChatFeed";
-import Contacts from "@/Components/dashboard/contacts";
-import PipelineChart from "@/Components/dashboard/PipelineChart";
-import RecentActivities from "@/Components/dashboard/RecentActivities";
-import RecentLeads from "@/Components/dashboard/RecentLeads";
+import { DashboardHeader } from "@/Components/dashboard/StatsCards";
+import LeadAgingWidget from "@/Components/dashboard/LeadAgingWidget";
+import EmailStats from "@/Components/dashboard/EmailStats";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function Dashboard() {
+export default function DashboardPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+
+    if (!token) {
+      router.replace("/sign-in");
+    }
+  }, [router]);
+
   return (
-    <>
-      <StatsCards />
+    <div className="min-h-screen w-full">
+      <main className="w-full">
+        <div className=" w-full">
+          <DashboardHeader />
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4 mt-4">
-        <LiveChatFeed />
-        <Contacts />
-      </div>
+          <div className="mt-6 w-full">
+            <EmailStats />
+          </div>
 
-      <div className="mt-4 pb-6">
-        <PipelineChart />
-      </div>
+          <div className="mt-6 w-full">
+            <LeadAgingWidget />
+          </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-4 pb-6">
-        <RecentLeads />
-        <RecentActivities />
-      </div>
-    </>
+        </div>
+      </main>
+    </div>
   );
 }

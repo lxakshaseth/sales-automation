@@ -187,41 +187,67 @@ export default function Signup() {
                 </p>
               </div>  
             </div>
-            <div className="hidden md:flex relative overflow-hidden flex-col bg-linear-to-br from-violet-700 via-violet-600 to-indigo-700 p-10">
+           <div className="hidden md:flex relative overflow-hidden flex-col bg-linear-to-br from-violet-700 via-violet-600 to-indigo-700 p-10">
 
-             <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
-             <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-indigo-300/20 blur-3xl"></div>
+          <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
+          <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-indigo-300/20 blur-3xl"></div>
 
-            <div className="relative z-10 flex flex-col h-full">
+          <div className="relative z-10 flex flex-col h-full">
 
-             {/* Smart CRM */}
-            <span className="inline-flex w-fit items-center rounded-full bg-white/10 px-4 py-1 text-sm backdrop-blur-md border border-white/20 text-white">
-            🚀 Smart CRM Platform
-            </span>
+          {/* Smart CRM */}
+          <span className="inline-flex w-fit items-center rounded-full bg-white/10 px-4 py-1 text-sm backdrop-blur-md border border-white/20 text-white">
+          🚀 Smart CRM Platform
+          </span>
 
-            {/* Yeh empty space Welcome Back wale content ke liye hai */}
-            <div className="flex-1"></div>
+              <h2 className="mt-6 text-5xl font-bold leading-tight text-white">
+                  Welcome <br />
+                  Back
+                </h2>
 
-            {/* Bottom Cards */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-4">
-            <p className="text-violet-200 text-sm">Leads Managed</p>
-            <h3 className="text-2xl font-bold text-white">10K+</h3>
+              <div className="mt-10 space-y-4 text-lg text-white">
+
+                <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                <p>Easy Account Setup</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                <p>Secure Authentication</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                <p>Access to Dashboard</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                <p>Start Managing Leads</p>
+                </div>
+              </div>
           </div>
-
+ 
+        {/* Bottom Cards */}
+         <div className="mt-10 grid grid-cols-2 gap-4">
           <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-4">
-           <p className="text-violet-200 text-sm">Campaigns</p>
-           <h3 className="text-2xl font-bold text-white">500+</h3>
-          </div>
+           <p className="text-violet-200 text-sm">Leads Managed</p>
+           <h3 className="text-2xl font-bold text-white">10K+</h3>
+         </div>
+
+         <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-4">
+          <p className="text-violet-200 text-sm">Campaigns</p>
+          <h3 className="text-2xl font-bold text-white">500+</h3>
         </div>
-
       </div>
-    </div>
 
+     </div>
+    </div>
             </div>
 
           </div>
         </div>
-      </div>
+    
+
   );
 }

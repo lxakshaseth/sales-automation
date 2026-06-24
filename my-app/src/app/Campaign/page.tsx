@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Sidebar from "../../Components/SideBar";
 import Campaigns from "../../Components/Campaigns";
+import TopBar from "@/Components/Topbar";
 
 export default function CampaignsPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -14,11 +15,11 @@ export default function CampaignsPage() {
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       />
       <main className={`flex flex-1 w-full flex-col py-10 px-8 bg-zinc-50 overflow-y-auto transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
-        <div className="max-w-7xl w-full mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Campaigns</h1>
-            <p className="text-zinc-500 mt-2">Manage and automate your WhatsApp and Email marketing campaigns.</p>
-          </div>
+        <div className="max-w-[1600px] w-full mx-auto">
+          <TopBar
+  title="Campaigns"
+  description="Manage and automate your WhatsApp and Email marketing campaigns."
+/>
           <Campaigns />
         </div>
       </main>

@@ -3,8 +3,8 @@
 import { useState } from "react";
 
 import SideBar from "@/Components/SideBar";
+import TopBar from "@/Components/Topbar";
 
-import Headersection from "@/Components/contacts/Headersection";
 import Contactlist from "@/Components/contacts/Contactlist";
 
 export default function ContactsPage() {
@@ -29,8 +29,11 @@ export default function ContactsPage() {
       >
         <div className="p-6 lg:p-8">
 
-          {/* HEADER + SEARCH */}
-          <Headersection />
+          {/* TOPBAR */}
+          <TopBar
+            title="Contacts Directory"
+            description="Manage your clients, leads, and team members."
+          />
 
           {/* CONTACTS GRID */}
           <div className="mt-6">

@@ -11,38 +11,20 @@ type Params = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(
-  req: NextRequest,
-  context: Params,
-) {
+export async function GET(req: NextRequest, context: Params) {
   await connectDB();
 
-  return getTemplateByIdController(
-    req,
-    context,
-  );
+  return getTemplateByIdController(req, context);
 }
 
-export async function PATCH(
-  req: NextRequest,
-  context: Params,
-) {
+export async function PATCH(req: NextRequest, context: Params) {
   await connectDB();
 
-  return updateTemplateController(
-    req,
-    context,
-  );
+  return updateTemplateController(req, context);
 }
 
-export async function DELETE(
-  req: NextRequest,
-  context: Params,
-) {
+export async function DELETE(req: NextRequest, context: Params) {
   await connectDB();
 
-  return deleteTemplateController(
-    req,
-    context,
-  );
+  return deleteTemplateController(req, context);
 }

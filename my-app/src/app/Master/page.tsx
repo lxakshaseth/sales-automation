@@ -1,9 +1,10 @@
 "use client";
+
 import { useState } from "react";
 
 import SideBar from "@/Components/SideBar";
+import TopBar from "@/Components/Topbar";
 
-import HeaderSection from "@/Components/master/HeaderSection";
 import StatsCards from "@/Components/master/StatsCards";
 import LeadSources from "@/Components/master/LeadSources";
 import LeadStatus from "@/Components/master/LeadStatus";
@@ -14,7 +15,7 @@ export default function MasterPage() {
 
   return (
     <div className="flex h-screen bg-[#f7f8fc] overflow-hidden">
-      
+
       {/* SIDEBAR */}
       <SideBar
         isCollapsed={isCollapsed}
@@ -30,12 +31,15 @@ export default function MasterPage() {
         }`}
       >
         <div className="p-8">
-          
-          {/* HEADER */}
-          <HeaderSection />
+
+          {/* TOPBAR */}
+          <TopBar
+            title="Master"
+            description="Manage all master data and lookups"
+          />
 
           {/* STATS */}
-          <div className="mt-1">
+          <div className="mt-6">
             <StatsCards />
           </div>
 

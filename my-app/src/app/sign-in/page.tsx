@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -43,6 +44,7 @@ export default function Signin() {
       if (response.ok) {
         toast.success("Login successful");
         sessionStorage.setItem("token", data.token);
+        sessionStorage.setItem("user", JSON.stringify(data.data));
         if (rememberMe) {
           localStorage.setItem("savedEmail", formData.email);
           localStorage.setItem("savedPassword", formData.password);
@@ -99,18 +101,18 @@ export default function Signin() {
             <h1 className="text-3xl font-bold text-slate-900">
               Sales Automation
             </h1>
-            <p className="text-sm text-slate-500">
+            <p className="text-md text-slate-500">
               CRM & Lead Management
             </p>
           </div>
         </div>
 
-        <div className="w-full max-w-4xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-md shadow-2xl border border-white/20">
-          <div className="grid md:grid-cols-2">
+        <div className="w-full max-w-5xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-md shadow-2xl border border-white/20">
+          <div className="grid md:grid-cols-[1.1fr_0.9fr]">
 
             {/* Left Side - Form */}
-            <div className="p-8">
-              <h2 className="text-2xl font-bold text-center text-slate-900 mb-6">
+            <div className="p-12 flex flex-col justify-center">
+              <h2 className="text-3xl font-bold text-center text-slate-900 mb-8">
                 Sign In
               </h2>
 
@@ -192,7 +194,7 @@ export default function Signin() {
             </div>
 
             {/* Right Side - Premium Welcome */}
-            <div className="hidden md:flex relative overflow-hidden flex-col justify-center bg-linear-to-br from-violet-700 via-violet-600 to-indigo-700 text-white p-10">
+            <div className="hidden md:flex relative overflow-hidden flex-col justify-center bg-linear-to-br from-violet-700 via-violet-600 to-indigo-700 text-white p-12">
 
               {/* Decorative Blobs */}
               <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
@@ -260,4 +262,4 @@ export default function Signin() {
       </div>
     </div>
   );
-}
+} 
