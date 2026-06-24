@@ -92,7 +92,13 @@ export const createLeadController = async (req: NextRequest) => {
       typeof countryData === "string"
         ? countryData
         : countryData?.[state?.toLowerCase()];
-    const createLead = await Lead.create({ ...body, timezone });
+
+    const createLead = await Lead.create({
+      ...body,
+      timezone,
+      stageEnteredAt: new Date(),
+      lastActivity: "Lead Created",
+      });
 
     await startCampaignFlow(createLead._id.toString());
 
@@ -157,6 +163,26 @@ export const getLeadsController = async (req: NextRequest) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
+    
+    const leadsWithAging = leads.map(
+        (lead: any) => {
+          const agingDays = Math.floor(
+            (
+              Date.now() -
+              new Date(
+                lead.stageEnteredAt ||
+                lead.createdAt
+              ).getTime()
+            ) /
+            (1000 * 60 * 60 * 24)
+          );
+
+          return {
+            ...lead.toObject(),
+            agingDays,
+          };
+        }
+      );
     const totalData = await Lead.countDocuments(filter);
     return NextResponse.json(
       {
@@ -218,8 +244,34 @@ export const updateLeadController = async (
       );
     }
     const body = await req.json();
-    const updatedLead = await Lead.findByIdAndUpdate(id, body);
-    if (!updatedLead) {
+    const existingLead = await Lead.findById(id);
+
+      if (!existingLead) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Lead not found",
+          },
+          { status: 404 }
+        );
+      }
+
+      if (
+        body.status &&
+        body.status !== existingLead.status
+      ) {
+        body.stageEnteredAt = new Date();
+
+        body.lastActivity =
+          `Moved from ${existingLead.status} to ${body.status}`;
+      }
+    const updatedLead = await Lead.findByIdAndUpdate(
+      id,
+      body,
+      { new: true, runValidators: true }
+    );
+
+      if (!updatedLead) {
       return NextResponse.json(
         { success: false, msg: "lead not found" },
         { status: 404 },

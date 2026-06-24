@@ -34,6 +34,5 @@ export const sendEmailService = async ({
     subject,
     html: body,
   });
-
   return info;
 };
