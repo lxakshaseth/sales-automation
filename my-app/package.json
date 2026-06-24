@@ -1,5 +1,5 @@
 {
-  "name": "sales-automation", // The name of the project
+  "name": "sales-automation", 
   "version": "0.1.0",
   "private": true,
   "scripts": {
