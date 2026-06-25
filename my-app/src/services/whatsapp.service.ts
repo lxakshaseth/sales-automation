@@ -7,6 +7,7 @@ export interface Contact {
   aiEnabled?: boolean;
   lastMessage?: string;
   lastMessageDirection?: Message["direction"];
+  lastMessageStatus?: Message["status"];
   lastMessageCreatedAt?: string;
   unreadCount?: number;
   lastMessageAt: string;
@@ -161,6 +162,7 @@ export async function getChatByWaId(waId: string, options?: RequestOptions) {
     const response = await fetch(`/api/whatsapp/chat/${waId}`, {
       headers: getAuthHeaders(),
       signal: request.signal,
+      cache: "no-store",
     });
 
     const data = await response.json();
