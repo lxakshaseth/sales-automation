@@ -43,7 +43,6 @@ export default function LeadFunnelChart({
   onTimePeriodChange,
   dateRangeLabel,
 }: LeadFunnelChartProps) {
-  // Sort data into fixed funnel order
   const sortedData = STATUS_ORDER.map((status) => ({
     status,
     label: STATUS_LABELS[status],
@@ -51,13 +50,11 @@ export default function LeadFunnelChart({
   }));
 
   return (<div className="bg-gray-50 border border-gray-500 rounded-xl shadow-sm p-5 transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.03] hover:shadow-2xl hover:shadow-gray-400/50 hover:z-20 cursor-default">
-      {/* Header */}
+    
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-[15px] font-semibold text-[#111827]">
           Lead funnel by status
         </h3>
-
-        {/* Time period dropdown */}
         <div className="relative">
           <select
             value={timePeriod}
@@ -73,13 +70,10 @@ export default function LeadFunnelChart({
           />
         </div>
       </div>
-
-      {/* Date range label */}
       <p className="text-[12px] text-[#94a3b8] mb-4">{dateRangeLabel}</p>
 
-      {/* Chart */}
-      <div className="h-[120px]">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="h-[100px]" style={{ minWidth: 0 }}>
+  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <BarChart
             data={sortedData}
             layout="vertical"

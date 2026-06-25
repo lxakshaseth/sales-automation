@@ -56,7 +56,7 @@ const [status, setStatus] = useState("active");
     const payload = {
       name: campaignName,
       description: description,
-status: status,
+      status: status,
       funnel: [
         {
           step: "email",
@@ -99,7 +99,7 @@ status: status,
     const payload = {
       name: campaignName,
       description: campaignCategory,
-      status: "status",
+      status: status,
       funnel: [
         {
           step: "email",

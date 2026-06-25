@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { DashboardHeader } from "@/Components/dashboard/StatsCards";
 import EmailStats from "@/Components/dashboard/EmailStats";
 import LeadFunnelChart from "@/Components/dashboard/LeadFunnelChart";
+import RecentAdminActivities from "@/Components/dashboard/RecentAdminActivities";
 import { fetchLeadFunnel, formatDateRangeLabel, FunnelItem } from "@/services/leadFunnel.service";
 
 export default function DashboardPage() {
@@ -47,10 +48,14 @@ export default function DashboardPage() {
             <EmailStats />
           </div>
 
+          <div className="mt-4 pb-6">
+            <RecentAdminActivities />
+          </div>
+
           {/* Lead Funnel Widget */}
           <div className="mt-6 pb-8">
             {loading ? (
-              <div className="bg-white border border-[#e8edf5] rounded-[20px] shadow-sm p-5 h-[360px] flex items-center justify-center text-[#94a3b8] text-[14px]">
+              <div className="bg-gray-50 border border-gray-500 rounded-xl shadow-sm p-5 h-[360px] flex items-center justify-center text-[#94a3b8] text-[14px]">
                 Loading funnel data...
               </div>
             ) : (
