@@ -20,16 +20,13 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen w-full">
       <main className="w-full">
-        <div className=" w-full">
+        <div className="w-full">
           <DashboardHeader />
 
-          <div className="mt-6 w-full">
-            <EmailStats />
-          </div>
-
-          <div className="mt-6 w-full">
-            <LeadAgingWidget />
-          </div>
+        <div className="mt-6 w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <EmailStats />
+          <LeadAgingWidget />
+        </div>
 
         </div>
       </main>
