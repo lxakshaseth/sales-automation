@@ -23,10 +23,17 @@ export async function GET(
         waId,
       );
 
-    return NextResponse.json({
-      success: true,
-      data: chat,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: chat,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      },
+    );
   } catch {
     return NextResponse.json(
       {
