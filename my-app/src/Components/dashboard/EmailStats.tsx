@@ -40,9 +40,12 @@ export default function EmailStats() {
       ? ((data.sentEmails / (data.sentEmails + data.failedEmails)) * 100).toFixed(1)
       : "0";
 
-  const pending = data
-    ? data.totalEmails - data.sentEmails - data.failedEmails
-    : 0;
+  const pending = Math.max(
+  0,
+  (Number(data?.totalEmails) || 0) -
+    (Number(data?.sentEmails) || 0) -
+    (Number(data?.failedEmails) || 0)
+  );
 
   useEffect(() => {
     const donutEl = donutWrapRef.current;
@@ -135,16 +138,52 @@ export default function EmailStats() {
     );
   }
 
+
+  console.log("Email Analytics:", data);
+  console.log("Pending:", pending);
+  
   const stats = [
-    { label: "Sent", value: data?.sentEmails || 0, color: "text-purple-600", bg: "bg-purple-50", dot: "bg-purple-500" },
-    { label: "Failed", value: data?.failedEmails || 0, color: "text-red-500", bg: "bg-red-50", dot: "bg-red-500" },
-    { label: "Pending", value: pending, color: "text-amber-500", bg: "bg-amber-50", dot: "bg-amber-400" },
-    { label: "Click Through", value: data?.clickThroughRate || "0%", color: "text-blue-500", bg: "bg-blue-50", dot: "bg-blue-400" },
-    { label: "Unsubscribed", value: data?.totalUnsubscribed || 0, color: "text-orange-500", bg: "bg-orange-50", dot: "bg-orange-400" },
-  ];
+    {
+    label: "Sent",
+    value: Number(data?.sentEmails) || 0,
+    color: "text-purple-600",
+    bg: "bg-purple-50",
+    dot: "bg-purple-500",
+  },
+  {
+    label: "Failed",
+    value: Number(data?.failedEmails) || 0,
+    color: "text-red-500",
+    bg: "bg-red-50",
+    dot: "bg-red-500",
+  },
+  {
+    label: "Pending",
+    value: pending,
+    color: "text-amber-500",
+    bg: "bg-amber-50",
+    dot: "bg-amber-400",
+  },
+  {
+    label: "Click Through",
+    value: data?.clickThroughRate
+      ? `${data.clickThroughRate}`
+      : "0%",
+    color: "text-blue-500",
+    bg: "bg-blue-50",
+    dot: "bg-blue-400",
+  },
+  {
+    label: "Unsubscribed",
+    value: Number(data?.totalUnsubscribed) || 0,
+    color: "text-orange-500",
+    bg: "bg-orange-50",
+    dot: "bg-orange-400",
+  },
+];
 
  return (
-  <div className="bg-gray-50 border border-gray-500 rounded-xl p-4 min-w-0 h-[320px] sm:h-[360px] flex flex-col relative transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.03] hover:shadow-2xl hover:shadow-gray-400/50 hover:z-20 cursor-default">
+  <div className="bg-gray-50 border border-gray-300 rounded-xl p-4 min-w-0 h-[320px] sm:h-[360px] flex flex-col relative transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.03] hover:shadow-2xl hover:shadow-gray-400/50 hover:z-20 cursor-default">
     <div className="flex items-center justify-between mb-4 gap-2 shrink-0">
       <p className="text-sm font-semibold text-gray-700 truncate">Email Status Overview</p>
       <span className="text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100 font-medium shrink-0">● Live</span>
@@ -167,7 +206,13 @@ export default function EmailStats() {
             <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${s.dot}`} />
             <div className="min-w-0">
               <p className="text-xs text-gray-400 truncate">{s.label}</p>
-              <p className={`text-base font-bold ${s.color} truncate`}>{s.value}</p>
+              <p className={`text-base font-bold ${s.color} truncate`}>
+                {typeof s.value === "number"
+                  ? Number.isFinite(s.value)
+                    ? s.value
+                    : 0
+                  : s.value}
+              </p>
             </div>
           </div>
         ))}
