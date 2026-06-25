@@ -44,7 +44,7 @@ async function fetchLogs() {
   };
 
   return (
-   <div className="bg-white rounded-2xl border border-black-200 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+   <div className="bg-white rounded-2xl border border-gray-300 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
       {/* Header */}
        <div className="p-4 border-b border-zinc-200 flex items-center">
       <h3 className="font-semibold text-zinc-900 flex items-center gap-2">
