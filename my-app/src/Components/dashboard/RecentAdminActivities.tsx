@@ -8,7 +8,6 @@ export default function RecentAdminActivities() {
 
 const [logs, setLogs] = useState<any[]>([]);
 const [loading, setLoading] = useState(true);
-const [showAll, setShowAll] = useState(false);
 
 useEffect(() => {
   fetchLogs();
@@ -44,32 +43,20 @@ async function fetchLogs() {
     }
   };
 
-  const displayedLogs = showAll
-  ? logs
-  : logs.slice(0, 5);
-
   return (
    <div className="bg-white rounded-2xl border border-black-200 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
       {/* Header */}
-      <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
-        <h3 className="font-semibold text-zinc-900 flex items-center gap-2">
-          <ShieldCheck size={18} className="text-violet-600" />
-          Recent Admin Activities
-        </h3>
-
-        <button
-        onClick={() => setShowAll(!showAll)}
-        className="text-[13px] font-medium text-[#8B5CF6]"
-      >
-        {showAll ? "View Less" : "View All"}
-      </button>
-        
-      </div>
+       <div className="p-4 border-b border-zinc-200 flex items-center">
+      <h3 className="font-semibold text-zinc-900 flex items-center gap-2">
+        <ShieldCheck size={18} className="text-violet-600" />
+        Recent Admin Activities
+      </h3>
+    </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto max-h-[300px]">
         <table className="w-full text-sm">
-          <thead className="bg-white border-b border-zinc-100">
+         <thead className="bg-white border-b border-zinc-100 sticky top-0 z-10">
             <tr>
               <th className="px-4 py-3 text-left font-medium text-zinc-500">
                 Date & Time
@@ -103,7 +90,7 @@ async function fetchLogs() {
                 </td>
                 </tr>
             ) : (
-                displayedLogs.map((log) => (
+                logs.map((log) => (
                 <tr
                     key={log._id}
                     className="border-b border-zinc-50 hover:bg-violet-50 hover:shadow-sm transition-all duration-200 cursor-pointer"
