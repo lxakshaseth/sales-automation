@@ -143,44 +143,36 @@ export default function EmailStats() {
     { label: "Unsubscribed", value: data?.totalUnsubscribed || 0, color: "text-orange-500", bg: "bg-orange-50", dot: "bg-orange-400" },
   ];
 
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full min-w-0">
-
-      {/* Left - Email Status Overview */}
-      <div className="bg-gray-50 border border-gray-500 rounded-xl p-4 min-w-0 h-[320px] sm:h-[360px] flex flex-col relative transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.03] hover:shadow-2xl hover:shadow-gray-400/50 hover:z-20 cursor-default">
-        <div className="flex items-center justify-between mb-4 gap-2 shrink-0">
-          <p className="text-sm font-semibold text-gray-700 truncate">Email Status Overview</p>
-          <span className="text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100 font-medium shrink-0">● Live</span>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-5 items-center min-w-0 flex-1 min-h-0 overflow-y-auto">
-          <div ref={donutWrapRef} className="flex flex-col items-center w-full sm:w-auto sm:shrink-0 max-w-[220px]">
-            <canvas ref={canvasRef} style={{ display: "block", maxWidth: "100%" }} />
-            <div className="flex gap-3 mt-2 flex-wrap justify-center">
-              {[{ label: "Sent", color: "bg-purple-500" }, { label: "Failed", color: "bg-red-500" }, { label: "Pending", color: "bg-amber-400" }].map((l) => (
-                <div key={l.label} className="flex items-center gap-1">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${l.color}`} />
-                  <span className="text-[10px] text-gray-400 whitespace-nowrap">{l.label}</span>
-                </div>
-              ))}
+ return (
+  <div className="bg-gray-50 border border-gray-500 rounded-xl p-4 min-w-0 h-[320px] sm:h-[360px] flex flex-col relative transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.03] hover:shadow-2xl hover:shadow-gray-400/50 hover:z-20 cursor-default">
+    <div className="flex items-center justify-between mb-4 gap-2 shrink-0">
+      <p className="text-sm font-semibold text-gray-700 truncate">Email Status Overview</p>
+      <span className="text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100 font-medium shrink-0">● Live</span>
+    </div>
+    <div className="flex flex-col sm:flex-row gap-5 items-center min-w-0 flex-1 min-h-0 overflow-y-auto">
+      <div ref={donutWrapRef} className="flex flex-col items-center w-full sm:w-auto sm:shrink-0 max-w-[220px]">
+        <canvas ref={canvasRef} style={{ display: "block", maxWidth: "100%" }} />
+        <div className="flex gap-3 mt-2 flex-wrap justify-center">
+          {[{ label: "Sent", color: "bg-purple-500" }, { label: "Failed", color: "bg-red-500" }, { label: "Pending", color: "bg-amber-400" }].map((l) => (
+            <div key={l.label} className="flex items-center gap-1">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${l.color}`} />
+              <span className="text-[10px] text-gray-400 whitespace-nowrap">{l.label}</span>
             </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1 min-w-0 w-full">
-            {stats.map((s) => (
-              <div key={s.label} className={`${s.bg} rounded-xl px-4 py-3 flex items-center gap-3 min-w-0`}>
-                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${s.dot}`} />
-                <div className="min-w-0">
-                  <p className="text-xs text-gray-400 truncate">{s.label}</p>
-                  <p className={`text-base font-bold ${s.color} truncate`}>{s.value}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
-
-      {/* Right - Lead Tracker */}
-      <LeadAgingWidget />
-
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1 min-w-0 w-full">
+        {stats.map((s) => (
+          <div key={s.label} className={`${s.bg} rounded-xl px-4 py-3 flex items-center gap-3 min-w-0`}>
+            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${s.dot}`} />
+            <div className="min-w-0">
+              <p className="text-xs text-gray-400 truncate">{s.label}</p>
+              <p className={`text-base font-bold ${s.color} truncate`}>{s.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
-  );
+  </div>
+);
 }
