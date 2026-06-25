@@ -1,4 +1,5 @@
-@import "tailwindcss";
+@import "tailwindcss";  /* Importing Tailwind CSS for utility-first styling*/
+
 
 :root {
   --background: #f8fafc; /* slate-50 */

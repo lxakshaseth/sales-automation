@@ -13,6 +13,7 @@ from app.core.rate_limiter import close_rate_limiter, install_rate_limit_middlew
 from app.core.redis_utils import validate_redis_startup
 from app.routes.owner_settings import router as owner_settings_router
 from app.routes.reports import router as reports_router
+from app.routes.leads_analytics import router as leads_analytics_router
 from app.routes.twilio_webhook import router as twilio_router
 from app.scheduler.followup import shutdown_scheduler, start_scheduler
 from app.security import secure_process_request
@@ -75,6 +76,7 @@ install_rate_limit_middleware(app)
 app.include_router(twilio_router)
 app.include_router(owner_settings_router)
 app.include_router(reports_router)
+app.include_router(leads_analytics_router)
 
 @app.get("/")
 async def root():
