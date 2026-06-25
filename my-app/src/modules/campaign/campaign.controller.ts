@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import Campaign from "./campaign.model";
 import mongoose from "mongoose";
+import { createAuditLog } from "@/modules/audit-log/auditLog.service";
 type Params = { params: Promise<{ id: string }> };
 
 export const createCampaignController = async (req: NextRequest) => {
   try {
     const body = await req.json();
     const campaign = await Campaign.create(body);
+    await createAuditLog(
+      "Campaigns",
+      "Create",
+      campaign.name,
+      "Campaign created"
+    );
+
     return NextResponse.json(
       { success: true, data: campaign },
       { status: 201 },
@@ -113,7 +121,37 @@ export const updateCampaignController = async (
       );
     }
     const body = await req.json();
-    const updatedCampaign = await Campaign.findByIdAndUpdate(id, body);
+
+      const oldCampaign = await Campaign.findById(id);
+
+      const updatedCampaign = await Campaign.findByIdAndUpdate(
+        id,
+        body,
+        { new: true }
+      );
+
+      let details = "Campaign updated";
+
+      if (body.name && oldCampaign?.name !== body.name) {
+        details = "Name changed";
+      }
+      else if (body.status && oldCampaign?.status !== body.status) {
+        details = `Status changed ${oldCampaign.status} → ${body.status}`;
+      }
+      else if (
+        body.description &&
+        oldCampaign?.description !== body.description
+      ) {
+        details = "Description updated";
+      }
+
+      await createAuditLog(
+        "Campaign",
+        "Update",
+        updatedCampaign?.name || oldCampaign?.name,
+        details
+      );
+
     if (!updatedCampaign) {
       return NextResponse.json(
         { success: false, msg: "Campaign not found" },
@@ -159,6 +197,13 @@ export const deleteCampaingnController = async (
         { status: 200 },
       );
     }
+
+    await createAuditLog(
+      "Campaigns",
+      "Delete",
+      deleteCampaingn.name,
+      "Campaign removed"
+    );
     return NextResponse.json(
       { success: true, message: "Deleted successfully" },
       { status: 200 },
