@@ -20,7 +20,7 @@ export default function DashboardPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen w-full bg-gray-100">
       <main className="w-full">
         <div className="w-full">
           <DashboardHeader />
@@ -71,9 +71,9 @@ export default function DashboardPage() {
           <LeadAgingWidget />
         </div>
 
-         <div className="mt-4 pb-6">
+        <div className="mt-4 pb-6">
         <RecentAdminActivities />
-      </div>
+        </div>
 
         </div>
       </main>
