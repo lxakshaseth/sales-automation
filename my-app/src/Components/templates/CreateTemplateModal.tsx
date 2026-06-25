@@ -30,7 +30,6 @@ export default function CreateTemplateModal({
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [editor, setEditor] = useState<any>(null);
   
   const [subjectVars, setSubjectVars] = useState<CustomVar[]>([]);
@@ -47,13 +46,11 @@ export default function CreateTemplateModal({
       setType(initialData.type || "email");
       setSubject(initialData.subject || "");
       setBody(initialData.body || "");
-      setError("");
     } else if (!isOpen) {
       setName("");
       setType("email");
       setSubject("");
       setBody("");
-      setError("");
       setSubjectVars([]);
       setBodyVars([]);
     }
@@ -130,30 +127,23 @@ export default function CreateTemplateModal({
   };
 
   const handleSave = async () => {
-    // 1. Template Name Empty Check
     if (!name.trim()) {
-      setError("Template Name cannot be empty");
       toast.error("Template Name is required");
       return;
     }
 
-    // 2. Subject Line Empty Check
     if (!subject.trim()) {
-      setError("Subject Line cannot be empty");
       toast.error("Subject Line is required");
       return;
     }
 
-    // 3. Body Content Empty Check
     if (!body.trim() || body === "<p></p>") {
-      setError("Body Content cannot be empty");
       toast.error("Body Content is required");
       return;
     }
 
     try {
       setLoading(true);
-      setError("");
       
       const payload = { name, type, subject, body };
 
@@ -169,13 +159,11 @@ export default function CreateTemplateModal({
     } catch (err: any) {
       const msg = err?.response?.data?.message || "";
       
-      // 4. Duplicate Name Check via Backend Exception Mapping
       if (msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("exists") || err?.response?.status === 409) {
-        setError("Template name already exists");
+        toast.error("Template name already exists");
       } else {
-        setError(msg || "Failed to save template");
+        toast.error(msg || "Failed to save template");
       }
-      toast.error("Failed to save template");
     } finally {
       setLoading(false);
     }
@@ -217,14 +205,7 @@ export default function CreateTemplateModal({
         <div className="flex-1 flex overflow-hidden bg-gray-50">
           {/* LEFT: FORM EDITOR */}
           <div className="w-7/12 bg-white border-r border-gray-100 flex flex-col overflow-y-auto p-6 space-y-6">
-            {/* Specific Dynamic Error Banner */}
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl shadow-sm animate-in fade-in duration-150 flex items-center gap-2">
-                <span>⚠️</span>
-                <span>{error}</span>
-              </div>
-            )}
-
+            
             {/* Template Name */}
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
@@ -234,10 +215,7 @@ export default function CreateTemplateModal({
                 type="text"
                 placeholder="e.g., Welcome Onboarding Email"
                 value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (error) setError(""); 
-                }}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-50/50 transition-all font-medium text-gray-900 shadow-sm"
               />
             </div>
@@ -246,7 +224,7 @@ export default function CreateTemplateModal({
             <div className="space-y-3 border border-gray-100 p-4 rounded-xl bg-gray-50/30">
               <div className="flex justify-between items-center">
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Subject <span className="text-red-500">*</span>
+                  Subject Line <span className="text-red-500">*</span>
                 </label>
                 <button
                   type="button"
@@ -324,10 +302,7 @@ export default function CreateTemplateModal({
                 type="text"
                 placeholder="Enter subject line..."
                 value={subject}
-                onChange={(e) => {
-                  setSubject(e.target.value);
-                  if (error) setError("");
-                }}
+                onChange={(e) => setSubject(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-50/50 transition-all font-medium text-gray-900 shadow-sm bg-white"
               />
             </div>
@@ -336,7 +311,7 @@ export default function CreateTemplateModal({
             <div className="flex-1 flex flex-col min-h-[320px] space-y-3 border border-gray-100 p-4 rounded-xl bg-gray-50/30">
               <div className="flex justify-between items-center">
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Body  <span className="text-red-500">*</span>
+                  Body Content <span className="text-red-500">*</span>
                 </label>
                 <button
                   type="button"
@@ -426,10 +401,7 @@ export default function CreateTemplateModal({
               <div className="flex-1 border border-gray-200 rounded-xl overflow-hidden focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-50/50 transition-all bg-white flex flex-col shadow-sm">
                 <TemplateEditor
                   content={body}
-                  onChange={(html) => {
-                    setBody(html);
-                    if (error) setError("");
-                  }}
+                  onChange={(html) => setBody(html)}
                   onEditorReady={(inst) => setEditor(inst)}
                 />
               </div>
@@ -441,7 +413,7 @@ export default function CreateTemplateModal({
             <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-3">
               <div>
                 <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Configure Variable Values</h4>
-               
+                <p className="text-[10px] text-gray-400">Fill standard variables here to test the live preview compiler</p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -470,7 +442,7 @@ export default function CreateTemplateModal({
 
             <div className="flex-1 flex flex-col">
               <div className="mb-2">
-                <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Live Preview</h3>
+                <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Live System Preview</h3>
                 <p className="text-[11px] text-gray-400 mt-0.5">Real-time compilation of system variables</p>
               </div>
 
