@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { DateTime } from "luxon";
 import { startCampaignFlow } from "@/modules/automation/automation.service";
 import Campaign from "../campaign/campaign.model";
+import { createAuditLog } from "@/modules/audit-log/auditLog.service";
 type Params = { params: Promise<{ id: string }> };
 
 const countryTimezoneMap: Record<string, any> = {
@@ -99,8 +100,18 @@ export const createLeadController = async (req: NextRequest) => {
       stageEnteredAt: new Date(),
       lastActivity: "Lead Created",
       });
+      
+      const leadName =
+      `${createLead.firstName || ""} ${createLead.lastName || ""}`.trim();
 
-    await startCampaignFlow(createLead._id.toString());
+       await createAuditLog(
+        "Leads",
+        "Create",
+        leadName,
+       "Lead created"
+      );
+
+    // await startCampaignFlow(createLead._id.toString());
 
     const currentTime = DateTime.now().setZone(createLead.timezone).toString();
 
@@ -271,6 +282,54 @@ export const updateLeadController = async (
       { new: true, runValidators: true }
     );
 
+    const changes: string[] = [];
+
+      if (
+        existingLead.firstName !== updatedLead.firstName ||
+        existingLead.lastName !== updatedLead.lastName
+      ) {
+        changes.push("Name changed");
+      }
+
+      if (existingLead.email !== updatedLead.email) {
+        changes.push("Email updated");
+      }
+
+      if (existingLead.phone !== updatedLead.phone) {
+        changes.push("Phone updated");
+      }
+
+      if (existingLead.status !== updatedLead.status) {
+        changes.push(
+          `Status changed ${existingLead.status} → ${updatedLead.status}`
+        );
+      }
+
+      if (existingLead.source !== updatedLead.source) {
+        changes.push(
+          `Source changed ${existingLead.source} → ${updatedLead.source}`
+        );
+      }
+
+      if (existingLead.score !== updatedLead.score) {
+        changes.push("Lead score updated");
+      }
+
+      const details =
+        changes.length > 0
+          ? changes.join(", ")
+          : "Lead updated";
+
+      const leadName =
+        `${updatedLead.firstName || ""} ${updatedLead.lastName || ""}`.trim();
+
+      await createAuditLog(
+        "Leads",
+        "Update",
+        leadName,
+        details
+      );
+
       if (!updatedLead) {
       return NextResponse.json(
         { success: false, msg: "lead not found" },
@@ -316,6 +375,17 @@ export const deleteLeadController = async (
         { status: 200 },
       );
     }
+
+    const leadName =
+    `${deleteLead.firstName || ""} ${deleteLead.lastName || ""}`.trim();
+
+      await createAuditLog(
+        "Leads",
+        "Delete",
+        leadName,
+        "Lead removed"
+      );
+
     return NextResponse.json(
       { success: true, message: "Deleted successfully" },
       { status: 200 },

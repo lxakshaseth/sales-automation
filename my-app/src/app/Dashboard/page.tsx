@@ -3,6 +3,7 @@
 import { DashboardHeader } from "@/Components/dashboard/StatsCards";
 import LeadAgingWidget from "@/Components/dashboard/LeadAgingWidget";
 import EmailStats from "@/Components/dashboard/EmailStats";
+import RecentAdminActivities from "@/Components/dashboard/RecentAdminActivities";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Megaphone, Users, MessageCircle, FileText } from "lucide-react";
@@ -69,6 +70,10 @@ export default function DashboardPage() {
           <EmailStats />
           <LeadAgingWidget />
         </div>
+
+         <div className="mt-4 pb-6">
+        <RecentAdminActivities />
+      </div>
 
         </div>
       </main>
