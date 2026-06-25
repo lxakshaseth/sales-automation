@@ -111,7 +111,7 @@ export const createLeadController = async (req: NextRequest) => {
        "Lead created"
       );
 
-    // await startCampaignFlow(createLead._id.toString());
+    await startCampaignFlow(createLead._id.toString());
 
     const currentTime = DateTime.now().setZone(createLead.timezone).toString();
 
