@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 
 const ContactSchema = new mongoose.Schema(
   {
-    waId: {
-      type: String,
+    waId: { 
+      type: String,    // WhatsApp ID
       required: true,
       unique: true,
     },
@@ -18,6 +18,37 @@ const ContactSchema = new mongoose.Schema(
 
     phone: {
       type: String,
+    },
+
+    aiEnabled: {
+      type: Boolean,
+      default: false,
+    },
+
+    conversationStatus: {
+      type: String,
+      enum: ["OPEN", "CLOSED"],
+      default: "OPEN",
+    },
+
+    lifecycleRunId: {
+      type: String,
+    },
+
+    lastInboundAt: {
+      type: Date, 
+    },
+
+    reminderSentAt: {  //
+      type: Date,
+    },
+
+    closedAt: {
+      type: Date,
+    },
+
+    summarySentAt: {
+      type: Date,
     },
 
     lastMessageAt: {

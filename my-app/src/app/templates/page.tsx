@@ -4,6 +4,7 @@ import { useState } from "react";
 import SideBar from "@/Components/SideBar";
 import TopBar from "@/Components/Topbar";
 
+import HeaderSection from "@/Components/templates/HeaderSection";
 import TemplatesTable from "@/Components/templates/TemplatesTable";
 
 export default function TemplatesPage() {

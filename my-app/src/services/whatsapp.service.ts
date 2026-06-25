@@ -1,9 +1,15 @@
 export interface Contact {
   _id: string;
   waId: string;
-  name?: string;
+  name?: string;    // The name of the contact as provided by WhatsApp
   customName?: string;
   phone?: string;
+  aiEnabled?: boolean;
+  lastMessage?: string;
+  lastMessageDirection?: Message["direction"];
+  lastMessageStatus?: Message["status"];
+  lastMessageCreatedAt?: string;
+  unreadCount?: number;
   lastMessageAt: string;
   createdAt: string;
   updatedAt: string;
@@ -16,10 +22,15 @@ export interface Message {
   direction: "INBOUND" | "OUTBOUND";
   type: "text" | "template";
   message: string;
-  status?: "SENT" | "DELIVERED" | "READ" | "FAILED";
+  status?: "RECEIVED" | "SENT" | "DELIVERED" | "READ" | "FAILED";
   createdAt: string;
   updatedAt: string;
 }
+
+type RequestOptions = {
+  signal?: AbortSignal;
+  timeoutMs?: number;
+};
 
 function getAuthHeaders() {
   const token = sessionStorage.getItem("token");
@@ -30,50 +41,140 @@ function getAuthHeaders() {
   };
 }
 
-export async function getContacts() {
-  const response = await fetch("/api/whatsapp/contacts", {
-    headers: getAuthHeaders(),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch contacts");
-  }
-
-  return data;
+export function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === "AbortError";
 }
 
-export async function updateContactName(contactId: string, customName: string) {
-  const response = await fetch(`/api/whatsapp/contacts/${contactId}`, {
-    method: "PATCH",
-    headers: getAuthHeaders(),
-    body: JSON.stringify({
-      customName,
-    }),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to update contact");
+function createRequestSignal({ signal, timeoutMs }: RequestOptions = {}) {
+  if (!timeoutMs) {
+    return {
+      signal,
+      cleanup: () => {},
+    };
   }
 
-  return data;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  const abortFromParent = () => controller.abort();
+
+  if (signal?.aborted) {
+    controller.abort();
+  } else {
+    signal?.addEventListener("abort", abortFromParent, {
+      once: true,
+    });
+  }
+
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      window.clearTimeout(timeout);
+      signal?.removeEventListener("abort", abortFromParent);
+    },
+  };
 }
 
-export async function getChatByWaId(waId: string) {
-  const response = await fetch(`/api/whatsapp/chat/${waId}`, {
-    headers: getAuthHeaders(),
-  });
+export async function getContacts(options?: RequestOptions) {
+  const request = createRequestSignal(options);
 
-  const data = await response.json();
+  try {
+    const response = await fetch("/api/whatsapp/contacts", {
+      headers: getAuthHeaders(),
+      signal: request.signal,
+      cache: "no-store",
+    });
 
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch chat");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch contacts");
+    }
+
+    return data;
+  } finally {
+    request.cleanup();
   }
+}
 
-  return data;
+export async function updateContactName(
+  contactId: string,
+  customName: string,
+  options?: RequestOptions,
+) {
+  const request = createRequestSignal(options);
+
+  try {
+    const response = await fetch(`/api/whatsapp/contacts/${contactId}`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      signal: request.signal,
+      body: JSON.stringify({
+        customName,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to update contact");
+    }
+
+    return data;
+  } finally {
+    request.cleanup();
+  }
+}
+
+export async function updateContactAiEnabled(
+  contactId: string,
+  aiEnabled: boolean,
+  options?: RequestOptions,
+) {
+  const request = createRequestSignal(options);
+
+  try {
+    const response = await fetch(`/api/whatsapp/contacts/${contactId}`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      signal: request.signal,
+      body: JSON.stringify({
+        aiEnabled,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to update AI setting");
+    }
+
+    return data;
+  } finally {
+    request.cleanup();
+  }
+}
+
+export async function getChatByWaId(waId: string, options?: RequestOptions) {
+  const request = createRequestSignal(options);
+
+  try {
+    const response = await fetch(`/api/whatsapp/chat/${waId}`, {
+      headers: getAuthHeaders(),
+      signal: request.signal,
+      cache: "no-store",
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch chat");
+    }
+
+    return data;
+  } finally {
+    request.cleanup();
+  }
 }
 
 export async function sendMessage({
@@ -101,11 +202,27 @@ export async function sendMessage({
   return data;
 }
 
-export async function markChatAsRead(waId: string) {
-  const response = await fetch(`/api/whatsapp/chat/${waId}/read`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-  });
+export async function markChatAsRead(waId: string, options?: RequestOptions) {
+  const request = createRequestSignal(options);
 
-  return response.json();
+  try {
+    const response = await fetch("/api/whatsapp/chat/read", {
+      method: "POST",
+      headers: getAuthHeaders(),
+      signal: request.signal,
+      body: JSON.stringify({
+        waId,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to mark chat as read");
+    }
+
+    return data;
+  } finally {
+    request.cleanup();
+  }
 }

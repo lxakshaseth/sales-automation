@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
 import {
-  getContactsController,
+  getContactsController,    //get
 } from "@/modules/whatsapp/whatsapp.controller";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
@@ -12,6 +14,10 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: contacts,
+    }, {
+      headers: {
+        "Cache-Control": "no-store",
+      },
     });
   } catch {
     return NextResponse.json(

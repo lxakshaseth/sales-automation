@@ -1,9 +1,18 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose";  // Importing the Mongoose library for MongoDB object modeling
 
 const connectDB = async () => {
   try {
-    if (mongoose.connection.readyState === 1) {
+    const dbName = process.env.MONGODB_DB_NAME || "sales-automation";
+
+    if (
+      mongoose.connection.readyState === 1 &&
+      mongoose.connection.name === dbName
+    ) {
       return;
+    }
+
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
     }
 
     const MONGODB_URI = process.env.MONGODB_URI;
@@ -12,7 +21,9 @@ const connectDB = async () => {
       throw new Error("MONGODB_URI is missing");
     }
 
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI, {
+      dbName,
+    });
 
     console.log("MongoDB Connected");
   } catch (error) {

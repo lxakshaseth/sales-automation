@@ -21,14 +21,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
 
   const body = await req.json();
-  const value = body?.entry?.[0]?.changes?.[0]?.value;
 
-  if (value?.messages) {
-    await handleIncomingMessage(body);
-  }
-  if (value?.statuses) {
-    await handleStatusUpdate(body);
-  }
+  await handleIncomingMessage(body);
+  await handleStatusUpdate(body);
   
   return NextResponse.json({ success: true });
 }
