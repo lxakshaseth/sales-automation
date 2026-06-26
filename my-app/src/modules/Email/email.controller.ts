@@ -1,5 +1,8 @@
 import Email from "./email.model";
-import { sendEmailService } from "./email.service"; // Importing the sendEmailService function from the email service module to handle sending emails
+import {
+  sendEmailService,
+} from "./email.service"; // Importing the sendEmailService function from the email service module to handle sending emails
+import type { EmailAttachment } from "./email.service";
 import Unsubscribed from "./unsubscribed.model";
 import { injectTrackingLinks } from "./email.util";
 import Template from "./template.model";
@@ -19,6 +22,7 @@ interface EmailBody {
   };
 
   emailId?: string;
+  attachments?: EmailAttachment[];
 }
 
 export const sendEmail = async ({
@@ -27,6 +31,7 @@ export const sendEmail = async ({
   body,
   templateName,
   variables = {},
+  attachments = [],
 }: EmailBody) => {
   try {
     // 1. Check unsubscribe list
@@ -101,6 +106,7 @@ export const sendEmail = async ({
       to,
       subject: finalSubject,
       body: completeBody,
+      attachments,
     });
 
     // 9. Update status

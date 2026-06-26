@@ -32,6 +32,35 @@ type RequestOptions = {
   timeoutMs?: number;
 };
 
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+  message?: string;
+};
+
+type ChatData = {
+  contact: Contact;
+  messages: Message[];
+};
+
+type SendMessageData = {
+  whatsapp?: unknown;
+  inboundMessage?: Message | null;
+  outboundMessage?: Message | null;
+};
+
+export class WhatsAppApiError extends Error {
+  status: number;
+  data: unknown;
+
+  constructor(message: string, status: number, data: unknown) {
+    super(message);
+    this.name = "WhatsAppApiError";
+    this.status = status;
+    this.data = data;
+  }
+}
+
 function getAuthHeaders() {
   const token = sessionStorage.getItem("token");
 
@@ -43,6 +72,42 @@ function getAuthHeaders() {
 
 export function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError";
+}
+
+export function isNotFoundError(error: unknown) {
+  return error instanceof WhatsAppApiError && error.status === 404;
+}
+
+async function readResponseData(response: Response) {
+  const text = await response.text();
+
+  if (!text) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {
+      message: text,
+    };
+  }
+}
+
+async function readJsonResponse<T>(response: Response, fallbackMessage: string) {
+  const data = await readResponseData(response) as T & {
+    message?: string;
+  };
+
+  if (!response.ok) {
+    throw new WhatsAppApiError(
+      data.message || fallbackMessage,
+      response.status,
+      data,
+    );
+  }
+
+  return data;
 }
 
 function createRequestSignal({ signal, timeoutMs }: RequestOptions = {}) {
@@ -85,13 +150,10 @@ export async function getContacts(options?: RequestOptions) {
       cache: "no-store",
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to fetch contacts");
-    }
-
-    return data;
+    return await readJsonResponse<ApiResponse<Contact[]>>(
+      response,
+      "Failed to fetch contacts",
+    );
   } finally {
     request.cleanup();
   }
@@ -105,7 +167,7 @@ export async function updateContactName(
   const request = createRequestSignal(options);
 
   try {
-    const response = await fetch(`/api/whatsapp/contacts/${contactId}`, {
+    const response = await fetch(`/api/whatsapp/contacts/${encodeURIComponent(contactId)}`, {
       method: "PATCH",
       headers: getAuthHeaders(),
       signal: request.signal,
@@ -114,13 +176,29 @@ export async function updateContactName(
       }),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to update contact");
+    return await readJsonResponse<ApiResponse<Contact>>(
+      response,
+      "Failed to update contact",
+    );
+  } catch (error) {
+    if (!isNotFoundError(error)) {
+      throw error;
     }
 
-    return data;
+    const fallbackResponse = await fetch("/api/whatsapp/contacts", {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      signal: request.signal,
+      body: JSON.stringify({
+        contactId,
+        customName,
+      }),
+    });
+
+    return await readJsonResponse<ApiResponse<Contact>>(
+      fallbackResponse,
+      "Failed to update contact",
+    );
   } finally {
     request.cleanup();
   }
@@ -134,7 +212,7 @@ export async function updateContactAiEnabled(
   const request = createRequestSignal(options);
 
   try {
-    const response = await fetch(`/api/whatsapp/contacts/${contactId}`, {
+    const response = await fetch(`/api/whatsapp/contacts/${encodeURIComponent(contactId)}`, {
       method: "PATCH",
       headers: getAuthHeaders(),
       signal: request.signal,
@@ -143,13 +221,29 @@ export async function updateContactAiEnabled(
       }),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to update AI setting");
+    return await readJsonResponse<ApiResponse<Contact>>(
+      response,
+      "Failed to update AI setting",
+    );
+  } catch (error) {
+    if (!isNotFoundError(error)) {
+      throw error;
     }
 
-    return data;
+    const fallbackResponse = await fetch("/api/whatsapp/contacts", {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      signal: request.signal,
+      body: JSON.stringify({
+        contactId,
+        aiEnabled,
+      }),
+    });
+
+    return await readJsonResponse<ApiResponse<Contact>>(
+      fallbackResponse,
+      "Failed to update AI setting",
+    );
   } finally {
     request.cleanup();
   }
@@ -159,19 +253,34 @@ export async function getChatByWaId(waId: string, options?: RequestOptions) {
   const request = createRequestSignal(options);
 
   try {
-    const response = await fetch(`/api/whatsapp/chat/${waId}`, {
+    const response = await fetch(`/api/whatsapp/chat/${encodeURIComponent(waId)}`, {
       headers: getAuthHeaders(),
       signal: request.signal,
       cache: "no-store",
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to fetch chat");
+    return await readJsonResponse<ApiResponse<ChatData>>(
+      response,
+      "Failed to fetch chat",
+    );
+  } catch (error) {
+    if (!isNotFoundError(error)) {
+      throw error;
     }
 
-    return data;
+    const fallbackResponse = await fetch(
+      `/api/whatsapp/chat?waId=${encodeURIComponent(waId)}`,
+      {
+        headers: getAuthHeaders(),
+        signal: request.signal,
+        cache: "no-store",
+      },
+    );
+
+    return await readJsonResponse<ApiResponse<ChatData>>(
+      fallbackResponse,
+      "Failed to fetch chat",
+    );
   } finally {
     request.cleanup();
   }
@@ -193,13 +302,10 @@ export async function sendMessage({
     }),
   });
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to send message");
-  }
-
-  return data;
+  return await readJsonResponse<ApiResponse<SendMessageData>>(
+    response,
+    "Failed to send message",
+  );
 }
 
 export async function markChatAsRead(waId: string, options?: RequestOptions) {
@@ -215,13 +321,10 @@ export async function markChatAsRead(waId: string, options?: RequestOptions) {
       }),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to mark chat as read");
-    }
-
-    return data;
+    return await readJsonResponse<{
+      success: boolean;
+      message?: string;
+    }>(response, "Failed to mark chat as read");
   } finally {
     request.cleanup();
   }
