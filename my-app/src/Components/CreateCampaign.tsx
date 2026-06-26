@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Mail, Send, Save, FileText, Check, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { getTemplates, Template } from "@/services/template.service";
 import { createCampaign } from "@/services/campaign.service";
 import { useRouter } from "next/navigation";
@@ -44,6 +45,21 @@ export default function CreateCampaign() {
   );
   
  async function handleSaveDraft() {
+  if (status !== "draft") {
+    toast.error("Set status to Draft to save as draft");
+    return;
+  }
+
+  if (!campaignName.trim()) {
+    toast.error("Campaign name is required");
+    return;
+  }
+
+  if (!description.trim()) {
+    toast.error("Campaign description is required");
+    return;
+  }
+
   try {
     setSaving(true);
 
@@ -53,11 +69,11 @@ export default function CreateCampaign() {
       throw new Error("Authentication token not found");
     }
 
-      const payload = {
-        name: campaignName,
-        description: description,
-        status: "draft",
-        funnel: [
+    const payload = {
+      name: campaignName,
+      description: description,
+      status,
+      funnel: [
         {
           step: "email",
           action: "welcome_email",
@@ -65,21 +81,17 @@ export default function CreateCampaign() {
           enabled: true,
         },
       ],
-      emailTemplates: selectedTemplateId
-        ? [selectedTemplateId]
-        : [],
+      emailTemplates: selectedTemplateId ? [selectedTemplateId] : [],
     };
 
     await createCampaign(payload, token);
 
-    alert("Draft saved successfully!");
+    toast.success("Draft saved successfully!");
   } catch (error) {
     console.error(error);
 
-    alert(
-      error instanceof Error
-        ? error.message
-        : "Failed to save draft"
+    toast.error(
+      error instanceof Error ? error.message : "Failed to save draft"
     );
   } finally {
     setSaving(false);
@@ -87,6 +99,21 @@ export default function CreateCampaign() {
 }
 
  async function handleLaunch() {
+  if (status !== "active") {
+    toast.error("Set status to Active to create");
+    return;
+  }
+
+  if (!campaignName.trim()) {
+    toast.error("Campaign name is required");
+    return;
+  }
+
+  if (!description.trim()) {
+    toast.error("Campaign description is required");
+    return;
+  }
+
   try {
     setLaunching(true);
 
@@ -98,8 +125,8 @@ export default function CreateCampaign() {
 
     const payload = {
       name: campaignName,
-      description: campaignCategory,
-      status: "active",
+      description: description,
+      status,
       funnel: [
         {
           step: "email",
@@ -108,19 +135,18 @@ export default function CreateCampaign() {
           enabled: true,
         },
       ],
-      emailTemplates: selectedTemplateId
-        ? [selectedTemplateId]
-        : [],
+      emailTemplates: selectedTemplateId ? [selectedTemplateId] : [],
     };
 
     const response = await createCampaign(payload, token);
 
     console.log(response);
-    alert("Campaign launched successfully!");
+    toast.success("Campaign created successfully!");
     router.push("/Campaign");
   } catch (error) {
     console.error(error);
-    alert(
+
+    toast.error(
       error instanceof Error
         ? error.message
         : "Failed to Create campaign"
@@ -129,8 +155,7 @@ export default function CreateCampaign() {
     setLaunching(false);
   }
 }
-
-  return (
+ return (
     <div className="flex flex-col gap-8 pb-10">
       {/* Top Action Bar */}
       <div className="flex items-center justify-between">
