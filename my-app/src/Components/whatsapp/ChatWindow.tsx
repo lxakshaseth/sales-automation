@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ArrowLeft,
-  Bot,
+  Bot, // This is the Bot icon from lucide-react
   Check,
   CheckCheck,
   MessageCircle,

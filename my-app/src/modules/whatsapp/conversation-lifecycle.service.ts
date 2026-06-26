@@ -10,7 +10,7 @@ import {
 } from "./whatsapp.service";
 
 const DEFAULT_REMINDER_AFTER_MS = 3 * 60 * 1000;
-const DEFAULT_CLOSE_AFTER_MS = 5 * 60 * 1000;
+const DEFAULT_CLOSE_AFTER_MS = 5 * 60 * 1000;  // 5 minutes in milliseconds
 
 type ConversationContact = {
   customName?: string;

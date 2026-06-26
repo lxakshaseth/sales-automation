@@ -40,7 +40,7 @@ export async function handleIncomingMessage(payload: any) {
 
   await startConversationLifecycle(contact._id.toString());
 
-  if (!contact.aiEnabled || !msg?.text?.body?.trim()) {
+  if (!contact.aiEnabled || !msg?.text?.body?.trim()) {   // If AI is not enabled for the contact or the message body is empty, do not generate a reply
     return;
   }
 
