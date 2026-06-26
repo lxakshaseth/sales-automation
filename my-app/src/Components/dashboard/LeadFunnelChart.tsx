@@ -12,17 +12,16 @@ import {
   Cell,
 } from "recharts";
 
-const STATUS_ORDER = [
-  "new",
-  "contacted"];
+const STATUS_ORDER = ["new", "contacted"];
 
 const STATUS_LABELS: Record<string, string> = {
   new: "New",
-  contacted: "Contacted"};
+  contacted: "Contacted",
+};
 
 const STATUS_COLORS: Record<string, string> = {
   new: "#3b82f6",
-  contacted: "#1D9E75"
+  contacted: "#1D9E75",
 };
 
 interface FunnelItem {
@@ -49,11 +48,11 @@ export default function LeadFunnelChart({
     count: data.find((d) => d.status === status)?.count ?? 0,
   }));
 
-  return (<div className="bg-gray-50 border border-gray-500 rounded-xl shadow-sm p-5 transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.03] hover:shadow-2xl hover:shadow-gray-400/50 hover:z-20 cursor-default">
-    
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-2xl hover:shadow-gray-400/50 hover:z-20 cursor-default">
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-[15px] font-semibold text-[#111827]">
-          Lead funnel by status
+          WhatsApp Contacts
         </h3>
         <div className="relative">
           <select
@@ -110,10 +109,7 @@ export default function LeadFunnelChart({
 
             <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={28}>
               {sortedData.map((entry) => (
-                <Cell
-                  key={entry.status}
-                  fill={STATUS_COLORS[entry.status]}
-                />
+                <Cell key={entry.status} fill={STATUS_COLORS[entry.status]} />
               ))}
             </Bar>
           </BarChart>

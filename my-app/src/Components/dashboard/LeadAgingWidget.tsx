@@ -104,7 +104,7 @@ export default function LeadAgingWidget() {
 
 return (
     <>
-      <div className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm flex flex-col w-full h-[320px] sm:h-[360px] min-h-0 min-w-0 relative transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.03] hover:shadow-2xl hover:shadow-gray-400/50 hover:z-20 cursor-default">
+      <div className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm flex flex-col w-full h-[320px] sm:h-[360px] min-h-0 min-w-0 relative transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-2xl hover:shadow-gray-400/50 hover:z-20 cursor-default">
         {/* Header */}
         <div className="flex items-center justify-between mb-3 px-1 shrink-0">
           <h2 className="text-base font-semibold text-gray-900">
