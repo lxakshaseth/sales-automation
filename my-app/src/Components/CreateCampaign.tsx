@@ -19,7 +19,9 @@ export default function CreateCampaign() {
   const [launching, setLaunching] = useState(false);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
+    null,
+  );
   const [templateSearch, setTemplateSearch] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<"draft" | "active">("draft");
@@ -39,128 +41,133 @@ export default function CreateCampaign() {
     fetchTemplates();
   }, []);
 
-  const filteredTemplates = templates.filter((t) =>
-    t.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
-    t.subject?.toLowerCase().includes(templateSearch.toLowerCase())
+  const filteredTemplates = templates.filter(
+    (t) =>
+      t.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
+      t.subject?.toLowerCase().includes(templateSearch.toLowerCase()),
   );
-  
- async function handleSaveDraft() {
-  if (status !== "draft") {
-    toast.error("Set status to Draft to save as draft");
-    return;
-  }
 
-  if (!campaignName.trim()) {
-    toast.error("Campaign name is required");
-    return;
-  }
-
-  if (!description.trim()) {
-    toast.error("Campaign description is required");
-    return;
-  }
-
-  try {
-    setSaving(true);
-
-    const token = sessionStorage.getItem("token");
-
-    if (!token) {
-      throw new Error("Authentication token not found");
+  async function handleSaveDraft() {
+    if (status !== "draft") {
+      toast.error("Set status to Draft to save as draft");
+      return;
     }
 
-    const payload = {
-      name: campaignName,
-      description: description,
-      status,
-      funnel: [
-        {
-          step: "email",
-          action: "welcome_email",
-          waitHours: 0,
-          enabled: true,
-        },
-      ],
-      emailTemplates: selectedTemplateId ? [selectedTemplateId] : [],
-    };
-
-    await createCampaign(payload, token);
-
-    toast.success("Draft saved successfully!");
-  } catch (error) {
-    console.error(error);
-
-    toast.error(
-      error instanceof Error ? error.message : "Failed to save draft"
-    );
-  } finally {
-    setSaving(false);
-  }
-}
-
- async function handleLaunch() {
-  if (status !== "active") {
-    toast.error("Set status to Active to create");
-    return;
-  }
-
-  if (!campaignName.trim()) {
-    toast.error("Campaign name is required");
-    return;
-  }
-
-  if (!description.trim()) {
-    toast.error("Campaign description is required");
-    return;
-  }
-
-  try {
-    setLaunching(true);
-
-    const token = sessionStorage.getItem("token");
-
-    if (!token) {
-      throw new Error("User not authenticated");
+    if (!campaignName.trim()) {
+      toast.error("Campaign name is required");
+      return;
     }
 
-    const payload = {
-      name: campaignName,
-      description: description,
-      status,
-      funnel: [
-        {
-          step: "email",
-          action: "welcome_email",
-          waitHours: 0,
-          enabled: true,
-        },
-      ],
-      emailTemplates: selectedTemplateId ? [selectedTemplateId] : [],
-    };
+    if (!description.trim()) {
+      toast.error("Campaign description is required");
+      return;
+    }
 
-    const response = await createCampaign(payload, token);
+    try {
+      setSaving(true);
 
-    console.log(response);
-    toast.success("Campaign created successfully!");
-    router.push("/Campaign");
-  } catch (error) {
-    console.error(error);
+      const token = sessionStorage.getItem("token");
 
-    toast.error(
-      error instanceof Error
-        ? error.message
-        : "Failed to Create campaign"
-    );
-  } finally {
-    setLaunching(false);
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+
+      const payload = {
+        name: campaignName,
+        description: description,
+        status,
+        funnel: [
+          {
+            step: "email",
+            action: "welcome_email",
+            waitHours: 0,
+            enabled: true,
+          },
+        ],
+        emailTemplates: selectedTemplateId ? [selectedTemplateId] : [],
+      };
+
+      await createCampaign(payload, token);
+
+      toast.success("Draft saved successfully!");
+      setTimeout(() => {
+        router.push("/Campaign");
+      }, 1000);
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save draft",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
-}
- return (
+
+  async function handleLaunch() {
+    if (status !== "active") {
+      toast.error("Set status to Active to create");
+      return;
+    }
+
+    if (!campaignName.trim()) {
+      toast.error("Campaign name is required");
+      return;
+    }
+
+    if (!description.trim()) {
+      toast.error("Campaign description is required");
+      return;
+    }
+
+    try {
+      setLaunching(true);
+
+      const token = sessionStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("User not authenticated");
+      }
+
+      const payload = {
+        name: campaignName,
+        description: description,
+        status,
+        funnel: [
+          {
+            step: "email",
+            action: "welcome_email",
+            waitHours: 0,
+            enabled: true,
+          },
+        ],
+        emailTemplates: selectedTemplateId ? [selectedTemplateId] : [],
+      };
+
+      const response = await createCampaign(payload, token);
+
+      console.log(response);
+      toast.success("Campaign created successfully!");
+      router.push("/Campaign");
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error instanceof Error ? error.message : "Failed to Create campaign",
+      );
+    } finally {
+      setLaunching(false);
+    }
+  }
+  return (
     <div className="flex flex-col gap-8 pb-10">
       {/* Top Action Bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-zinc-500">
-          <Link href="/Campaign" className="hover:text-violet-600 transition-colors">
+          <Link
+            href="/Campaign"
+            className="hover:text-violet-600 transition-colors"
+          >
             Campaigns
           </Link>
           <span>/</span>
@@ -188,8 +195,12 @@ export default function CreateCampaign() {
 
       {/* Page Title */}
       <div>
-        <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Create New Campaign</h1>
-        <p className="text-zinc-500 mt-1">Build and launch Email or WhatsApp campaigns.</p>
+        <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">
+          Create New Campaign
+        </h1>
+        <p className="text-zinc-500 mt-1">
+          Build and launch Email or WhatsApp campaigns.
+        </p>
       </div>
 
       {/* Campaign Details Card */}
@@ -207,96 +218,94 @@ export default function CreateCampaign() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Campaign Name */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-2">
+              Campaign Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={campaignName}
+              onChange={(e) => setCampaignName(e.target.value)}
+              placeholder="Enter campaign name"
+              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
+            />
+          </div>
 
-  {/* Campaign Name */}
-  <div>
-    <label className="block text-sm font-medium text-zinc-700 mb-2">
-      Campaign Name <span className="text-red-500">*</span>
-    </label>
-    <input
-      type="text"
-      value={campaignName}
-      onChange={(e) => setCampaignName(e.target.value)}
-      placeholder="Enter campaign name"
-      className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
-    />
-  </div>
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-2">
+              Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter campaign description"
+              rows={3}
+              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm resize-none"
+            />
+          </div>
 
-  {/* Description */}
-  <div>
-    <label className="block text-sm font-medium text-zinc-700 mb-2">
-      Description <span className="text-red-500">*</span>
-    </label>
-    <textarea
-      value={description}
-      onChange={(e) => setDescription(e.target.value)}
-      placeholder="Enter campaign description"
-      rows={3}
-      className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm resize-none"
-    />
-  </div>
+          {/* Status */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-2">
+              Status <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as "draft" | "active")}
+              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm bg-white"
+            >
+              <option value="draft">Draft</option>
+              <option value="active">Active</option>
+            </select>
+          </div>
 
-  {/* Status */}
-  <div>
-    <label className="block text-sm font-medium text-zinc-700 mb-2">
-      Status <span className="text-red-500">*</span>
-    </label>
-      <select
-        value={status}
-        onChange={(e) => setStatus(e.target.value as "draft" | "active")}
-        className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm bg-white"
-      >
-        <option value="draft">Draft</option>
-        <option value="active">Active</option>
-      </select>
-  </div>
+          {/* Campaign Category */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-2">
+              Campaign Category
+            </label>
+            <select
+              value={campaignCategory}
+              onChange={(e) => setCampaignCategory(e.target.value)}
+              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm bg-white"
+            >
+              <option value="Promotional">Promotional</option>
+              <option value="Transactional">Transactional</option>
+              <option value="Newsletter">Newsletter</option>
+              <option value="Welcome">Welcome</option>
+              <option value="Re-engagement">Re-engagement</option>
+            </select>
+          </div>
 
-  {/* Campaign Category */}
-  <div>
-    <label className="block text-sm font-medium text-zinc-700 mb-2">
-      Campaign Category
-    </label>
-    <select
-      value={campaignCategory}
-      onChange={(e) => setCampaignCategory(e.target.value)}
-      className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm bg-white"
-    >
-      <option value="Promotional">Promotional</option>
-      <option value="Transactional">Transactional</option>
-      <option value="Newsletter">Newsletter</option>
-      <option value="Welcome">Welcome</option>
-      <option value="Re-engagement">Re-engagement</option>
-    </select>
-  </div>
+          {/* Schedule Date */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-2">
+              Schedule Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={scheduleDate}
+              onChange={(e) => setScheduleDate(e.target.value)}
+              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
+            />
+          </div>
 
-  {/* Schedule Date */}
-  <div>
-    <label className="block text-sm font-medium text-zinc-700 mb-2">
-      Schedule Date <span className="text-red-500">*</span>
-    </label>
-    <input
-      type="date"
-      value={scheduleDate}
-      onChange={(e) => setScheduleDate(e.target.value)}
-      className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
-    />
-  </div>
-
-  {/* Schedule Time */}
-  <div>
-    <label className="block text-sm font-medium text-zinc-700 mb-2">
-      Schedule Time <span className="text-red-500">*</span>
-    </label>
-    <input
-      type="time"
-      value={scheduleTime}
-      onChange={(e) => setScheduleTime(e.target.value)}
-      className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
-    />
-  </div>
-
-</div>
-</motion.div>
+          {/* Schedule Time */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-2">
+              Schedule Time <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="time"
+              value={scheduleTime}
+              onChange={(e) => setScheduleTime(e.target.value)}
+              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
+            />
+          </div>
+        </div>
+      </motion.div>
       {/* Select Template Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -310,108 +319,109 @@ export default function CreateCampaign() {
           </div>
           <div>
             <h2 className="text-xl font-bold text-zinc-900">Select Template</h2>
-            <p className="text-sm text-zinc-500">Choose an existing template for this campaign</p>
+            <p className="text-sm text-zinc-500">
+              Choose an existing template for this campaign
+            </p>
           </div>
         </div>
 
         <div className="flex items-center justify-between mt-6 mb-5 gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
 
-  <div className="relative flex-1">
-    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
-
-    <input
-      type="text"
-      placeholder="Search templates..."
-      value={templateSearch}
-      onChange={(e) => setTemplateSearch(e.target.value)}
-      className="w-full pl-9 pr-4 py-2.5 border border-zinc-200 rounded-xl text-sm"
-    />
-  </div>
-
-  <Link
-    href="/templates"   
-    className="px-4 py-2 border border-violet-300 text-white rounded-xl font-medium bg-violet-600 hover:bg-violet-700"
-  >
-    + Create Template
-  </Link>
-
-</div>
-        {filteredTemplates.length > 0 && (
-  <div className="mt-6 border border-zinc-200 rounded-xl overflow-hidden">
-    
-    <div className="grid grid-cols-12 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-700 border-b">
-      <div className="col-span-4">Template Name</div>
-      <div className="col-span-4">Subject</div>
-      <div className="col-span-2">Type</div>
-      <div className="col-span-2">Last Updated</div>
-    </div>
-
-    {filteredTemplates.map((template) => {
-      const isSelected = selectedTemplateId === template._id;
-
-      return (
-        <button
-          key={template._id}
-          onClick={() =>
-            setSelectedTemplateId(
-              isSelected ? null : template._id
-            )
-          }
-          className={`w-full grid grid-cols-12 px-4 py-4 border-b text-left hover:bg-zinc-50 transition ${
-            isSelected ? "bg-violet-50" : ""
-          }`}
-        >
-          <div className="col-span-4 flex items-center gap-3">
             <input
-              type="radio"
-              checked={isSelected}
-              readOnly
-              className="accent-violet-600"
+              type="text"
+              placeholder="Search templates..."
+              value={templateSearch}
+              onChange={(e) => setTemplateSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 border border-zinc-200 rounded-xl text-sm"
             />
-            <div>
-              <p className="font-medium text-zinc-900">
-                {template.name}
-              </p>
+          </div>
+
+          <Link
+            href="/templates"
+            className="px-4 py-2 border border-violet-300 text-white rounded-xl font-medium bg-violet-600 hover:bg-violet-700"
+          >
+            + Create Template
+          </Link>
+        </div>
+        {filteredTemplates.length > 0 && (
+          <div className="mt-6 border border-zinc-200 rounded-xl overflow-hidden">
+            <div className="grid grid-cols-12 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-700 border-b">
+              <div className="col-span-4">Template Name</div>
+              <div className="col-span-4">Subject</div>
+              <div className="col-span-2">Type</div>
+              <div className="col-span-2">Last Updated</div>
             </div>
-          </div>
 
-          <div className="col-span-4 text-sm text-zinc-600">
-            {template.subject || "-"}
-          </div>
+            {filteredTemplates.map((template) => {
+              const isSelected = selectedTemplateId === template._id;
 
-          <div className="col-span-2">
-            <span
-  className={`px-2 py-1 rounded-md text-xs font-medium ${
-    template.type?.toLowerCase() === "email"
-      ? "bg-blue-100 text-blue-700"
-      : template.type?.toLowerCase() === "whatsapp"
-      ? "bg-green-100 text-green-700"
-      : template.type?.toLowerCase() === "sms"
-      ? "bg-orange-100 text-orange-700"
-      : "bg-zinc-100 text-zinc-700"
-  }`}
->
-  {template.type}
-</span>
-          </div>
+              return (
+                <button
+                  key={template._id}
+                  onClick={() =>
+                    setSelectedTemplateId(isSelected ? null : template._id)
+                  }
+                  className={`w-full grid grid-cols-12 px-4 py-4 border-b text-left hover:bg-zinc-50 transition ${
+                    isSelected ? "bg-violet-50" : ""
+                  }`}
+                >
+                  <div className="col-span-4 flex items-center gap-3">
+                    <input
+                      type="radio"
+                      checked={isSelected}
+                      readOnly
+                      className="accent-violet-600"
+                    />
+                    <div>
+                      <p className="font-medium text-zinc-900">
+                        {template.name}
+                      </p>
+                    </div>
+                  </div>
 
-          <div className="col-span-2 text-sm text-zinc-600">
-  {template.updatedAt
-    ? new Date(template.updatedAt).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : "--"}
-</div>
-        </button>
-      );
-    })}
-  </div>
-)}
+                  <div className="col-span-4 text-sm text-zinc-600">
+                    {template.subject || "-"}
+                  </div>
+
+                  <div className="col-span-2">
+                    <span
+                      className={`px-2 py-1 rounded-md text-xs font-medium ${
+                        template.type?.toLowerCase() === "email"
+                          ? "bg-blue-100 text-blue-700"
+                          : template.type?.toLowerCase() === "whatsapp"
+                            ? "bg-green-100 text-green-700"
+                            : template.type?.toLowerCase() === "sms"
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-zinc-100 text-zinc-700"
+                      }`}
+                    >
+                      {template.type}
+                    </span>
+                  </div>
+
+                  <div className="col-span-2 text-sm text-zinc-600">
+                    {template.updatedAt
+                      ? new Date(template.updatedAt).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          },
+                        )
+                      : "--"}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
         {selectedTemplateId && (
           <p className="mt-4 text-xs text-violet-600 font-medium">
-            ✓ Template selected: {templates.find((t) => t._id === selectedTemplateId)?.name}
+            ✓ Template selected:{" "}
+            {templates.find((t) => t._id === selectedTemplateId)?.name}
           </p>
         )}
       </motion.div>
