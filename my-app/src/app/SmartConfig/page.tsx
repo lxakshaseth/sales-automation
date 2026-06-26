@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
-
-import SideBar from "@/Components/SideBar";
+import { useSidebar } from "@/Components/SideBar";
 import TopBar from "@/Components/Topbar";
 
 import {
   StatsCards,
 } from "@/Components/smartconfig/StatsCards";
-
 import AutomationRules from "@/Components/smartconfig/AutomationRules";
 import AIConfiguration from "@/Components/smartconfig/AIConfiguration";
 import WorkflowBuilder from "@/Components/smartconfig/WorkflowBuilder";
@@ -16,18 +13,10 @@ import NotificationSettings from "@/Components/smartconfig/NotificationSettings"
 import RecentAutomationActivity from "@/Components/smartconfig/RecentAutomationActivity";
 
 export default function SmartConfigPage() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed } = useSidebar();
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc] overflow-hidden">
-
-      {/* SIDEBAR */}
-      <SideBar
-        isCollapsed={isCollapsed}
-        onToggleCollapse={() =>
-          setIsCollapsed(!isCollapsed)
-        }
-      />
 
       {/* MAIN CONTENT */}
       <main
