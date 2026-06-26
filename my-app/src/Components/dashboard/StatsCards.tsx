@@ -66,13 +66,13 @@ export function DashboardHeader() {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="mb-8 flex items-start justify-between gap-6 rounded-2xl bg-[#8b1efc] px-6 py-5"
+      className="mb-8 flex items-start justify-between gap-6 px-2 pb-4 border-b border-slate-200"
     >
       <div>
-        <h1 className="text-[28px] font-semibold tracking-tight text-white">
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900">
           Dashboard
         </h1>
-        <p className="mt-0.1 text-[14px] text-white/80">
+        <p className="mt-1 text-sm text-slate-500">
           Monitor leads, conversations, campaigns, and contacts at a glance.
         </p>
       </div>
@@ -87,21 +87,21 @@ export function DashboardHeader() {
             aria-expanded={showProfileMenu}
             className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 transition-colors hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-[13px] font-semibold text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600 text-[14px] font-semibold text-white">
               {initials}
             </div>
             <div className="hidden text-left sm:block">
-              <p className="text-[13px] font-medium leading-tight text-white capitalize">
+              <p className="text-[14px] font-bold leading-tight text-gray-900 capitalize">
                 {displayName}
               </p>
-              <p className="text-[11px] leading-tight text-white/70 capitalize">
+              <p className="text-[12px] leading-tight text-gray-400 capitalize">
                 {displayRole}
               </p>
             </div>
             <ChevronDown
               size={16}
               strokeWidth={1.8}
-              className={`hidden text-white/80 transition-transform sm:block ${
+              className={`hidden text-gray-500 transition-transform sm:block ${
                 showProfileMenu ? "rotate-180" : ""
               }`}
             />
