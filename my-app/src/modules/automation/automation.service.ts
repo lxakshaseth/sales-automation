@@ -49,8 +49,8 @@ export const startCampaignFlow = async (leadId: string) => {
       body: template.body,
 
       variables: {
-        firstName: lead.firstName,
-        lastName: lead.lastName || "",
+        first_name: lead.firstName,
+        last_name: lead.lastName || "",
         company: lead.company || "",
         email: lead.email,
       },
