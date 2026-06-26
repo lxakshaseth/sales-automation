@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
-import SideBar from "@/Components/SideBar";
+import { useSidebar } from "@/Components/SideBar";
 
 import HeaderSection from "@/Components/LeadsSalesPipeline/HeaderSection";
 import Statscards from "@/Components/LeadsSalesPipeline/Statscards";
@@ -11,21 +9,12 @@ import PipelineOverview from "@/Components/LeadsSalesPipeline/PipelineOverview";
 import SalesFunnel from "@/Components/LeadsSalesPipeline/SalesFunnel";
 import RecentActivities from "@/Components/LeadsSalesPipeline/RecentActivities";
 
-
 export default function LeadSalesPipelinePage() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed } = useSidebar();
 
   return (
     <div className="flex min-h-screen bg-slate-50 overflow-hidden">
       
-      {/* SIDEBAR */}
-      <SideBar
-        isCollapsed={isCollapsed}
-        onToggleCollapse={() =>
-          setIsCollapsed(!isCollapsed)
-        }
-      />
-
       {/* MAIN CONTENT */}
       <main
         className={`flex-1 transition-all duration-300 overflow-y-auto ${

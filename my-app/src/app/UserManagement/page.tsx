@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
-import SideBar from "@/Components/SideBar";
+import { useSidebar } from "@/Components/SideBar";
 import TopBar from "@/Components/Topbar";
 
 import StatsCards from "@/Components/userManagement/StatsCards";
@@ -11,18 +9,9 @@ import RoleManagement from "@/Components/userManagement/RoleManagement";
 import RecentActivity from "@/Components/userManagement/RecentActivity";
 
 export default function UserManagementPage() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
+  const { isCollapsed } = useSidebar();
   return (
     <div className="flex min-h-screen bg-[#f8fafc] overflow-hidden">
-
-      {/* SIDEBAR */}
-      <SideBar
-        isCollapsed={isCollapsed}
-        onToggleCollapse={() =>
-          setIsCollapsed(!isCollapsed)
-        }
-      />
 
       {/* MAIN CONTENT */}
       <main

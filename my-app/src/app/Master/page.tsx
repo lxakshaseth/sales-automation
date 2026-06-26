@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
-import SideBar from "@/Components/SideBar";
+import { useSidebar } from "@/Components/SideBar";
 import TopBar from "@/Components/Topbar";
 
 import StatsCards from "@/Components/master/StatsCards";
@@ -11,18 +9,9 @@ import LeadStatus from "@/Components/master/LeadStatus";
 import Industries from "@/Components/master/Industries";
 
 export default function MasterPage() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
+  const { isCollapsed } = useSidebar();
   return (
     <div className="flex h-screen bg-[#f7f8fc] overflow-hidden">
-
-      {/* SIDEBAR */}
-      <SideBar
-        isCollapsed={isCollapsed}
-        onToggleCollapse={() =>
-          setIsCollapsed(!isCollapsed)
-        }
-      />
 
       {/* RIGHT CONTENT */}
       <main

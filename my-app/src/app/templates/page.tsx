@@ -1,22 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import SideBar from "@/Components/SideBar";
+import { useSidebar } from "@/Components/SideBar";
 import TopBar from "@/Components/Topbar";
 
 import HeaderSection from "@/Components/templates/HeaderSection";
 import TemplatesTable from "@/Components/templates/TemplatesTable";
 
 export default function TemplatesPage() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed } = useSidebar();
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc] overflow-hidden">
-      <SideBar
-        isCollapsed={isCollapsed}
-        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-      />
-
       <main
         className={`flex-1 transition-all duration-300 overflow-y-auto ${
           isCollapsed ? "ml-[90px]" : "ml-[270px]"

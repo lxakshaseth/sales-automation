@@ -2,12 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";  // Importing Google fonts Geist and Geist Mono from the next/font/google module for use in the application
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+import { SidebarProvider } from "@/Components/SideBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -35,7 +35,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <SidebarProvider>
+          {children}
+        </SidebarProvider>
 
         <Toaster
           position="top-right"

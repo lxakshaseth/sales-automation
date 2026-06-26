@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,6 +36,38 @@ interface SidebarMenuItem {
   icon: LucideIcon;
   items?: SidebarSubItem[];
   notificationId?: string;
+}
+
+interface SidebarContextValue {
+  isCollapsed: boolean;
+  toggleCollapse: () => void;
+}
+
+const SidebarContext = createContext<SidebarContextValue | undefined>(undefined);
+
+export function SidebarProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const toggleCollapse = () => setIsCollapsed((prev) => !prev);
+  const isAuthRoute = pathname === "/sign-in" || pathname === "/sign-up";
+
+  return (
+    <SidebarContext.Provider value={{ isCollapsed, toggleCollapse }}>
+      {!isAuthRoute && (
+        <Sidebar isCollapsed={isCollapsed} onToggleCollapse={toggleCollapse} />
+      )}
+      {children}
+    </SidebarContext.Provider>
+  );
+}
+
+export function useSidebar() {
+  const context = useContext(SidebarContext);
+  if (!context) {
+    throw new Error("useSidebar must be used within SidebarProvider");
+  }
+  return context;
 }
 
 const menu: SidebarMenuItem[] = [
