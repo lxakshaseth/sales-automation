@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { DateTime } from "luxon";
 import { startCampaignFlow } from "@/modules/automation/automation.service";
 import Campaign from "../campaign/campaign.model";
+import { createAuditLog } from "@/modules/audit-log/auditLog.service";
 type Params = { params: Promise<{ id: string }> };
 
 const countryTimezoneMap: Record<string, any> = {
@@ -94,7 +95,23 @@ export const createLeadController = async (req: NextRequest) => {
       typeof countryData === "string"
         ? countryData
         : countryData?.[state?.toLowerCase()];
-    const createLead = await Lead.create({ ...body, timezone });
+
+    const createLead = await Lead.create({
+      ...body,
+      timezone,
+      stageEnteredAt: new Date(),
+      lastActivity: "Lead Created",
+      });
+      
+      const leadName =
+      `${createLead.firstName || ""} ${createLead.lastName || ""}`.trim();
+
+       await createAuditLog(
+        "Leads",
+        "Create",
+        leadName,
+       "Lead created"
+      );
 
     if (campaign) {
       await startCampaignFlow(createLead._id.toString());
@@ -175,6 +192,26 @@ export const getLeadsController = async (req: NextRequest) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
+    
+    const leadsWithAging = leads.map(
+        (lead: any) => {
+          const agingDays = Math.floor(
+            (
+              Date.now() -
+              new Date(
+                lead.stageEnteredAt ||
+                lead.createdAt
+              ).getTime()
+            ) /
+            (1000 * 60 * 60 * 24)
+          );
+
+          return {
+            ...lead.toObject(),
+            agingDays,
+          };
+        }
+      );
     const totalData = await Lead.countDocuments(filter);
     return NextResponse.json(
       {
@@ -236,8 +273,82 @@ export const updateLeadController = async (
       );
     }
     const body = await req.json();
-    const updatedLead = await Lead.findByIdAndUpdate(id, body);
-    if (!updatedLead) {
+    const existingLead = await Lead.findById(id);
+
+      if (!existingLead) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Lead not found",
+          },
+          { status: 404 }
+        );
+      }
+
+      if (
+        body.status &&
+        body.status !== existingLead.status
+      ) {
+        body.stageEnteredAt = new Date();
+
+        body.lastActivity =
+          `Moved from ${existingLead.status} to ${body.status}`;
+      }
+    const updatedLead = await Lead.findByIdAndUpdate(
+      id,
+      body,
+      { new: true, runValidators: true }
+    );
+
+    const changes: string[] = [];
+
+      if (
+        existingLead.firstName !== updatedLead.firstName ||
+        existingLead.lastName !== updatedLead.lastName
+      ) {
+        changes.push("Name changed");
+      }
+
+      if (existingLead.email !== updatedLead.email) {
+        changes.push("Email updated");
+      }
+
+      if (existingLead.phone !== updatedLead.phone) {
+        changes.push("Phone updated");
+      }
+
+      if (existingLead.status !== updatedLead.status) {
+        changes.push(
+          `Status changed ${existingLead.status} → ${updatedLead.status}`
+        );
+      }
+
+      if (existingLead.source !== updatedLead.source) {
+        changes.push(
+          `Source changed ${existingLead.source} → ${updatedLead.source}`
+        );
+      }
+
+      if (existingLead.score !== updatedLead.score) {
+        changes.push("Lead score updated");
+      }
+
+      const details =
+        changes.length > 0
+          ? changes.join(", ")
+          : "Lead updated";
+
+      const leadName =
+        `${updatedLead.firstName || ""} ${updatedLead.lastName || ""}`.trim();
+
+      await createAuditLog(
+        "Leads",
+        "Update",
+        leadName,
+        details
+      );
+
+      if (!updatedLead) {
       return NextResponse.json(
         { success: false, msg: "lead not found" },
         { status: 404 },
@@ -282,6 +393,17 @@ export const deleteLeadController = async (
         { status: 200 },
       );
     }
+
+    const leadName =
+    `${deleteLead.firstName || ""} ${deleteLead.lastName || ""}`.trim();
+
+      await createAuditLog(
+        "Leads",
+        "Delete",
+        leadName,
+        "Lead removed"
+      );
+
     return NextResponse.json(
       { success: true, message: "Deleted successfully" },
       { status: 200 },

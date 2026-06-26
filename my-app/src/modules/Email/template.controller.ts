@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Template from "./template.model";
 import mongoose from "mongoose";
+import { createAuditLog } from "../audit-log/auditLog.service";
 
 type Params = {
   params: Promise<{ id: string }>;
@@ -13,6 +14,13 @@ export const createTemplateController = async (
     const body = await req.json();
 
     const template = await Template.create(body);
+
+    await createAuditLog(
+      "Templates",
+      "Create",
+      template.name,
+      "Template created"
+    );
 
     return NextResponse.json(
       {
@@ -128,6 +136,8 @@ export const updateTemplateController = async (
 
     const body = await req.json();
 
+    const oldTemplate = await Template.findById(id);
+
     const template =
       await Template.findByIdAndUpdate(
         id,
@@ -148,6 +158,40 @@ export const updateTemplateController = async (
         },
       );
     }
+
+    let details = "Template updated";
+
+      if (
+        body.name &&
+        oldTemplate?.name !== body.name
+      ) {
+        details = "Template name changed";
+      }
+      else if (
+        body.subject &&
+        oldTemplate?.subject !== body.subject
+      ) {
+        details = "Subject updated";
+      }
+      else if (
+        body.body &&
+        oldTemplate?.body !== body.body
+      ) {
+        details = "Template content updated";
+      }
+      else if (
+        body.type &&
+        oldTemplate?.type !== body.type
+      ) {
+        details = "Template type changed";
+      }
+
+      await createAuditLog(
+        "Templates",
+        "Update",
+        template.name,
+        details
+      );
 
     return NextResponse.json(
       {
@@ -180,6 +224,13 @@ export const deleteTemplateController = async (
 
     const template =
       await Template.findByIdAndDelete(id);
+
+      await createAuditLog(
+        "Templates",
+        "Delete",
+        template?.name,
+        "Template removed"
+      );
 
     if (!template) {
       return NextResponse.json(

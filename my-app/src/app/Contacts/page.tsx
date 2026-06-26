@@ -13,17 +13,16 @@ export default function ContactsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc] overflow-hidden">
+    <div className="flex h-screen bg-zinc-50 font-sans overflow-hidden">
       {/* SIDEBAR */}
       <SideBar
         isCollapsed={isCollapsed}
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       />
-
       {/* MAIN CONTENT */}
       <main
         className={`flex-1 transition-all duration-300 overflow-y-auto ${
-          isCollapsed ? "ml-[90px]" : "ml-[270px]"
+          isCollapsed ? "ml-20" : "ml-64"
         }`}
       >
         <div className="p-6 lg:p-8">
@@ -53,7 +52,6 @@ export default function ContactsPage() {
               onCloseAddContact={() => setIsAddingContact(false)}
             />
           </div>
-
         </div>
       </main>
     </div>
