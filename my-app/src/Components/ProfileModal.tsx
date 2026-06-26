@@ -1,468 +1,273 @@
 "use client";
 
-import { X, User, Mail, Phone, Building2, Shield, Calendar } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  Calendar,
+  Mail,
+  Phone,
+  Shield,
+  User,
+  X,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useSidebar } from "@/Components/SideBar";
 
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onProfileUpdated?: (profile: { name: string; role: string }) => void;
 }
+
+interface ProfileData {
+  companyName: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  role: string;
+  memberSince: string;
+}
+
+type EditableFieldName = "name" | "email" | "phoneNumber";
+
+const emptyProfileData: ProfileData = {
+  companyName: "",
+  name: "",
+  email: "",
+  phoneNumber: "",
+  role: "Administrator",
+  memberSince: "",
+};
+
+const getAuthToken = () => {
+  return (
+    sessionStorage.getItem("token") ||
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    ""
+  );
+};
 
 export default function ProfileModal({
   isOpen,
   onClose,
 }: ProfileModalProps) {
-  const [errors, setErrors] = useState({
-    name: "",
-    email: "",
-    phoneNumber: "",
-    companyName: "",
-  });
-
-  const [profileData, setProfileData] = useState({
-    companyName: "",
-    name: "",
-    email: "",
-    phoneNumber: "",
-    role: "Administrator",
-    memberSince: "",
-  });
+  const [profileData, setProfileData] =
+    useState<ProfileData>(emptyProfileData);
+  const { isCollapsed } = useSidebar();
+  const modalOffsetClass = isCollapsed ? "md:left-20" : "md:left-64";
 
   const initials = useMemo(() => {
-    const names = profileData.name.trim().split(" ");
+    const names = profileData.name.trim().split(" ").filter(Boolean);
 
-    if (names.length === 1) {
-      return names[0].charAt(0).toUpperCase();
-    }
+    if (names.length === 0) return "A";
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
 
     return (
-      names[0].charAt(0) +
-      names[names.length - 1].charAt(0)
+      names[0].charAt(0) + names[names.length - 1].charAt(0)
     ).toUpperCase();
   }, [profileData.name]);
 
-  const validateField = (
-    name: string,
-    value: string
-  ) => {
-    switch (name) {
-      case "name":
-        if (!value.trim())
-          return "Full Name is required";
+  useEffect(() => {
+    if (!isOpen) return;
 
-        if (!/^[A-Za-z ]+$/.test(value))
-          return "Only alphabets are allowed";
+    let isMounted = true;
 
-        if (value.trim().length < 2)
-          return "Minimum 2 characters";
-
-        return "";
-
-      case "email":
-        if (!value.trim())
-          return "Email is required";
-
-        if (
-          !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(
-            value
-          )
-        )
-          return "Enter a valid email";
-
-        return "";
-
-      case "phoneNumber":
-        if (!value)
-          return "Phone Number is required";
-
-        if (!/^\d{10}$/.test(value))
-          return "Enter a valid 10-digit number";
-
-        return "";
-
-      case "companyName":
-        if (!value.trim())
-          return "Company Name is required";
-
-        return "";
-
-      default:
-        return "";
-    }
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, value } = e.target;
-
-    let newValue = value;
-
-    if (name === "phoneNumber") {
-      newValue = value.replace(/\D/g, "").slice(0, 10);
-    }
-
-    setProfileData((prev) => ({
-      ...prev,
-      [name]: newValue,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      [name]: validateField(name, newValue),
-    }));
-  };
-
-  const getAuthToken = () => {
-    return (
-      sessionStorage.getItem("token") ||
-      localStorage.getItem("token") ||
-      localStorage.getItem("authToken") ||
-      ""
-    );
-  };
-
-  const authFetch = async (path: string, options: RequestInit) => {
-    const token = getAuthToken();
-    const res = await fetch(path, {
-      ...options,
-      headers: {
-        ...(options.headers || {}),
-        Authorization: token ? `Bearer ${token}` : "",
-        "Content-Type": "application/json",
-      },
-    });
-    return res;
-  };
-
-  const fetchProfile = async () => {
-    try {
-      const token = getAuthToken();
-      if (!token) return;
-
-      const res = await fetch("/api/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) return;
-
-      const json = await res.json();
-      const d = json?.data || {};
-      setProfileData({
-        name: d.name ?? "",
-        email: d.email ?? "",
-        phoneNumber: d.phoneNumber ?? "",
-        companyName: d.companyName ?? "",
-        role: d.role ?? "",
-        memberSince: d.memberSince ?? "",
-      });
-    } catch {
-      // ignore
-    }
-  };
-
-  // load on open
-  // (keep existing UI; only connect data)
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  if (isOpen && !isLoaded) {
-    // Trigger once when opening (client component)
-    fetchProfile().finally(() => setIsLoaded(true));
-  }
-
-
-  const handleSave = async () => {
-    const newErrors = {
-      name: validateField("name", profileData.name),
-      email: validateField("email", profileData.email),
-      phoneNumber: validateField(
-        "phoneNumber",
-        profileData.phoneNumber
-      ),
-      companyName: validateField(
-        "companyName",
-        profileData.companyName
-      ),
-    };
-
-    setErrors(newErrors);
-
-    if (
-      Object.values(newErrors).every(
-        (value) => value === ""
-      )
-    ) {
-      console.log(profileData);
-
+    const fetchProfile = async () => {
       try {
         const token = getAuthToken();
         if (!token) return;
 
         const res = await fetch("/api/profile", {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: profileData.name,
-            email: profileData.email,
-            mobile: profileData.phoneNumber,
-            companyName: profileData.companyName,
-          }),
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         if (!res.ok) return;
 
-        await fetchProfile();
-      } catch {
-        // ignore
-      }
+        const json = await res.json();
+        const d = json?.data || {};
+        const nextProfileData = {
+          name: d.name ?? "",
+          email: d.email ?? "",
+          phoneNumber: d.phoneNumber ?? "",
+          companyName: d.companyName ?? "",
+          role: d.role ?? "Administrator",
+          memberSince: d.memberSince ?? "",
+        };
 
-      onClose();
-    }
+        if (!isMounted) return;
+
+        setProfileData(nextProfileData);
+      } catch {
+        // Keep the modal usable if profile refresh fails.
+      }
+    };
+
+    fetchProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
+  const handleClose = () => {
+    onClose();
   };
 
   if (!isOpen) return null;
 
+  const editableFields: Array<{
+    name: EditableFieldName;
+    label: string;
+    type: string;
+    icon: LucideIcon;
+  }> = [
+    {
+      name: "name",
+      label: "Full Name",
+      type: "text",
+      icon: User,
+    },
+    {
+      name: "email",
+      label: "Email Address",
+      type: "email",
+      icon: Mail,
+    },
+    {
+      name: "phoneNumber",
+      label: "Phone Number",
+      type: "tel",
+      icon: Phone,
+    },
+  ];
+
+  const renderEditableField = (
+    field: (typeof editableFields)[number]
+  ) => {
+    const Icon = field.icon;
+
+    return (
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-slate-950">
+          {field.label}
+        </label>
+
+        <div
+          className="relative flex min-h-16 overflow-hidden rounded-lg border border-slate-200 bg-white"
+        >
+          <Icon
+            size={22}
+            strokeWidth={2.2}
+            className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-violet-700"
+          />
+
+          <input
+            type={field.type}
+            name={field.name}
+            value={profileData[field.name]}
+            readOnly
+            className="min-w-0 flex-1 cursor-default bg-white py-4 pl-14 pr-4 text-base font-medium text-slate-950 outline-none"
+          />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
-      {/* Blur Background */}
       <div
-        onClick={onClose}
-        className="fixed inset-0 bg-white/10 backdrop-blur-md z-40"
+        onClick={handleClose}
+        className={`fixed inset-y-0 right-0 left-0 z-40 bg-white/30 backdrop-blur-lg ${modalOffsetClass}`}
       />
 
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-        <div className="w-full max-w-5xl rounded-3xl overflow-hidden bg-white shadow-2xl">
+      <div
+        className={`fixed inset-y-0 right-0 left-0 z-50 flex items-center justify-center p-4 ${modalOffsetClass}`}
+      >
+        <div className="w-[min(94vw,980px)] overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-slate-200/80">
+          <div className="relative overflow-hidden bg-gradient-to-r from-violet-700 via-purple-700 to-indigo-700 px-6 py-5 sm:px-8">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-20 opacity-20 lg:block">
+              <div className="absolute right-0 top-3 h-px w-1/2 rotate-[-8deg] bg-white/40" />
+              <div className="absolute right-0 top-9 h-px w-3/5 rotate-[-8deg] bg-white/30" />
+              <div className="absolute right-0 top-16 h-px w-1/2 rotate-[-8deg] bg-white/25" />
+              <div className="absolute right-0 top-20 h-px w-2/5 rotate-[-8deg] bg-white/20" />
+            </div>
 
-          {/* Header */}
+            <div className="absolute right-5 top-5 z-20">
+              <button
+                type="button"
+                onClick={handleClose}
+                aria-label="Close profile"
+                className="p-2 text-white/80 transition hover:text-white"
+              >
+                <X size={22} />
+              </button>
+            </div>
 
-          <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 px-10 py-8 relative">
-
-            <button
-              onClick={onClose}
-              className="absolute right-6 top-6 bg-white/20 hover:bg-white/30 transition rounded-full p-2 text-white"
-            >
-              <X size={20} />
-            </button>
-
-            <div className="flex items-center gap-6">
-
-              <div className="h-24 w-24 rounded-full bg-white flex items-center justify-center text-3xl font-bold text-violet-700 shadow-lg">
+            <div className="relative flex items-center gap-5 pr-14 sm:gap-6">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-white text-4xl font-bold text-violet-700 shadow-xl sm:h-24 sm:w-24">
                 {initials}
               </div>
 
-              <div>
-
-                <h2 className="text-3xl font-bold text-white">
-                  {profileData.name}
+              <div className="min-w-0">
+                <h2 className="truncate text-3xl font-bold text-white sm:text-4xl">
+                  {profileData.name || "Admin"}
                 </h2>
 
-                <p className="text-violet-100 mt-1">
-                  {profileData.email}
-                </p>
-
-                <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white">
-                  <Shield size={16} />
-                  {profileData.role}
+                <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur">
+                  <Shield size={18} />
+                  {profileData.role || "Administrator"}
                 </div>
-
               </div>
-
             </div>
-
           </div>
 
-          {/* Body */}
+          <div className="px-6 py-5 sm:px-8">
+            <div className="text-center">
+              <h3 className="text-xl font-bold text-slate-950">
+                Profile Information
+              </h3>
+              <div className="mx-auto mt-2 h-1 w-28 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600" />
+              <p className="mt-2 text-sm text-slate-500">
+                Manage your personal details and contact information.
+              </p>
+            </div>
 
-          <div className="p-8">
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-              {/* Personal Information */}
-
-              <div className="rounded-2xl border border-slate-200 p-6">
-
-                <h3 className="text-lg font-semibold text-slate-800 mb-6">
-                  Personal Information
-                </h3>
-
-                {/* Full Name */}
-
-                <div className="mb-5">
-
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <User size={16} />
-                    Full Name
-                  </label>
-
-                  <input
-                    name="name"
-                    value={profileData.name}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
-                  />
-
-                  {errors.name && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.name}
-                    </p>
-                  )}
-
-                </div>
-
-                {/* Email */}
-
-                <div className="mb-5">
-
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <Mail size={16} />
-                    Email
-                  </label>
-
-                  <input
-                    type="email"
-                    name="email"
-                    value={profileData.email}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
-                  />
-
-                  {errors.email && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.email}
-                    </p>
-                  )}
-                </div>
-                                {/* Phone Number */}
-
-                <div className="mb-5">
-
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <Phone size={16} />
-                    Phone Number
-                  </label>
-
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={profileData.phoneNumber}
-                    onChange={handleChange}
-                    maxLength={10}
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
-                  />
-
-                  {errors.phoneNumber && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.phoneNumber}
-                    </p>
-                  )}
-
-                </div>
-
+            <div className="mt-7 grid gap-6 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
+              <div className="space-y-5">
+                {renderEditableField(editableFields[0])}
+                {renderEditableField(editableFields[1])}
               </div>
 
-              {/* Account Information */}
+              <div className="hidden w-px bg-slate-200 lg:block" />
 
-              <div className="rounded-2xl border border-slate-200 p-6">
-
-                <h3 className="text-lg font-semibold text-slate-800 mb-6">
-                  Account Information
-                </h3>
-
-                {/* Company */}
-
-                <div className="mb-5">
-
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <Building2 size={16} />
-                    Company Name
-                  </label>
-
-                  <input
-                    type="text"
-                    name="companyName"
-                    value={profileData.companyName}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
-                  />
-
-                  {errors.companyName && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.companyName}
-                    </p>
-                  )}
-
-                </div>
-
-                {/* Role */}
-
-                <div className="mb-5">
-
-                  <label className="mb-2 text-sm font-medium text-slate-700">
-                    Role
-                  </label>
-
-                  <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 flex items-center gap-2">
-                    <Shield
-                      size={18}
-                      className="text-violet-600"
-                    />
-
-                    <span className="font-medium text-violet-700">
-                      {profileData.role}
-                    </span>
-                  </div>
-
-                </div>
-
-                {/* Member Since */}
+              <div className="space-y-5">
+                {renderEditableField(editableFields[2])}
 
                 <div>
-
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <Calendar size={16} />
+                  <label className="mb-2 block text-sm font-semibold text-slate-950">
                     Member Since
                   </label>
 
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-600">
-                    {profileData.memberSince}
+                  <div className="relative flex min-h-16 overflow-hidden rounded-lg border border-slate-200 bg-white">
+                    <Calendar
+                      size={22}
+                      strokeWidth={2.2}
+                      className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-violet-700"
+                    />
+
+                    <div className="flex min-w-0 flex-1 items-center py-4 pl-14 pr-12 text-base font-medium text-slate-500">
+                      {profileData.memberSince || "Not available"}
+                    </div>
+
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-950">
+                      <Calendar size={22} />
+                    </div>
                   </div>
-
                 </div>
-
               </div>
-
             </div>
-
-            {/* Buttons */}
-
-            <div className="mt-10 flex justify-end gap-4 border-t pt-6">
-
-              <button
-                onClick={onClose}
-                className="rounded-xl border border-slate-300 px-6 py-3 font-medium text-slate-700 transition hover:bg-slate-100"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleSave}
-                className="rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-7 py-3 font-medium text-white shadow-lg transition hover:scale-[1.02] hover:shadow-xl"
-              >
-                Save Changes
-              </button>
-
-            </div>
-
           </div>
-
         </div>
-
       </div>
-
     </>
   );
-
 }

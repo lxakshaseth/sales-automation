@@ -114,23 +114,25 @@ export async function PUT(req: NextRequest) {
     );
   }
 
-  const companyNameStr = String(companyName ?? "").trim();
-  if (!companyNameStr) {
-    return NextResponse.json(
-      { success: false, message: "Company Name is required" },
-      { status: 400 }
-    );
+  const updatePayload: {
+    name: string;
+    email: string;
+    mobile: string;
+    companyName?: string;
+  } = {
+    name: nameStr,
+    email: emailStr,
+    mobile: mobileStr,
+  };
+
+  if (companyName !== undefined) {
+    updatePayload.companyName = String(companyName ?? "").trim();
   }
 
   const updated = await User.findByIdAndUpdate(
     userId,
     {
-      $set: {
-        name: nameStr,
-        email: emailStr,
-        mobile: mobileStr,
-        companyName: companyNameStr,
-      },
+      $set: updatePayload,
     },
     { new: true }
   ).lean();
