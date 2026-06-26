@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+
+:root {
+  --background: #f8fafc; /* slate-50 */
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+:where(*):not(html):not(body) {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+:where(*):not(html):not(body)::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+a[href],
+button,
+[role="button"],
+summary,
+label[for],
+select,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+div[class*="fixed inset-0 bg-black"] {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+input:disabled {
+  cursor: not-allowed;
+}
+
+.ProseMirror {
+  min-height: 350px;
+  outline: none;
+}
+
+.ProseMirror p {
+  margin: 0;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
