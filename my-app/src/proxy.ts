@@ -30,7 +30,7 @@ export async function proxy(req: NextRequest) {
 export const config = {
     matcher: [
       "/api/campaigns/:path*",
-      "/api/leads/:path*",
+      "/api/leads/((?!funnel).*)",
       "/api/templates/:path*",
       "/api/automation/:path*",
     ],

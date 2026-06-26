@@ -1,4 +1,4 @@
-"use client";
+"use client"; // This directive indicates that the file is a client-side component in Next.js
 
 import { useState } from "react";
 
@@ -10,11 +10,23 @@ import { Contact } from "@/services/whatsapp.service";
 export default function WhatsAppLayout() {
   const [selectedContact, setSelectedContact] =
     useState<Contact | null>(null);
+  const [readContactMarker, setReadContactMarker] =
+    useState<{
+      waId: string;
+      version: number;
+    } | null>(null);
 
   function handleContactUpdated(
     updatedContact: Contact,
   ) {
     setSelectedContact(updatedContact);
+  }
+
+  function handleChatRead(waId: string) {
+    setReadContactMarker((currentMarker) => ({
+      waId,
+      version: (currentMarker?.version || 0) + 1,
+    }));
   }
 
   return (
@@ -25,6 +37,7 @@ export default function WhatsAppLayout() {
           <ContactList
             selectedContact={selectedContact}
             onSelectContact={setSelectedContact}
+            readContactMarker={readContactMarker}
           />
         </div>
 
@@ -37,6 +50,7 @@ export default function WhatsAppLayout() {
             onContactUpdated={
               handleContactUpdated
             }
+            onChatRead={handleChatRead}
           />
         </div>
 

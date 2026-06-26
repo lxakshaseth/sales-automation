@@ -24,11 +24,14 @@ export default function DeleteTemplateDialog({
 
   if (!isOpen || !template) return null;
 
+  const templateId = template._id;
+  const templateName = template.name;
+
   async function handleDelete() {
     try {
       setLoading(true);
 
-      await deleteTemplate(template._id);
+      await deleteTemplate(templateId);
 
       toast.success("Template deleted successfully");
 
@@ -52,7 +55,7 @@ export default function DeleteTemplateDialog({
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold text-[#111827]">
+              <h2 className="text-xl font-bold text-[#111827]">
                 Delete Template
               </h2>
 
@@ -83,7 +86,7 @@ export default function DeleteTemplateDialog({
             </p>
 
             <p className="font-semibold text-[#111827] break-all">
-              {template.name}
+              {templateName}
             </p>
           </div>
         </div>

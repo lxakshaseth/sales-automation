@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { DateTime } from "luxon";
 import { startCampaignFlow } from "@/modules/automation/automation.service";
 import Campaign from "../campaign/campaign.model";
+import { createAuditLog } from "@/modules/audit-log/auditLog.service";
 type Params = { params: Promise<{ id: string }> };
 
 const countryTimezoneMap: Record<string, any> = {
@@ -71,12 +72,14 @@ export const createLeadController = async (req: NextRequest) => {
     const body = await req.json();
     const { country, state, campaign, email } = body;
 
-    const campaignExists = await Campaign.exists({ _id: campaign });
-    if (!campaignExists)
-      return NextResponse.json(
-        { success: false, message: "Campaign not found" },
-        { status: 404 },
-      );
+    if (campaign) {
+      const campaignExists = await Campaign.exists({ _id: campaign });
+      if (!campaignExists)
+        return NextResponse.json(
+          { success: false, message: "Campaign not found" },
+          { status: 404 },
+        );
+    }
 
     const checkLeadEmail = await Lead.exists({ email });
 
@@ -99,8 +102,20 @@ export const createLeadController = async (req: NextRequest) => {
       stageEnteredAt: new Date(),
       lastActivity: "Lead Created",
       });
+      
+      const leadName =
+      `${createLead.firstName || ""} ${createLead.lastName || ""}`.trim();
 
-    await startCampaignFlow(createLead._id.toString());
+       await createAuditLog(
+        "Leads",
+        "Create",
+        leadName,
+       "Lead created"
+      );
+
+    if (campaign) {
+      await startCampaignFlow(createLead._id.toString());
+    }
 
     const currentTime = DateTime.now().setZone(createLead.timezone).toString();
 
@@ -271,6 +286,54 @@ export const updateLeadController = async (
       { new: true, runValidators: true }
     );
 
+    const changes: string[] = [];
+
+      if (
+        existingLead.firstName !== updatedLead.firstName ||
+        existingLead.lastName !== updatedLead.lastName
+      ) {
+        changes.push("Name changed");
+      }
+
+      if (existingLead.email !== updatedLead.email) {
+        changes.push("Email updated");
+      }
+
+      if (existingLead.phone !== updatedLead.phone) {
+        changes.push("Phone updated");
+      }
+
+      if (existingLead.status !== updatedLead.status) {
+        changes.push(
+          `Status changed ${existingLead.status} → ${updatedLead.status}`
+        );
+      }
+
+      if (existingLead.source !== updatedLead.source) {
+        changes.push(
+          `Source changed ${existingLead.source} → ${updatedLead.source}`
+        );
+      }
+
+      if (existingLead.score !== updatedLead.score) {
+        changes.push("Lead score updated");
+      }
+
+      const details =
+        changes.length > 0
+          ? changes.join(", ")
+          : "Lead updated";
+
+      const leadName =
+        `${updatedLead.firstName || ""} ${updatedLead.lastName || ""}`.trim();
+
+      await createAuditLog(
+        "Leads",
+        "Update",
+        leadName,
+        details
+      );
+
       if (!updatedLead) {
       return NextResponse.json(
         { success: false, msg: "lead not found" },
@@ -316,8 +379,60 @@ export const deleteLeadController = async (
         { status: 200 },
       );
     }
+
+    const leadName =
+    `${deleteLead.firstName || ""} ${deleteLead.lastName || ""}`.trim();
+
+      await createAuditLog(
+        "Leads",
+        "Delete",
+        leadName,
+        "Lead removed"
+      );
+
     return NextResponse.json(
       { success: true, message: "Deleted successfully" },
+      { status: 200 },
+    );
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 },
+    );
+  }
+};
+
+export const bulkDeleteLeadsController = async (req: NextRequest) => {
+  try {
+    const body = await req.json();
+    const { ids } = body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "No contact IDs provided" },
+        { status: 400 },
+      );
+    }
+
+    const validIds = ids.filter((id: string) =>
+      mongoose.Types.ObjectId.isValid(id),
+    );
+
+    if (validIds.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "No valid IDs provided" },
+        { status: 400 },
+      );
+    }
+
+    const result = await Lead.deleteMany({ _id: { $in: validIds } });
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: `${result.deletedCount} contacts deleted successfully`,
+        deletedCount: result.deletedCount,
+      },
       { status: 200 },
     );
   } catch (error: any) {

@@ -1,12 +1,13 @@
 export interface Contact {
   _id: string;
   waId: string;
-  name?: string;
+  name?: string;    // The name of the contact as provided by WhatsApp
   customName?: string;
   phone?: string;
   aiEnabled?: boolean;
   lastMessage?: string;
   lastMessageDirection?: Message["direction"];
+  lastMessageStatus?: Message["status"];
   lastMessageCreatedAt?: string;
   unreadCount?: number;
   lastMessageAt: string;
@@ -161,6 +162,7 @@ export async function getChatByWaId(waId: string, options?: RequestOptions) {
     const response = await fetch(`/api/whatsapp/chat/${waId}`, {
       headers: getAuthHeaders(),
       signal: request.signal,
+      cache: "no-store",
     });
 
     const data = await response.json();

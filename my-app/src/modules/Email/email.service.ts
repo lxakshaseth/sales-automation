@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-interface SendEmailProps {
+interface SendEmailProps {  // Defining an interface for the properties required to send an email
   to: string;
   subject: string;
   body: string;

@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 
 const ContactSchema = new mongoose.Schema(
   {
-    waId: {
-      type: String,
+    waId: { 
+      type: String,    // WhatsApp ID
       required: true,
       unique: true,
     },
@@ -36,10 +36,10 @@ const ContactSchema = new mongoose.Schema(
     },
 
     lastInboundAt: {
-      type: Date,
+      type: Date, 
     },
 
-    reminderSentAt: {
+    reminderSentAt: {  //
       type: Date,
     },
 

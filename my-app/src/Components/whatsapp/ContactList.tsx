@@ -1,19 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react"; // React hooks for managing state and side effects
 
-import { Search } from "lucide-react";
+import {
+  Check,
+  CheckCheck,
+  Search,
+  XCircle,
+} from "lucide-react";
 
-import { Contact, getContacts } from "@/services/whatsapp.service";
+import {
+  Contact,
+  Message,
+  getContacts,
+} from "@/services/whatsapp.service";
 
 type ContactListProps = {
   selectedContact: Contact | null;
   onSelectContact: (contact: Contact) => void;
+  readContactMarker?: {
+    waId: string;
+    version: number;
+  } | null;
 };
 
 export default function ContactList({
   selectedContact,
   onSelectContact,
+  readContactMarker,
 }: ContactListProps) {
   const [contacts, setContacts] = useState<Contact[]>([]);
 
@@ -50,6 +64,25 @@ export default function ContactList({
 
     return () => clearInterval(interval);
   }, [fetchContacts]);
+
+  useEffect(() => {
+    if (!readContactMarker) {
+      return;
+    }
+
+    void Promise.resolve().then(() => {
+      setContacts((currentContacts) =>
+        currentContacts.map((contact) =>
+          contact.waId === readContactMarker.waId
+            ? {
+                ...contact,
+                unreadCount: 0,
+              }
+            : contact,
+        ),
+      );
+    });
+  }, [readContactMarker]);
 
   const filteredContacts = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -94,6 +127,39 @@ export default function ContactList({
     return contact.lastMessageDirection === "OUTBOUND"
       ? `You: ${contact.lastMessage}`
       : contact.lastMessage;
+  }
+
+  function renderStatusIcon(status?: Message["status"]) {
+    switch (status) {
+      case "SENT":
+        return <Check size={13} className="shrink-0 text-gray-400" />;
+
+      case "DELIVERED":
+        return <CheckCheck size={13} className="shrink-0 text-gray-400" />;
+
+      case "READ":
+        return <CheckCheck size={13} className="shrink-0 text-blue-500" />;
+
+      case "FAILED":
+        return <XCircle size={13} className="shrink-0 text-red-500" />;
+
+      default:
+        return null;
+    }
+  }
+
+  function handleSelectContact(contact: Contact) {
+    const readContact = {
+      ...contact,
+      unreadCount: 0,
+    };
+
+    setContacts((currentContacts) =>
+      currentContacts.map((currentContact) =>
+        currentContact._id === contact._id ? readContact : currentContact,
+      ),
+    );
+    onSelectContact(readContact);
   }
 
   return (
@@ -161,7 +227,7 @@ export default function ContactList({
             return (
               <div
                 key={contact._id}
-                onClick={() => onSelectContact(contact)}
+                onClick={() => handleSelectContact(contact)}
                 className={`px-5 py-4 border-b border-[#f1f5f9] cursor-pointer transition-all ${
                   isSelected
                     ? "bg-green-50 border-l-4 border-l-green-500"
@@ -208,19 +274,32 @@ export default function ContactList({
                     </div>
 
                     <div className="mt-1 flex items-center justify-between gap-3">
-                      <p
-                        className={`truncate text-sm ${
+                      <div
+                        className={`min-w-0 flex flex-1 items-center gap-1.5 text-sm ${
                           hasUnread
                             ? "font-semibold text-[#111827]"
                             : "text-gray-500"
                         }`}
                       >
-                        {getContactPreview(contact)}
-                      </p>
+                        {contact.lastMessageDirection === "OUTBOUND" &&
+                          renderStatusIcon(contact.lastMessageStatus)}
+
+                        <p className="truncate">
+                          {getContactPreview(contact)}
+                        </p>
+                      </div>
 
                       {hasUnread && (
-                        <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-green-500 px-1.5 text-[11px] font-bold text-white">
-                          {unreadCount > 99 ? "99+" : unreadCount}
+                        <span
+                          className="flex h-5 w-5 shrink-0 items-center justify-center"
+                          aria-label={`${unreadCount} unread customer ${
+                            unreadCount === 1 ? "message" : "messages"
+                          }`}
+                          title={`${unreadCount} unread customer ${
+                            unreadCount === 1 ? "message" : "messages"
+                          }`}
+                        >
+                          <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
                         </span>
                       )}
                     </div>

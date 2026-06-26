@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ArrowLeft,
-  Bot,
+  Bot, // This is the Bot icon from lucide-react
   Check,
   CheckCheck,
   MessageCircle,
@@ -29,6 +29,7 @@ type ChatWindowProps = {
   selectedContact: Contact | null;
   onBack: () => void;
   onContactUpdated: (contact: Contact) => void;
+  onChatRead?: (waId: string) => void;
 };
 
 type ChatDisplayMessage = {
@@ -41,10 +42,37 @@ type ChatDisplayMessage = {
 
 const CHAT_POLL_INTERVAL_MS = 6000;
 
+function getMessageSnapshot(message: Message) {
+  return [
+    message._id,
+    message.waMessageId,
+    message.direction,
+    message.type,
+    message.message,
+    message.status || "",
+    message.createdAt,
+    message.updatedAt,
+  ].join("\u0001");
+}
+
+function areMessagesSame(
+  currentMessages: Message[],
+  nextMessages: Message[],
+) {
+  return (
+    currentMessages.length === nextMessages.length &&
+    currentMessages.every(
+      (message, index) =>
+        getMessageSnapshot(message) === getMessageSnapshot(nextMessages[index]),
+    )
+  );
+}
+
 export default function ChatWindow({
   selectedContact,
   onBack,
   onContactUpdated,
+  onChatRead,
 }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
@@ -65,17 +93,6 @@ export default function ChatWindow({
   const readAbortControllerRef = useRef<AbortController | null>(null);
   const readInFlightRef = useRef(false);
   const lastReadKeyRef = useRef("");
-
-  const isAtBottom = useCallback(() => {
-    const container = messagesContainerRef.current;
-
-    if (!container) return false;
-
-    const distanceFromBottom =
-      container.scrollHeight - container.scrollTop - container.clientHeight;
-
-    return distanceFromBottom < 100;
-  }, []);
 
   const clearPollTimer = useCallback(() => {
     if (pollTimerRef.current) {
@@ -138,7 +155,13 @@ export default function ChatWindow({
           return;
         }
 
-        setMessages(response.data?.messages || []);
+        const nextMessages = response.data?.messages || [];
+
+        setMessages((currentMessages) =>
+          areMessagesSame(currentMessages, nextMessages)
+            ? currentMessages
+            : nextMessages,
+        );
         setErrorMessage("");
 
         console.info("[whatsapp:chat] fetch:success", {
@@ -186,7 +209,7 @@ export default function ChatWindow({
   );
 
   const markReadIfNeeded = useCallback(async () => {
-    if (!selectedContact || !isAtBottom() || readInFlightRef.current) {
+    if (!selectedContact || readInFlightRef.current) {
       return;
     }
 
@@ -226,6 +249,18 @@ export default function ChatWindow({
       console.info("[whatsapp:chat] read:success", {
         waId,
       });
+
+      setMessages((currentMessages) =>
+        currentMessages.map((message) =>
+          message.direction === "INBOUND" && message.status === "RECEIVED"
+            ? {
+                ...message,
+                status: "READ",
+              }
+            : message,
+        ),
+      );
+      onChatRead?.(waId);
     } catch (error) {
       if (isAbortError(error)) {
         console.info("[whatsapp:chat] read:aborted", {
@@ -248,7 +283,7 @@ export default function ChatWindow({
 
       readInFlightRef.current = false;
     }
-  }, [isAtBottom, messages, selectedContact]);
+  }, [messages, onChatRead, selectedContact]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -669,6 +704,8 @@ export default function ChatWindow({
     );
   }
 
+  const aiOwnsConversation = Boolean(selectedContact.aiEnabled);
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="h-[80px] shrink-0 border-b border-[#e7ebf3] px-6 flex items-center">
@@ -692,14 +729,25 @@ export default function ChatWindow({
                 .toUpperCase()}
             </div>
 
-            <div>
-              <h2 className="text-lg font-semibold text-[#111827]">
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-semibold text-[#111827]">
                 {selectedContact.customName ||
                   selectedContact.name ||
                   "Unknown Contact"}
               </h2>
 
-              <p className="text-sm text-gray-500">{selectedContact.phone}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <p className="text-sm text-gray-500">{selectedContact.phone}</p>
+
+                {aiOwnsConversation && (
+                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                    <Bot size={13} />
+                    <span className="truncate">
+                      AI Assistant is actively responding to this customer
+                    </span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

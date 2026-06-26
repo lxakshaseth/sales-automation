@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import dotenv from "dotenv";   // Importing the dotenv package to load environment variables from a .env file into process.env
 
 dotenv.config({
   path: ".env",
