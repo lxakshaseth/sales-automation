@@ -12,9 +12,20 @@ export interface FunnelResponse {
 }
 
 export async function fetchLeadFunnel(days: "7" | "30"): Promise<FunnelResponse> {
-  const res = await fetch(
-     `/api/leads/funnel/by-status?days=${days}`
-   );
+  const res = await fetch(`/api/leads/funnel/by-status?days=${days}`);
+
+  if (res.status === 503) {
+    return {
+      data: [
+        { status: "new", count: 0 },
+        { status: "contacted", count: 0 },
+      ],
+      date_range: {
+        from: new Date().toISOString().split("T")[0],
+        to: new Date().toISOString().split("T")[0],
+      },
+    };
+  }
 
   if (!res.ok) {
     throw new Error("Failed to fetch lead funnel data");

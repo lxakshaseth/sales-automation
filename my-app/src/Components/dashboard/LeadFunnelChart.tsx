@@ -73,7 +73,7 @@ export default function LeadFunnelChart({
       <p className="text-[12px] text-[#94a3b8] mb-4">{dateRangeLabel}</p>
 
       <div className="h-[100px]" style={{ minWidth: 0 }}>
-  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <BarChart
             data={sortedData}
             layout="vertical"
