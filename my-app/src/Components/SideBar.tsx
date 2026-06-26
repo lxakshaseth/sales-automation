@@ -76,10 +76,6 @@ const menu: SidebarMenuItem[] = [
   { name: "Contacts", href: "/Contacts", icon: Contact },
   { name: "Templates", href: "/templates", icon: LayoutTemplate },
   { name: "WhatsApp", href: "/whatsapp", icon: MessageCircle },
-  { name: "Integration", href: "/Integration", icon: Plug },
-  { name: "Lead & Sales Pipeline", href: "/LeadSalesPipeline", icon: TrendingUp, notificationId: "leads" },
-  { name: "User Management", href: "/UserManagement", icon: Users },
-  { name: "Master", href: "/Master", icon: Database },
 ];
 interface SidebarItemProps {
   item: SidebarMenuItem;

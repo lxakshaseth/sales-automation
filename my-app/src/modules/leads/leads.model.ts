@@ -62,6 +62,16 @@ const leadSchema = new Schema(
       default: "new",
     },
 
+    stageEnteredAt: {
+          type: Date,
+          default: Date.now,
+        },
+
+        lastActivity: {
+          type: String,
+          default: "Lead Created",
+        },
+
     score: {
       type: Number,
       default: 0,

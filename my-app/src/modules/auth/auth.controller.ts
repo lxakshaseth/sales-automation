@@ -59,8 +59,9 @@ export const loginController = async (req: NextRequest) => {
     }
 
     const token = generateToken(user._id.toString());
+    const { password: _pw, ...safeUser } = user.toObject();
     return NextResponse.json(
-      { success: true, token, data: user },
+      { success: true, token, data: safeUser },
       { status: 200 },
     );
   } catch (error: any) {
