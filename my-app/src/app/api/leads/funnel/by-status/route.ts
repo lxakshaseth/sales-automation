@@ -1,40 +1,51 @@
-import connectDB from "@/lib/db";
-import Lead from "@/modules/leads/leads.model";
 import { NextRequest, NextResponse } from "next/server";
+import { getContactsController } from "@/modules/whatsapp/whatsapp.controller";
+
+interface ContactDoc {
+  createdAt: string | Date;
+}
 
 export async function GET(req: NextRequest) {
   try {
-    await connectDB();
+    const contacts = (await getContactsController()) as ContactDoc[];
 
-    const { searchParams } = new URL(req.url);
-    const days = parseInt(searchParams.get("days") || "7");
+    const now = new Date();
 
-    const fromDate = new Date();
-    fromDate.setDate(fromDate.getDate() - days);
+    const startOfThisWeek = new Date(now);
+    const day = startOfThisWeek.getDay();
+    const diff = day === 0 ? 6 : day - 1;
+    startOfThisWeek.setDate(now.getDate() - diff);
+    startOfThisWeek.setHours(0, 0, 0, 0);
 
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const startOfLastWeek = new Date(startOfThisWeek);
+    startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
 
-    const newCount = await Lead.countDocuments({
-      createdAt: { $gte: oneWeekAgo },
-    });
+    const endOfLastWeek = new Date(startOfThisWeek);
 
-    const contactedCount = await Lead.countDocuments({
-      createdAt: { $gte: fromDate, $lt: oneWeekAgo },
-    });
+    let newCount = 0;
+    let contactedCount = 0;
 
-    const to = new Date();
+    for (const contact of contacts) {
+      const createdAt = new Date(contact.createdAt);
+
+      if (createdAt >= startOfThisWeek && createdAt <= now) {
+        newCount++;
+      } else if (createdAt >= startOfLastWeek && createdAt < endOfLastWeek) {
+        contactedCount++;
+      }
+    }
+
     return NextResponse.json({
       data: [
         { status: "new", count: newCount },
         { status: "contacted", count: contactedCount },
       ],
       date_range: {
-        from: fromDate.toISOString().split("T")[0],
-        to: to.toISOString().split("T")[0],
+        from: startOfLastWeek.toISOString().split("T")[0],
+        to: now.toISOString().split("T")[0],
       },
     });
   } catch (error) {
-    return NextResponse.json({ error: "DB not ready" }, { status: 503 });
+    return NextResponse.json({ error: "Failed to load funnel data" }, { status: 503 });
   }
 }
