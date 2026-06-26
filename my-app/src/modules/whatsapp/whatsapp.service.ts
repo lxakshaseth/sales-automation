@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 import connectDB from "@/lib/db";
 import Contact from "@/modules/whatsapp/contact.model";
 import Message from "@/modules/whatsapp/message.model";
@@ -35,6 +37,49 @@ function getWhatsAppMessageId(rawPayload: unknown) {
 
     return messages?.[0]?.id;
   }
+}
+
+function getContactIdentifierVariants(identifier: string) {
+  const trimmed = decodeURIComponent(identifier).trim();
+  const withoutWhatsappPrefix = trimmed.replace(/^whatsapp:/i, "");
+  const withoutPlus = withoutWhatsappPrefix.replace(/^\+/, "");
+
+  return Array.from(
+    new Set([
+      trimmed,
+      withoutWhatsappPrefix,
+      withoutPlus,
+      `+${withoutPlus}`,
+      `whatsapp:${withoutWhatsappPrefix}`,
+      `whatsapp:+${withoutPlus}`,
+    ].filter(Boolean)),
+  );
+}
+
+function getContactLookupFilter(identifier: string) {
+  const variants = getContactIdentifierVariants(identifier);
+  const filters: Record<string, unknown>[] = [
+    {
+      waId: {
+        $in: variants,
+      },
+    },
+    {
+      phone: {
+        $in: variants,
+      },
+    },
+  ];
+
+  if (mongoose.Types.ObjectId.isValid(identifier)) {
+    filters.unshift({
+      _id: identifier,
+    });
+  }
+
+  return {
+    $or: filters,
+  };
 }
 
 function normalizeMessageStatus(status: string): MessageStatus | null {
@@ -259,7 +304,7 @@ export async function updateMessageStatus({
 export async function getChatByWaId(waId: string) {
   await connectDB();
 
-  const contact = await Contact.findOne({ waId });
+  const contact = await Contact.findOne(getContactLookupFilter(waId));
 
   if (!contact) return null;
 
@@ -311,9 +356,7 @@ export async function getContacts() {
 export async function markMessagesAsRead(waId: string) {
   await connectDB();
 
-  const contact = await Contact.findOne({
-    waId,
-  });
+  const contact = await Contact.findOne(getContactLookupFilter(waId));
 
   if (!contact) return;
 
@@ -378,8 +421,8 @@ export async function markMessagesAsRead(waId: string) {
 export async function updateContactName(contactId: string, customName: string) {
   await connectDB();
 
-  return Contact.findByIdAndUpdate(
-    contactId,
+  return Contact.findOneAndUpdate(
+    getContactLookupFilter(contactId),
     {
       customName,
     },
@@ -395,8 +438,8 @@ export async function updateContactAiEnabled(
 ) {
   await connectDB();
 
-  return Contact.findByIdAndUpdate(
-    contactId,
+  return Contact.findOneAndUpdate(
+    getContactLookupFilter(contactId),
     {
       aiEnabled,
     },
