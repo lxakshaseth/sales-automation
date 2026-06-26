@@ -21,7 +21,7 @@ export default function CreateCampaign() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateSearch, setTemplateSearch] = useState("");
   const [description, setDescription] = useState("");
-const [status, setStatus] = useState("active");
+  const [status, setStatus] = useState<"draft" | "active">("draft");
 
   useEffect(() => {
     async function fetchTemplates() {
@@ -53,11 +53,11 @@ const [status, setStatus] = useState("active");
       throw new Error("Authentication token not found");
     }
 
-    const payload = {
-      name: campaignName,
-      description: description,
-      status: status,
-      funnel: [
+      const payload = {
+        name: campaignName,
+        description: description,
+        status: "draft",
+        funnel: [
         {
           step: "email",
           action: "welcome_email",
@@ -99,7 +99,7 @@ const [status, setStatus] = useState("active");
     const payload = {
       name: campaignName,
       description: campaignCategory,
-      status: status,
+      status: "active",
       funnel: [
         {
           step: "email",
@@ -216,14 +216,14 @@ const [status, setStatus] = useState("active");
     <label className="block text-sm font-medium text-zinc-700 mb-2">
       Status <span className="text-red-500">*</span>
     </label>
-    <select
-      value={status}
-      onChange={(e) => setStatus(e.target.value)}
-      className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm bg-white"
-    >
-      <option value="active">Active</option>
-      <option value="inactive">Inactive</option>
-    </select>
+      <select
+        value={status}
+        onChange={(e) => setStatus(e.target.value as "draft" | "active")}
+        className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm bg-white"
+      >
+        <option value="draft">Draft</option>
+        <option value="active">Active</option>
+      </select>
   </div>
 
   {/* Campaign Category */}
