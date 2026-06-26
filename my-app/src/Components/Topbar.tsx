@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, LogOut, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -41,11 +41,6 @@ const handleLogout = () => {
 
       <div className="flex items-center gap-4 shrink-0">
         {children}
-
-        <button className="relative p-2 rounded-xl hover:bg-slate-100 transition">
-          <Bell className="w-8 h-8 text-slate-600" />
-          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-violet-600" />
-        </button>
 
         <div className="relative">
   <button
