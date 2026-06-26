@@ -12,7 +12,7 @@ export default function WhatsAppPage() {
     useState(false);
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc] overflow-hidden">
+    <div className="flex h-screen bg-zinc-50 font-sans overflow-hidden">
       <SideBar
         isCollapsed={isCollapsed}
         onToggleCollapse={() =>
@@ -23,8 +23,8 @@ export default function WhatsAppPage() {
       <main
         className={`flex-1 transition-all duration-300 overflow-y-auto ${
           isCollapsed
-            ? "ml-[90px]"
-            : "ml-[270px]"
+            ? "ml-20"
+            : "ml-64"
         }`}
       >
         <div className="p-6 lg:p-8">

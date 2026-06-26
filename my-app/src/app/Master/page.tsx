@@ -14,7 +14,7 @@ export default function MasterPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen bg-[#f7f8fc] overflow-hidden">
+    <div className="flex h-screen bg-zinc-50 font-sans overflow-hidden">
 
       {/* SIDEBAR */}
       <SideBar
