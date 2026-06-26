@@ -24,5 +24,6 @@ export default function CampaignsPage() {
         </div>
       </main>
     </div>
+    
   );
 }

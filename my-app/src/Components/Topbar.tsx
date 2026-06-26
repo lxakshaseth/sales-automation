@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -96,36 +96,41 @@ export default function TopBar({
           <div className="relative">
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-transparent"
             >
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-semibold">
                 {initials || "A"}
               </div>
               <div className="hidden lg:block text-left">
                 <p className="text-sm font-semibold">
-                  {firstName || "Admin"}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {lastName || "Administrator"}
+                  {user.name || "Admin"}
                 </p>
               </div>
+
+              <ChevronDown
+                size={16}
+                className={`text-gray-500 transition-transform ${
+                  showProfileMenu ? "rotate-180" : ""
+                }`}
+              />
+
             </button>
 
             {showProfileMenu && (
-              <div className="absolute right-0 top-14 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+              <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-52 overflow-hidden rounded-xl border border-[#e2e8f0] bg-white py-1.5 shadow-lg shadow-black/5">
                 <button
                   onClick={() => {
                     setShowProfileModal(true);
                     setShowProfileMenu(false);
                   }}
-                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 text-left"
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] text-[#0f172a] transition-colors hover:bg-[#f8fafc]"
                 >
                   <User size={18} />
                   <span>Profile</span>
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 text-red-600 text-left"
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] text-[#dc2626] transition-colors hover:bg-[#fef2f2]"
                 >
                   <LogOut size={18} />
                   <span>Logout</span>
