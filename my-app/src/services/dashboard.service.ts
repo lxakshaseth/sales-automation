@@ -1,9 +1,18 @@
+import { readJsonResponse } from "@/services/api";
+
 export interface DashboardStats {
   campaigns: number;
   templates: number;
   leads: number;
   whatsappContacts: number;
 }
+
+const emptyDashboardStats: DashboardStats = {
+  campaigns: 0,
+  templates: 0,
+  leads: 0,
+  whatsappContacts: 0,
+};
 
 interface DashboardStatsResponse {
   success: boolean;
@@ -12,15 +21,16 @@ interface DashboardStatsResponse {
 }
 
 export async function fetchDashboardStats(): Promise<DashboardStats> {
-  const response = await fetch("/api/dashboard");
+  try {
+    const response = await fetch("/api/dashboard");
+    const result = await readJsonResponse<DashboardStatsResponse>(response);
 
-  const result = (await response
-    .json()
-    .catch(() => null)) as DashboardStatsResponse | null;
+    if (!response.ok || !result?.success || !result.data) {
+      return emptyDashboardStats;
+    }
 
-  if (!response.ok || !result?.success || !result.data) {
-    throw new Error(result?.message || "Failed to fetch dashboard stats");
+    return result.data;
+  } catch {
+    return emptyDashboardStats;
   }
-
-  return result.data;
 }
