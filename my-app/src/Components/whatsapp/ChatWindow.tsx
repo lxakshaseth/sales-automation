@@ -19,6 +19,7 @@ import {
   Message,
   getChatByWaId,
   isAbortError,
+  isNotFoundError,
   markChatAsRead,
   updateContactAiEnabled,
   updateContactName,
@@ -185,7 +186,23 @@ export default function ChatWindow({
           return;
         }
 
-        console.error("[whatsapp:chat] fetch:failure", {
+        if (isNotFoundError(error)) {
+          console.warn("[whatsapp:chat] fetch:not-found", {
+            waId,
+            error,
+          });
+
+          if (mountedRef.current) {
+            setMessages([]);
+            setErrorMessage(
+              "Conversation not found. Refresh contacts and select it again.",
+            );
+          }
+
+          return;
+        }
+
+        console.warn("[whatsapp:chat] fetch:failure", {
           waId,
           error,
         });
@@ -406,7 +423,7 @@ export default function ChatWindow({
       setCustomName("");
     } catch (error) {
       if (!isAbortError(error)) {
-        console.error("[whatsapp:chat] rename:failure", {
+        console.warn("[whatsapp:chat] rename:failure", {
           contactId: selectedContact._id,
           error,
         });
@@ -437,12 +454,16 @@ export default function ChatWindow({
       onContactUpdated(response.data);
     } catch (error) {
       if (!isAbortError(error)) {
-        console.error("[whatsapp:chat] ai-toggle:failure", {
+        console.warn("[whatsapp:chat] ai-toggle:failure", {
           contactId: selectedContact._id,
           error,
         });
 
-        setErrorMessage("Unable to update AI mode. Please try again.");
+        setErrorMessage(
+          isNotFoundError(error)
+            ? "Contact not found. Refresh contacts and select it again."
+            : "Unable to update AI mode. Please try again.",
+        );
       }
     } finally {
       setAiToggleSaving(false);

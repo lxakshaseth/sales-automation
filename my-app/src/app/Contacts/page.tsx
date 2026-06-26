@@ -19,7 +19,6 @@ export default function ContactsPage() {
         isCollapsed={isCollapsed}
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       />
-
       {/* MAIN CONTENT */}
       <main
         className={`flex-1 transition-all duration-300 overflow-y-auto ${
@@ -53,7 +52,6 @@ export default function ContactsPage() {
               onCloseAddContact={() => setIsAddingContact(false)}
             />
           </div>
-
         </div>
       </main>
     </div>
