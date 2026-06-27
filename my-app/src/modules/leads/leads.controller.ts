@@ -142,6 +142,7 @@ export const getLeadsController = async (req: NextRequest) => {
     const page = Number(searchParams.get("page")) || 1;
     const limit = Number(searchParams.get("limit")) || 10;
     const skip = (page - 1) * limit;
+    const search = searchParams.get("search");
     const firstName = searchParams.get("firstName");
     const email = searchParams.get("email");
     const lastName = searchParams.get("lastName");
@@ -151,26 +152,39 @@ export const getLeadsController = async (req: NextRequest) => {
     const state = searchParams.get("state");
     const filter: any = {};
 
-    if (firstName) {
-      filter.firstName = { $regex: firstName, $options: "i" };
-    }
-    if (email) {
-      filter.email = { $regex: email, $options: "i" };
-    }
-    if (lastName) {
-      filter.lastName = { $regex: lastName, $options: "i" };
-    }
-    if (phone) {
-      filter.phone = { $regex: phone, $options: "i" };
-    }
-    if (company) {
-      filter.company = { $regex: company, $options: "i" };
-    }
-    if (country) {
-      filter.country = { $regex: country, $options: "i" };
-    }
-    if (state) {
-      filter.state = { $regex: state, $options: "i" };
+    if (search) {
+      const regex = { $regex: search, $options: "i" };
+      filter.$or = [
+        { firstName: regex },
+        { lastName: regex },
+        { email: regex },
+        { phone: regex },
+        { company: regex },
+        { state: regex },
+        { country: regex },
+      ];
+    } else {
+      if (firstName) {
+        filter.firstName = { $regex: firstName, $options: "i" };
+      }
+      if (email) {
+        filter.email = { $regex: email, $options: "i" };
+      }
+      if (lastName) {
+        filter.lastName = { $regex: lastName, $options: "i" };
+      }
+      if (phone) {
+        filter.phone = { $regex: phone, $options: "i" };
+      }
+      if (company) {
+        filter.company = { $regex: company, $options: "i" };
+      }
+      if (country) {
+        filter.country = { $regex: country, $options: "i" };
+      }
+      if (state) {
+        filter.state = { $regex: state, $options: "i" };
+      }
     }
 
     const leads = await Lead.find(filter)
