@@ -33,6 +33,11 @@ export default function TopBar({
     router.push("/sign-in");
   };
 
+  const handleCloseProfile = () => {
+    setShowProfileModal(false);
+    router.push("/");
+  };
+
   useEffect(() => {
     if (isUserLoaded) return;
     const fetchProfile = async () => {
@@ -143,7 +148,8 @@ export default function TopBar({
 
       <ProfileModal
         isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
+        onClose={handleCloseProfile}
+        onProfileUpdated={(profile) => setUser(profile)}
       />
     </>
   );
