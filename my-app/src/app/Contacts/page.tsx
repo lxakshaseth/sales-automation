@@ -1,40 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import SideBar from "@/Components/SideBar";
+import { useSidebar } from "@/Components/SideBar";
 import TopBar from "@/Components/Topbar";
 import Headersection from "@/Components/contacts/Headersection";
 import ContactsList from "@/Components/contacts/Contactlist";
 
 export default function ContactsPage() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed } = useSidebar();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc] overflow-hidden">
-      {/* SIDEBAR */}
-      <SideBar
-        isCollapsed={isCollapsed}
-        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-      />
-
-      {/* MAIN CONTENT */}
+    <div className="flex h-screen bg-zinc-50 font-sans overflow-hidden">
       <main
         className={`flex-1 transition-all duration-300 overflow-y-auto ${
-          isCollapsed ? "ml-[90px]" : "ml-[270px]"
+          isCollapsed ? "md:ml-20" : "md:ml-64"
         }`}
       >
         <div className="p-6 lg:p-8">
-
-          {/* TOPBAR */}
           <TopBar
             title="Contacts Directory"
             description="Manage your clients, leads, and team members."
           />
 
-          {/* HEADER + SEARCH + IMPORT + ADD */}
           <div className="mt-6">
             <Headersection
               searchQuery={searchQuery}
@@ -44,7 +35,6 @@ export default function ContactsPage() {
             />
           </div>
 
-          {/* CONTACTS TABLE */}
           <div className="mt-6">
             <ContactsList
               key={refreshKey}
@@ -53,7 +43,6 @@ export default function ContactsPage() {
               onCloseAddContact={() => setIsAddingContact(false)}
             />
           </div>
-
         </div>
       </main>
     </div>

@@ -1,15 +1,23 @@
 import nodemailer from "nodemailer";
 
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer | string;
+  contentType?: string;
+}
+
 interface SendEmailProps {  // Defining an interface for the properties required to send an email
   to: string;
   subject: string;
   body: string;
+  attachments?: EmailAttachment[];
 }
 
 export const sendEmailService = async ({
   to,
   subject,
   body,
+  attachments = [],
 }: SendEmailProps) => {
 
   const SMTP_EMAIL = process.env.SMTP_EMAIL;
@@ -33,6 +41,7 @@ export const sendEmailService = async ({
     to,
     subject,
     html: body,
+    attachments,
   });
   return info;
 };

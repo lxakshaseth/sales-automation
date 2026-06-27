@@ -1,21 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Contact,
-  Plug,
   LayoutTemplate,
   Megaphone,
-  TrendingUp,
-  Users,
-  Database,
   Menu,
   ChevronLeft,
-  LogOut,
   Rocket,
   Search,
   ChevronDown,
@@ -38,16 +33,44 @@ interface SidebarMenuItem {
   notificationId?: string;
 }
 
+interface SidebarContextValue {
+  isCollapsed: boolean;
+  toggleCollapse: () => void;
+}
+
+const SidebarContext = createContext<SidebarContextValue | undefined>(undefined);
+
+export function SidebarProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const toggleCollapse = () => setIsCollapsed((prev) => !prev);
+  const isAuthRoute = pathname === "/sign-in" || pathname === "/sign-up";
+
+  return (
+    <SidebarContext.Provider value={{ isCollapsed, toggleCollapse }}>
+      {!isAuthRoute && (
+        <Sidebar isCollapsed={isCollapsed} onToggleCollapse={toggleCollapse} />
+      )}
+      {children}
+    </SidebarContext.Provider>
+  );
+}
+
+export function useSidebar() {
+  const context = useContext(SidebarContext);
+  if (!context) {
+    throw new Error("useSidebar must be used within SidebarProvider");
+  }
+  return context;
+}
+
 const menu: SidebarMenuItem[] = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Campaigns", href: "/Campaign", icon: Megaphone },
   { name: "Contacts", href: "/Contacts", icon: Contact },
   { name: "Templates", href: "/templates", icon: LayoutTemplate },
   { name: "WhatsApp", href: "/whatsapp", icon: MessageCircle },
-  { name: "Integration", href: "/Integration", icon: Plug },
-  { name: "Lead & Sales Pipeline", href: "/LeadSalesPipeline", icon: TrendingUp, notificationId: "leads" },
-  { name: "User Management", href: "/UserManagement", icon: Users },
-  { name: "Master", href: "/Master", icon: Database },
 ];
 interface SidebarItemProps {
   item: SidebarMenuItem;
