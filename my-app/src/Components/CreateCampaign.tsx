@@ -84,9 +84,13 @@ export default function CreateCampaign() {
       emailTemplates: selectedTemplateId ? [selectedTemplateId] : [],
     };
 
-    await createCampaign(payload, token);
+await createCampaign(payload, token);
 
-    toast.success("Draft saved successfully!");
+toast.success("Draft saved successfully!");
+setTimeout(() => {
+  router.push("/Campaign");
+}, 1000);
+
   } catch (error) {
     console.error(error);
 
