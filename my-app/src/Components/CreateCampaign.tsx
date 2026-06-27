@@ -1,7 +1,7 @@
 "use client";
-import TopBar from "@/Components/Topbar";
+
 import { useState, useEffect } from "react";
-import { Mail, Send, Save, FileText, Check, Search } from "lucide-react";
+import { Mail, Send, Save, FileText, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import toast from "react-hot-toast";

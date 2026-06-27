@@ -35,7 +35,6 @@ export default function TopBar({
 
   const handleCloseProfile = () => {
     setShowProfileModal(false);
-    router.push("/");
   };
 
   useEffect(() => {
