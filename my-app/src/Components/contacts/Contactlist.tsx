@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { MoreVertical, X, Loader2 } from "lucide-react";
 import { getContacts, createContact, updateContact, deleteContact, bulkDeleteContacts, getCampaigns, assignLead, assignMultipleLeads } from "@/services/contact.service";
 
@@ -36,6 +36,7 @@ export default function ContactsList({
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [deletingContactId, setDeletingContactId] = useState<string | null>(null);
   const [addingContactData, setAddingContactData] = useState({
@@ -54,7 +55,7 @@ export default function ContactsList({
   const fetchContacts = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getContacts(currentPage, itemsPerPage);
+      const data = await getContacts(currentPage, itemsPerPage, searchQuery);
       if (data.success) {
         setContacts(data.data);
         setTotalData(data.totalData);
@@ -64,24 +65,30 @@ export default function ContactsList({
     } finally {
       setLoading(false);
     }
-  }, [currentPage]);
+  }, [currentPage, searchQuery]);
 
   useEffect(() => {
     fetchContacts();
   }, [fetchContacts]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenu(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const totalPages = Math.ceil(totalData / itemsPerPage);
 
-  const filteredContacts = contacts.filter((c) => {
-    const name = `${c.firstName} ${c.lastName || ""}`.toLowerCase();
-    const q = searchQuery.toLowerCase();
-    return name.includes(q) || c.email.includes(q) || (c.phone || "").includes(q) ||
-      (c.company || "").toLowerCase().includes(q) || (c.state || "").toLowerCase().includes(q) ||
-      (c.country || "").toLowerCase().includes(q);
-  });
-
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) setSelectedContacts(filteredContacts.map((c) => c._id));
+    if (e.target.checked) setSelectedContacts(contacts.map((c) => c._id));
     else setSelectedContacts([]);
   };
 
@@ -206,7 +213,7 @@ export default function ContactsList({
             <tr className="border-b border-[#e5e7eb] bg-[#f9fafb]">
               <th className="w-12 px-6 py-4 text-left">
                 <input type="checkbox"
-                  checked={selectedContacts.length === filteredContacts.length && filteredContacts.length > 0}
+                  checked={selectedContacts.length === contacts.length && contacts.length > 0}
                   onChange={handleSelectAll}
                   className="w-4 h-4 rounded border-[#d1d5db] cursor-pointer"
                 />
@@ -222,9 +229,9 @@ export default function ContactsList({
           <tbody>
             {loading ? (
               <tr><td colSpan={7} className="px-6 py-16 text-center text-[#64748b]"><Loader2 size={24} className="animate-spin mx-auto" /></td></tr>
-            ) : filteredContacts.length === 0 ? (
+            ) : contacts.length === 0 ? (
               <tr><td colSpan={7} className="px-6 py-16 text-center text-[#64748b] text-sm">No contacts found</td></tr>
-            ) : filteredContacts.map((contact) => (
+            ) : contacts.map((contact) => (
               <tr key={contact._id} className="border-b border-[#e5e7eb] hover:bg-[#f9fafb] transition-colors">
                 <td className="px-6 py-4">
                   <input type="checkbox" checked={selectedContacts.includes(contact._id)}
@@ -245,12 +252,13 @@ export default function ContactsList({
                 <td className="px-6 py-4 text-sm text-[#64748b]">{contact.state}</td>
                 <td className="px-6 py-4 text-sm text-[#64748b]">{contact.country}</td>
                 <td className="px-6 py-4 text-center relative">
-                  <button onClick={() => setOpenMenu(openMenu === contact._id ? null : contact._id)}
-                    className="text-[#94a3b8] hover:text-[#64748b] transition-colors">
-                    <MoreVertical size={18} />
-                  </button>
-                  {openMenu === contact._id && (
-                    <div className="absolute right-0 mt-2 w-32 bg-white border border-[#e5e7eb] rounded-lg shadow-lg z-10">
+                  <div ref={(el) => { if (openMenu === contact._id) menuRef.current = el; }}>
+                    <button onClick={() => setOpenMenu(openMenu === contact._id ? null : contact._id)}
+                      className="text-[#94a3b8] hover:text-[#64748b] transition-colors">
+                      <MoreVertical size={18} />
+                    </button>
+                    {openMenu === contact._id && (
+                      <div className="absolute right-0 mt-2 w-32 bg-white border border-[#e5e7eb] rounded-lg shadow-lg z-10">
                       <button onClick={() => handleEditClick(contact)}
                         className="w-full text-left px-4 py-2 text-sm text-[#111827] hover:bg-[#f3f4f6] border-b border-[#e5e7eb]">
                         Edit
@@ -261,6 +269,7 @@ export default function ContactsList({
                       </button>
                     </div>
                   )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -285,7 +294,7 @@ export default function ContactsList({
 
       {/* ADD CONTACT MODAL */}
       {isAddingContact && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full shadow-xl">
             <div className="flex items-center justify-between border-b border-[#e5e7eb] px-6 py-4">
               <h2 className="text-xl font-bold text-[#111827]">Add New Contact</h2>
@@ -314,7 +323,7 @@ export default function ContactsList({
 
       {/* EDIT MODAL */}
       {editingContact && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full shadow-xl">
             <div className="flex items-center justify-between border-b border-[#e5e7eb] px-6 py-4">
               <h2 className="text-xl font-bold text-[#111827]">Edit Contact</h2>
@@ -343,7 +352,7 @@ export default function ContactsList({
 
       {/* DELETE CONFIRMATION MODAL */}
       {deletingContactId && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl pointer-events-auto">
             <div className="border-b border-[#e5e7eb] px-6 py-4">
               <h2 className="text-lg font-bold text-[#111827]">Confirm Delete</h2>
@@ -361,7 +370,7 @@ export default function ContactsList({
 
       {/* ASSIGN CAMPAIGN MODAL */}
       {showAssignModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full shadow-xl">
             <div className="flex items-center justify-between border-b border-[#e5e7eb] px-6 py-4">
               <h2 className="text-xl font-bold text-[#111827]">

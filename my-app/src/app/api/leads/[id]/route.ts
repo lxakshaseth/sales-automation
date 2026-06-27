@@ -15,6 +15,11 @@ export async function PATCH(req: NextRequest, context: Params,) {
   return updateLeadController(req, context);
 }
 
+export async function PUT(req: NextRequest, context: Params,) {
+  await connectDB();
+  return updateLeadController(req, context);
+}
+
 export async function DELETE(req:NextRequest,context:Params){
 await connectDB();
 return deleteLeadController(req,context)

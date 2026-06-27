@@ -6,8 +6,9 @@ function getAuthHeaders() {
   };
 }
 
-export async function getContacts(page: number = 1, limit: number = 11) {
-  const response = await fetch(`/api/leads?limit=${limit}&page=${page}`, {
+export async function getContacts(page: number = 1, limit: number = 11, search?: string) {
+  const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
+  const response = await fetch(`/api/leads?limit=${limit}&page=${page}${searchParam}`, {
     headers: getAuthHeaders(),
   });
   const data = await response.json();
