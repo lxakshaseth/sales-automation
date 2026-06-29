@@ -7,22 +7,25 @@ type Params = { params: Promise<{ id: string }> };
 export const createCampaignController = async (req: NextRequest) => {
   try {
     const body = await req.json();
-    const campaign = await Campaign.create(body);
-    await createAuditLog(
-      "Campaigns",
-      "Create",
-      campaign.name,
-      "Campaign created"
-    );
 
-    return NextResponse.json(
-      { success: true, data: campaign },
-      { status: 201 },
-    );
+    const existing = await Campaign.findOne({
+      name: { $regex: `^${body.name.trim()}$`, $options: "i" },
+    });
+    if (existing) {
+      return NextResponse.json(
+        { success: false, message: "A campaign with this name already exists." },
+        { status: 409 }
+      );
+    }
+
+    const campaign = await Campaign.create(body);
+    await createAuditLog("Campaigns", "Create", campaign.name, "Campaign created");
+
+    return NextResponse.json({ success: true, data: campaign }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: error.message },
-      { status: 500 },
+      { status: 500 }
     );
   }
 };
