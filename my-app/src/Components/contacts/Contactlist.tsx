@@ -46,6 +46,7 @@ export default function ContactsList({
     firstName: "", lastName: "", phone: "", email: "", company: "", state: "", country: "",
   });
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState("");
   const [assigning, setAssigning] = useState(false);
@@ -120,12 +121,18 @@ export default function ContactsList({
     } catch (err) { console.error("Delete failed", err); }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (!selectedContacts.length) return;
-    if (!window.confirm(`Delete ${selectedContacts.length} contacts?`)) return;
+    setShowBulkDeleteModal(true);
+  };
+
+  const cancelBulkDelete = () => setShowBulkDeleteModal(false);
+
+  const confirmBulkDelete = async () => {
     try {
       await bulkDeleteContacts(selectedContacts);
       setSelectedContacts([]);
+      setShowBulkDeleteModal(false);
       fetchContacts();
     } catch (err) { console.error("Bulk delete failed", err); }
   };
@@ -363,6 +370,24 @@ export default function ContactsList({
             <div className="flex gap-3 border-t border-[#e5e7eb] px-6 py-4">
               <button onClick={cancelDelete} className="flex-1 px-4 py-2 border border-[#e5e7eb] rounded-lg text-[#374151] font-medium hover:bg-[#f9fafb]">Cancel</button>
               <button onClick={confirmDelete} className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BULK DELETE CONFIRMATION MODAL */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl pointer-events-auto">
+            <div className="border-b border-[#e5e7eb] px-6 py-4">
+              <h2 className="text-lg font-bold text-[#111827]">Confirm Bulk Delete</h2>
+            </div>
+            <div className="px-6 py-6">
+              <p className="text-[#64748b] text-sm">Are you sure you want to delete {selectedContacts.length} selected contacts? This cannot be undone.</p>
+            </div>
+            <div className="flex gap-3 border-t border-[#e5e7eb] px-6 py-4">
+              <button onClick={cancelBulkDelete} className="flex-1 px-4 py-2 border border-[#e5e7eb] rounded-lg text-[#374151] font-medium hover:bg-[#f9fafb]">Cancel</button>
+              <button onClick={confirmBulkDelete} className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700">Delete</button>
             </div>
           </div>
         </div>

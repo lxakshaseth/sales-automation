@@ -23,11 +23,10 @@ export default function Headersection({
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const data = await bulkUploadContacts(file);
-      alert(`${data.totalUploaded} contacts imported successfully!`);
+      await bulkUploadContacts(file);
       onImportSuccess?.();
     } catch (err: any) {
-      alert(err.message || "Import failed");
+      console.error("Import failed:", err.message || err);
     }
     e.target.value = "";
   };
