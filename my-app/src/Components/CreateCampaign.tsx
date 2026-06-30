@@ -115,7 +115,7 @@ export default function CreateCampaign() {
         funnel: [
           {
             step: "email",
-            action: "welcome_email",
+            action: "send_email",
             waitHours: 0,
             enabled: true,
           },
@@ -182,7 +182,7 @@ export default function CreateCampaign() {
         funnel: [
           {
             step: "email",
-            action: "welcome_email",
+            action: "send_email",
             waitHours: 0,
             enabled: true,
           },

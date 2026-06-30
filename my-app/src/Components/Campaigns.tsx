@@ -1,4 +1,4 @@
-"use client";
+  "use client";
 
 import { motion } from "framer-motion";
 import { Plus, Search, ChevronLeft, ChevronRight, Eye, ArrowUpDown, Pencil, Trash2, X, Loader2, FileText, Check } from "lucide-react";
@@ -180,6 +180,10 @@ export default function Campaigns() {
     }
     if (editNameTaken) {
       toast.error("A campaign with this name already exists");
+      return;
+    }
+    if (editStatus === "active" && !editTemplateId) {
+      toast.error("Please select a template to set this campaign as Active");
       return;
     }
     try {
