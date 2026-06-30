@@ -140,7 +140,7 @@ export default function CreateCampaign() {
     }
   }
 
-  async function handleLaunch() {
+    async function handleLaunch() {
     if (status !== "active") {
       toast.error("Set status to Active to create");
       return;
@@ -158,6 +158,11 @@ export default function CreateCampaign() {
 
     if (!description.trim()) {
       toast.error("Campaign description is required");
+      return;
+    }
+
+    if (!selectedTemplateId) {
+      toast.error("No template selected");
       return;
     }
 
