@@ -45,7 +45,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
-  const isAuthRoute = pathname === "/sign-in" || pathname === "/sign-up";
+  const isAuthRoute = pathname === "/" || pathname === "/sign-in" || pathname === "/sign-up";
 
   return (
     <SidebarContext.Provider value={{ isCollapsed, toggleCollapse }}>
@@ -66,7 +66,7 @@ export function useSidebar() {
 }
 
 const menu: SidebarMenuItem[] = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/Dashboard", icon: LayoutDashboard },
   { name: "Campaigns", href: "/Campaign", icon: Megaphone },
   { name: "Contacts", href: "/Contacts", icon: Contact },
   { name: "Templates", href: "/templates", icon: LayoutTemplate },
@@ -334,6 +334,7 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter(); 
   const [isMobile, setIsMobile] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -408,6 +409,12 @@ const isEffectivelyCollapsed = isCollapsed;
           type: "spring",
           stiffness: 90,
           damping: 20,
+        }}
+        onMouseEnter={() => {
+          if (!isMobile && isCollapsed) setIsHovering(true);
+        }}
+        onMouseLeave={() => {
+          if (!isMobile && isCollapsed) setIsHovering(false);
         }}
         className={`fixed left-0 top-0 h-screen bg-white/95 backdrop-blur-xl border-r border-slate-200 shadow-2xl z-50 overflow-visible flex flex-col transition-transform duration-300 md:translate-x-0 max-md:w-70! ${
           isCollapsed ? "max-md:-translate-x-full" : "max-md:translate-x-0"

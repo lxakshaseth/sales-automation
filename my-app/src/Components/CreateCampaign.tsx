@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { getTemplates, Template } from "@/services/template.service";
-import { createCampaign } from "@/services/campaign.service";
+import { createCampaign, getCampaigns } from "@/services/campaign.service";
 import { useRouter } from "next/navigation";
 
 export default function CreateCampaign() {
@@ -25,6 +25,8 @@ export default function CreateCampaign() {
   const [templateSearch, setTemplateSearch] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<"draft" | "active">("draft");
+  const [nameTaken, setNameTaken] = useState(false);
+  const [checkingName, setCheckingName] = useState(false);
 
   useEffect(() => {
     async function fetchTemplates() {
@@ -41,6 +43,35 @@ export default function CreateCampaign() {
     fetchTemplates();
   }, []);
 
+  useEffect(() => {
+    const trimmed = campaignName.trim();
+    if (!trimmed) {
+      setNameTaken(false);
+      setCheckingName(false);
+      return;
+    }
+
+    setCheckingName(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await getCampaigns({ name: trimmed, limit: 50 });
+        const exists = (res.data || []).some(
+          (c: { name: string }) =>
+            c.name.trim().toLowerCase() === trimmed.toLowerCase(),
+        );
+        setNameTaken(exists);
+      } catch {
+        // If the check itself fails, don't block the user; the
+        // create/save request will still catch a real duplicate.
+        setNameTaken(false);
+      } finally {
+        setCheckingName(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [campaignName]);
+
   const filteredTemplates = templates.filter(
     (t) =>
       t.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
@@ -55,6 +86,11 @@ export default function CreateCampaign() {
 
     if (!campaignName.trim()) {
       toast.error("Campaign name is required");
+      return;
+    }
+
+    if (nameTaken) {
+      toast.error("A campaign with this name already exists");
       return;
     }
 
@@ -79,7 +115,7 @@ export default function CreateCampaign() {
         funnel: [
           {
             step: "email",
-            action: "welcome_email",
+            action: "send_email",
             waitHours: 0,
             enabled: true,
           },
@@ -104,7 +140,7 @@ export default function CreateCampaign() {
     }
   }
 
-  async function handleLaunch() {
+    async function handleLaunch() {
     if (status !== "active") {
       toast.error("Set status to Active to create");
       return;
@@ -115,8 +151,18 @@ export default function CreateCampaign() {
       return;
     }
 
+    if (nameTaken) {
+      toast.error("A campaign with this name already exists");
+      return;
+    }
+
     if (!description.trim()) {
       toast.error("Campaign description is required");
+      return;
+    }
+
+    if (!selectedTemplateId) {
+      toast.error("No template selected");
       return;
     }
 
@@ -136,7 +182,7 @@ export default function CreateCampaign() {
         funnel: [
           {
             step: "email",
-            action: "welcome_email",
+            action: "send_email",
             waitHours: 0,
             enabled: true,
           },
@@ -168,15 +214,14 @@ export default function CreateCampaign() {
             href="/Campaign"
             className="hover:text-violet-600 transition-colors"
           >
-            Campaigns
+            <p>&lt; Back</p>
           </Link>
-          <span>/</span>
-          <span className="text-zinc-900 font-medium">Create Campaign</span>
+          
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={handleSaveDraft}
-            disabled={saving}
+            disabled={saving || nameTaken}
             className="flex items-center gap-2 px-5 py-2.5 border border-zinc-200 bg-white rounded-xl text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-all shadow-sm disabled:opacity-50"
           >
             <Save size={16} />
@@ -184,7 +229,7 @@ export default function CreateCampaign() {
           </button>
           <button
             onClick={handleLaunch}
-            disabled={launching}
+            disabled={launching || nameTaken}
             className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-medium transition-all shadow-sm shadow-violet-600/20 disabled:opacity-50"
           >
             <Send size={16} />
@@ -228,8 +273,18 @@ export default function CreateCampaign() {
               value={campaignName}
               onChange={(e) => setCampaignName(e.target.value)}
               placeholder="Enter campaign name"
-              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
+              className={`w-full border rounded-xl px-4 py-3 text-sm ${
+                nameTaken ? "border-red-400" : "border-zinc-200"
+              }`}
             />
+            {checkingName && (
+              <p className="text-xs text-zinc-400 mt-1">Checking name...</p>
+            )}
+            {!checkingName && nameTaken && (
+              <p className="text-xs text-red-500 mt-1">
+                A campaign with this name already exists.
+              </p>
+            )}
           </div>
 
           {/* Description */}

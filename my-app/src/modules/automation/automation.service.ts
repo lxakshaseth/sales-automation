@@ -32,12 +32,10 @@ export const startCampaignFlow = async (leadId: string) => {
   // 3. Handle email step only
   if (firstStep.step === "email") {
     // 4. Find matching template
-    const template = campaign.emailTemplates.find(
-      (template: any) => template.name === firstStep.action,
-    );
+    const template = campaign.emailTemplates?.[0];
 
     if (!template) {
-      throw new Error(`Template not found for action: ${firstStep.action}`);
+      throw new Error("No email template attached to this campaign");
     }
 
     // 5. Queue email job

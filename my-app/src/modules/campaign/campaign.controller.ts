@@ -7,22 +7,25 @@ type Params = { params: Promise<{ id: string }> };
 export const createCampaignController = async (req: NextRequest) => {
   try {
     const body = await req.json();
-    const campaign = await Campaign.create(body);
-    await createAuditLog(
-      "Campaigns",
-      "Create",
-      campaign.name,
-      "Campaign created"
-    );
 
-    return NextResponse.json(
-      { success: true, data: campaign },
-      { status: 201 },
-    );
+    const existing = await Campaign.findOne({
+      name: { $regex: `^${body.name.trim()}$`, $options: "i" },
+    });
+    if (existing) {
+      return NextResponse.json(
+        { success: false, message: "A campaign with this name already exists." },
+        { status: 409 }
+      );
+    }
+
+    const campaign = await Campaign.create(body);
+    await createAuditLog("Campaigns", "Create", campaign.name, "Campaign created");
+
+    return NextResponse.json({ success: true, data: campaign }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: error.message },
-      { status: 500 },
+      { status: 500 }
     );
   }
 };
@@ -122,35 +125,48 @@ export const updateCampaignController = async (
     }
     const body = await req.json();
 
-      const oldCampaign = await Campaign.findById(id);
+    const oldCampaign = await Campaign.findById(id);
 
-      const updatedCampaign = await Campaign.findByIdAndUpdate(
-        id,
-        body,
-        { new: true }
-      );
-
-      let details = "Campaign updated";
-
-      if (body.name && oldCampaign?.name !== body.name) {
-        details = "Name changed";
+    if (body.name && body.name.trim()) {
+      const existing = await Campaign.findOne({
+        _id: { $ne: id },
+        name: { $regex: `^${body.name.trim()}$`, $options: "i" },
+      });
+      if (existing) {
+        return NextResponse.json(
+          { success: false, message: "A campaign with this name already exists." },
+          { status: 409 }
+        );
       }
-      else if (body.status && oldCampaign?.status !== body.status) {
-        details = `Status changed ${oldCampaign.status} → ${body.status}`;
-      }
-      else if (
-        body.description &&
-        oldCampaign?.description !== body.description
-      ) {
-        details = "Description updated";
-      }
+    }
 
-      await createAuditLog(
-        "Campaign",
-        "Update",
-        updatedCampaign?.name || oldCampaign?.name,
-        details
-      );
+    const updatedCampaign = await Campaign.findByIdAndUpdate(
+      id,
+      body,
+      { new: true }
+    );
+
+    let details = "Campaign updated";
+
+    if (body.name && oldCampaign?.name !== body.name) {
+      details = "Name changed";
+    }
+    else if (body.status && oldCampaign?.status !== body.status) {
+      details = `Status changed ${oldCampaign.status} → ${body.status}`;
+    }
+    else if (
+      body.description &&
+      oldCampaign?.description !== body.description
+    ) {
+      details = "Description updated";
+    }
+
+    await createAuditLog(
+      "Campaign",
+      "Update",
+      updatedCampaign?.name || oldCampaign?.name,
+      details
+    );
 
     if (!updatedCampaign) {
       return NextResponse.json(

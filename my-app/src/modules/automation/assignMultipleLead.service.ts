@@ -20,14 +20,8 @@ export const assignMultipleLeadsToCampaign = async (
   });
 
   const assignedLeads = [];
-  const skippedLeads = [];
 
   for (const lead of leads) {
-    if (lead.campaign) {
-      skippedLeads.push(lead);
-      continue;
-    }
-
     lead.campaign = campaign._id;
 
     await lead.save();
@@ -37,8 +31,5 @@ export const assignMultipleLeadsToCampaign = async (
     assignedLeads.push(lead);
   }
 
-  return {
-    assignedLeads,
-    skippedLeads,
-  };
+  return assignedLeads;
 };
