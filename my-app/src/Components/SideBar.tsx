@@ -374,7 +374,7 @@ export default function Sidebar({
       }, [])
     : menu;
 
-const isEffectivelyCollapsed = isMobile ? isCollapsed : (isCollapsed && !isHovering);
+const isEffectivelyCollapsed = isCollapsed;
 
   return (
     <>

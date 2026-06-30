@@ -115,7 +115,7 @@ export default function CreateCampaign() {
         funnel: [
           {
             step: "email",
-            action: "welcome_email",
+            action: "send_email",
             waitHours: 0,
             enabled: true,
           },
@@ -140,7 +140,7 @@ export default function CreateCampaign() {
     }
   }
 
-  async function handleLaunch() {
+    async function handleLaunch() {
     if (status !== "active") {
       toast.error("Set status to Active to create");
       return;
@@ -161,6 +161,11 @@ export default function CreateCampaign() {
       return;
     }
 
+    if (!selectedTemplateId) {
+      toast.error("No template selected");
+      return;
+    }
+
     try {
       setLaunching(true);
 
@@ -177,7 +182,7 @@ export default function CreateCampaign() {
         funnel: [
           {
             step: "email",
-            action: "welcome_email",
+            action: "send_email",
             waitHours: 0,
             enabled: true,
           },

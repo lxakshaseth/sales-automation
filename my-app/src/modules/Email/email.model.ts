@@ -19,7 +19,7 @@ const EmailSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["PENDING", "SENT", "FAILED"],
+      enum: ["PENDING", "SENT", "FAILED", "SKIPPED"],
       default: "PENDING",
     },
   },
