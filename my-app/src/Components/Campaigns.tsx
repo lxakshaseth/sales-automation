@@ -78,6 +78,8 @@ export default function Campaigns() {
   const [editDescription, setEditDescription] = useState("");
   const [editStatus, setEditStatus] = useState<Campaign["status"]>("draft");
   const [savingEdit, setSavingEdit] = useState(false);
+  const [editNameTaken, setEditNameTaken] = useState(false);
+  const [checkingEditName, setCheckingEditName] = useState(false);
 
   const [allTemplates, setAllTemplates] = useState<Template[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
@@ -141,10 +143,43 @@ export default function Campaigns() {
       t.subject?.toLowerCase().includes(templateSearch.toLowerCase()),
   );
 
+  useEffect(() => {
+    if (!editCampaign) return;
+    const trimmed = editName.trim();
+    if (!trimmed) {
+      setEditNameTaken(false);
+      setCheckingEditName(false);
+      return;
+    }
+
+    setCheckingEditName(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await getCampaigns({ name: trimmed, limit: 50 });
+        const exists = (res.data || []).some(
+          (c: { _id: string; name: string }) =>
+            c._id !== editCampaign._id &&
+            c.name.trim().toLowerCase() === trimmed.toLowerCase(),
+        );
+        setEditNameTaken(exists);
+      } catch {
+        setEditNameTaken(false);
+      } finally {
+        setCheckingEditName(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [editName, editCampaign]);
+
   const handleSaveEdit = async () => {
     if (!editCampaign) return;
     if (!editName.trim()) {
       toast.error("Campaign name is required");
+      return;
+    }
+    if (editNameTaken) {
+      toast.error("A campaign with this name already exists");
       return;
     }
     try {
@@ -418,8 +453,18 @@ export default function Campaigns() {
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full border border-zinc-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
+                  className={`w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all ${
+                    editNameTaken ? "border-red-400" : "border-zinc-200"
+                  }`}
                 />
+                {checkingEditName && (
+                  <p className="text-xs text-zinc-400 mt-1">Checking name...</p>
+                )}
+                {!checkingEditName && editNameTaken && (
+                  <p className="text-xs text-red-500 mt-1">
+                    A campaign with this name already exists.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-zinc-700 mb-1.5">Description</label>
@@ -536,7 +581,7 @@ export default function Campaigns() {
               </button>
               <button
                 onClick={handleSaveEdit}
-                disabled={savingEdit}
+                disabled={savingEdit || editNameTaken}
                 className="px-4 py-2 text-sm bg-violet-600 hover:bg-violet-700 text-white rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
               >
                 {savingEdit && <Loader2 size={14} className="animate-spin" />}
