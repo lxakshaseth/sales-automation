@@ -3,14 +3,37 @@
 import { ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 
+
 export default function RecentAdminActivities() {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [autoDeleted, setAutoDeleted] = useState(false);
+  const [fromDate, setFromDate] = useState("");  
+  const [toDate, setToDate] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const closeNotification = () => {
+  setAutoDeleted(false);
+  localStorage.removeItem("auditAutoDelete");
+};
 
   useEffect(() => {
     fetchLogs();
   }, []);
+
+  useEffect(() => {
+  const saved = localStorage.getItem("auditAutoDelete");
+
+  if (!saved) return;
+
+  const data = JSON.parse(saved);
+
+  if (Date.now() < data.expiry) {
+    setAutoDeleted(true);
+  } else {
+    localStorage.removeItem("auditAutoDelete");
+  }
+}, []);
 
   async function fetchLogs() {
     try {
@@ -18,14 +41,55 @@ export default function RecentAdminActivities() {
       const data = await res.json();
 
       if (data.success) {
-        setLogs(data.data);
-      }
+    setLogs(data.data);
+
+   if (data.autoDeleted) {
+  const expiry = Date.now() + 24 * 60 * 60 * 1000;
+
+  localStorage.setItem("auditAutoDelete", JSON.stringify({
+    show: true,
+    expiry,
+  }));
+
+  setAutoDeleted(true);
+}
+  }
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
   }
+
+  const deleteLogs = () => {
+  if (!fromDate || !toDate) return;
+
+  setShowDeleteModal(true);
+};
+
+const confirmDelete = async () => {
+  try {
+    const res = await fetch("/api/audit-logs/recent", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fromDate,
+        toDate,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      fetchLogs();
+      setShowDeleteModal(false);
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const getBadgeColor = (action: string) => {
     switch (action) {
@@ -78,7 +142,20 @@ export default function RecentAdminActivities() {
             </td>
           </tr>
         ) : (
-          logs.map((log) => (
+          logs
+          .filter((log) => {
+            if (!fromDate || !toDate) return true;
+
+            const logDate = new Date(log.createdAt);
+
+            const startDate = new Date(fromDate);
+
+            const endDate = new Date(toDate);
+            endDate.setHours(23, 59, 59, 999);
+
+            return logDate >= startDate && logDate <= endDate;
+          })
+          .map((log) => (
             <tr
               key={log._id}
               className="border-b border-zinc-50 hover:bg-violet-50 hover:shadow-sm transition-all duration-200 cursor-pointer"
@@ -121,11 +198,50 @@ export default function RecentAdminActivities() {
       {/* Main Card */}
       <div className="bg-white rounded-2xl border border-gray-300 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
         {/* Header */}
+        {autoDeleted && (
+        <div className="mx-4 mt-3 flex items-start justify-between rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+
+          <p className="text-sm text-green-700">
+            ✔ 6-month-old audit logs were automatically deleted successfully.
+          </p>
+
+          <button
+            onClick={closeNotification}
+            className="ml-4 text-green-600 hover:text-green-800 text-lg leading-none"
+          >
+            ✕
+          </button>
+
+        </div>
+      )}
         <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
           <h3 className="font-semibold text-zinc-900 flex items-center gap-2">
             <ShieldCheck size={18} className="text-violet-600" />
             Recent Admin Activities
           </h3>
+
+         <div className="flex items-center gap-2">
+
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="border border-violet-300 rounded-lg px-3 py-2 text-sm"
+          />
+
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="border border-violet-300 rounded-lg px-3 py-2 text-sm"
+          />
+
+          <button
+            className="text-xs font-medium text-violet-600 hover:text-violet-700"
+            onClick={deleteLogs}
+          >
+            Delete
+          </button>
 
           <button
             onClick={() => setShowAll(true)}
@@ -133,6 +249,8 @@ export default function RecentAdminActivities() {
           >
             View All
           </button>
+
+        </div>
         </div>
 
         {/* Table */}
@@ -173,6 +291,47 @@ export default function RecentAdminActivities() {
           </div>
         </div>
       )}
+          {showDeleteModal && (
+      <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+        <div className="bg-white rounded-2xl w-[420px] shadow-2xl p-6">
+
+          <h2 className="text-lg font-semibold text-zinc-900">
+            Delete Audit Logs
+          </h2>
+
+          <p className="mt-3 text-sm text-zinc-600">
+            Are you sure you want to delete the selected audit logs?
+          </p>
+
+          <div className="mt-4 bg-zinc-100 rounded-lg px-3 py-2 text-sm">
+            {fromDate} → {toDate}
+          </div>
+
+          <p className="mt-3 text-xs text-red-500">
+            This action cannot be undone.
+          </p>
+
+          <div className="mt-6 flex justify-end gap-3">
+
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              className="px-4 py-2 rounded-lg border border-zinc-300"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={confirmDelete}
+              className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+            >
+              Delete
+            </button>
+
+          </div>
+
+        </div>
+      </div>
+    )}
     </>
   );
 }
