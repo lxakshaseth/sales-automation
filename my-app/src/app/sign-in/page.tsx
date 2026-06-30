@@ -16,6 +16,16 @@ export default function Signin() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    if (token) {
+      router.replace("/Dashboard");
+    } else {
+      setChecking(false);
+    }
+  }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -53,7 +63,7 @@ export default function Signin() {
         }
 
         setTimeout(() => {
-          router.push("/");
+          router.push("/Dashboard");
         }, 1000);
       } else {
         toast.error(data.message || "Login failed");
@@ -80,6 +90,8 @@ export default function Signin() {
       setRememberMe(true);
     }
   }, []);
+
+  if (checking) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-linear-to-br from-violet-50 via-white to-indigo-100 relative overflow-hidden">
