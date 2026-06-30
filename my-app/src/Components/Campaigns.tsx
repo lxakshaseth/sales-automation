@@ -182,6 +182,10 @@ export default function Campaigns() {
       toast.error("A campaign with this name already exists");
       return;
     }
+    if (editStatus === "active" && !editTemplateId) {
+      toast.error("Please select a template to set this campaign as Active");
+      return;
+    }
     try {
       setSavingEdit(true);
       await updateCampaign(editCampaign._id, {
