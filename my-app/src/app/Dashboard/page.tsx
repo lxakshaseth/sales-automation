@@ -74,7 +74,9 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-screen bg-zinc-50 font-sans overflow-hidden">
-      <main className={`flex flex-1 w-full flex-col py-10 px-8 bg-zinc-50 overflow-y-auto transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
+      <main
+        className={`flex flex-1 w-full flex-col py-10 px-8 bg-zinc-50 overflow-y-auto transition-all duration-300 ${isCollapsed ? "md:ml-20" : "md:ml-64"}`}
+      >
         <div className="max-w-[1700px] w-full mx-auto">
           <DashboardHeader />
 
@@ -160,23 +162,18 @@ export default function DashboardPage() {
           </div>
 
           {/* Recent Activities */}
-          <div className="mt-4 pb-6">
+          <div className="mt-4 pb-3">
             <RecentAdminActivities />
           </div>
 
-          {/* Lead Funnel Widget */}
-          <div className="mt-6 pb-8">
+          {/* WhatsApp Contacts */}
+          <div className="mt-1 pb-1">
             {loading ? (
-              <div className="bg-gray-50 border border-gray-500 rounded-xl shadow-sm p-5 h-[360px] flex items-center justify-center text-[#94a3b8] text-[14px]">
-                Loading funnel data...
+              <div className="bg-white border border-gray-200 rounded-2xl shadow-sm h-42.5 flex items-center justify-center text-[#94a3b8] text-[14px]">
+                Loading WhatsApp contacts...
               </div>
             ) : (
-              <LeadFunnelChart
-                data={funnelData}
-                timePeriod={timePeriod}
-                onTimePeriodChange={setTimePeriod}
-                dateRangeLabel={dateRangeLabel}
-              />
+              <LeadFunnelChart data={funnelData} />
             )}
           </div>
         </div>

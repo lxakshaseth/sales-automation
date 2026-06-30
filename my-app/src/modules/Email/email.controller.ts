@@ -1,7 +1,5 @@
 import Email from "./email.model";
-import {
-  sendEmailService,
-} from "./email.service"; // Importing the sendEmailService function from the email service module to handle sending emails
+import { sendEmailService } from "./email.service"; // Importing the sendEmailService function from the email service module to handle sending emails
 import type { EmailAttachment } from "./email.service";
 import Unsubscribed from "./unsubscribed.model";
 import { injectTrackingLinks } from "./email.util";
@@ -40,7 +38,16 @@ export const sendEmail = async ({
     });
 
     if (unsubscribedUser) {
-      throw new Error("User has unsubscribed from emails");
+      console.log(`${to} has unsubscribed. Skipping email.`);
+
+      await Email.create({
+        to,
+        subject: subject || "UNSUBSCRIBED",
+        body: body || "",
+        status: "SKIPPED", 
+      });
+
+      return null;
     }
 
     // 2. Prepare subject + body
