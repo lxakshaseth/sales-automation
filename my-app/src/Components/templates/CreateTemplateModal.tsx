@@ -35,8 +35,8 @@ export default function CreateTemplateModal({
   const [subjectVars, setSubjectVars] = useState<CustomVar[]>([]);
   const [bodyVars, setBodyVars] = useState<CustomVar[]>([]);
   
-  const [previewFirstName, setPreviewFirstName] = useState("Arpita");
-  const [previewLastName, setPreviewLastName] = useState("Kulkarni");
+  const [previewFirstName, setPreviewFirstName] = useState("");
+  const [previewLastName, setPreviewLastName] = useState("");
 
   const subjectInputRef = useRef<HTMLInputElement>(null);
 
@@ -226,13 +226,6 @@ export default function CreateTemplateModal({
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Subject Line <span className="text-red-500">*</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={addSubjectVar}
-                  className="text-[11px] font-bold text-violet-600 hover:text-violet-700 flex items-center gap-1 bg-violet-50 px-2 py-1 rounded"
-                >
-                  <Plus size={12} /> Add Subject Var
-                </button>
               </div>
 
               {/* Badges bar */}
@@ -313,13 +306,6 @@ export default function CreateTemplateModal({
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Body Content <span className="text-red-500">*</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={addBodyVar}
-                  className="text-[11px] font-bold text-violet-600 hover:text-violet-700 flex items-center gap-1 bg-violet-50 px-2 py-1 rounded"
-                >
-                  <Plus size={12} /> Add Body Var
-                </button>
               </div>
 
               {/* Badges bar */}
@@ -424,7 +410,6 @@ export default function CreateTemplateModal({
                     value={previewFirstName}
                     onChange={(e) => setPreviewFirstName(e.target.value)}
                     className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-violet-500 bg-gray-50/50"
-                    placeholder="e.g. Arpita"
                   />
                 </div>
                 <div className="space-y-1">
@@ -434,7 +419,6 @@ export default function CreateTemplateModal({
                     value={previewLastName}
                     onChange={(e) => setPreviewLastName(e.target.value)}
                     className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-violet-500 bg-gray-50/50"
-                    placeholder="e.g. Kulkarni"
                   />
                 </div>
               </div>
@@ -443,7 +427,6 @@ export default function CreateTemplateModal({
             <div className="flex-1 flex flex-col">
               <div className="mb-2">
                 <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Live System Preview</h3>
-                <p className="text-[11px] text-gray-400 mt-0.5">Real-time compilation of system variables</p>
               </div>
 
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col flex-1 min-h-[400px]">

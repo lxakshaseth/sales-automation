@@ -6,12 +6,18 @@ import TemplatePreviewModal from "./TemplatePreviewModal";
 import DeleteTemplateDialog from "./DeleteTemplateDialog";
 
 import { useEffect, useState } from "react";
-import { getTemplates, Template, deleteTemplate } from "@/services/template.service";
+import {
+  getTemplates,
+  Template,
+  deleteTemplate,
+} from "@/services/template.service";
 import toast from "react-hot-toast";
 
 export default function TemplatesTable() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
+    null,
+  );
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
@@ -80,30 +86,34 @@ export default function TemplatesTable() {
       {/* TOOLBAR */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setIsSelectionMode(!isSelectionMode);
-              setSelectedIds([]);
-            }}
-            className={`px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
-              isSelectionMode
-                ? "bg-violet-50 border-violet-200 text-violet-700"
-                : "border-[#d7dce5] text-[#4b5563] hover:bg-gray-50"
-            }`}
-          >
-            {isSelectionMode ? <X size={16} /> : <CheckSquare size={16} />}
-            {isSelectionMode ? "Cancel Selection" : "Select Multiple"}
-          </button>
+          {templates.length > 0 && (
+            <>
+              <button
+                onClick={() => {
+                  setIsSelectionMode(!isSelectionMode);
+                  setSelectedIds([]);
+                }}
+                className={`px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
+                  isSelectionMode
+                    ? "bg-violet-50 border-violet-200 text-violet-700"
+                    : "border-[#d7dce5] text-[#4b5563] hover:bg-gray-50"
+                }`}
+              >
+                {isSelectionMode ? <X size={16} /> : <CheckSquare size={16} />}
+                {isSelectionMode ? "Cancel Selection" : "Select Multiple"}
+              </button>
 
-          {isSelectionMode && selectedIds.length > 0 && (
-            <button
-              onClick={handleBulkDelete}
-              disabled={isBulkDeleting}
-              className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 disabled:opacity-50"
-            >
-              <Trash2 size={16} />
-              Delete Selected ({selectedIds.length})
-            </button>
+              {isSelectionMode && selectedIds.length > 0 && (
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={isBulkDeleting}
+                  className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 disabled:opacity-50"
+                >
+                  <Trash2 size={16} />
+                  Delete Selected ({selectedIds.length})
+                </button>
+              )}
+            </>
           )}
         </div>
 
@@ -121,11 +131,17 @@ export default function TemplatesTable() {
 
       {/* TABLE */}
       {loading ? (
-        <div className="py-20 text-center text-gray-500 font-medium">Loading templates...</div>
+        <div className="py-20 text-center text-gray-500 font-medium">
+          Loading templates...
+        </div>
       ) : error ? (
-        <div className="py-20 text-center text-red-500 font-medium">{error}</div>
+        <div className="py-20 text-center text-red-500 font-medium">
+          {error}
+        </div>
       ) : templates.length === 0 ? (
-        <div className="py-20 text-center text-gray-400 font-medium">No templates found. Create one to get started!</div>
+        <div className="py-20 text-center text-gray-400 font-medium">
+          No templates found. Create one to get started!
+        </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-[#eef2f7]">
           <table className="w-full text-left border-collapse">
@@ -135,21 +151,35 @@ export default function TemplatesTable() {
                   <th className="p-4 w-12 text-center">
                     <input
                       type="checkbox"
-                      checked={selectedIds.length === templates.length && templates.length > 0}
+                      checked={
+                        selectedIds.length === templates.length &&
+                        templates.length > 0
+                      }
                       onChange={handleSelectAll}
                       className="rounded border-gray-300 text-violet-600 focus:ring-violet-500 h-4 w-4"
                     />
                   </th>
                 )}
-                <th className="p-4 text-xs uppercase tracking-wider text-[#6b7280] font-semibold">Name</th>
-                <th className="p-4 text-xs uppercase tracking-wider text-[#6b7280] font-semibold">Type</th>
-                <th className="p-4 text-xs uppercase tracking-wider text-[#6b7280] font-semibold">Subject</th>
-                <th className="p-4 text-xs uppercase tracking-wider text-[#6b7280] font-semibold text-right">Actions</th>
+                <th className="p-4 text-xs uppercase tracking-wider text-[#6b7280] font-semibold">
+                  Name
+                </th>
+                <th className="p-4 text-xs uppercase tracking-wider text-[#6b7280] font-semibold">
+                  Type
+                </th>
+                <th className="p-4 text-xs uppercase tracking-wider text-[#6b7280] font-semibold">
+                  Subject
+                </th>
+                <th className="p-4 text-xs uppercase tracking-wider text-[#6b7280] font-semibold text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eef2f7]">
               {templates.map((template) => (
-                <tr key={template._id} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={template._id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
                   {isSelectionMode && (
                     <td className="p-4 text-center">
                       <input
@@ -160,13 +190,17 @@ export default function TemplatesTable() {
                       />
                     </td>
                   )}
-                  <td className="p-4 font-semibold text-[#111827]">{template.name}</td>
+                  <td className="p-4 font-semibold text-[#111827]">
+                    {template.name}
+                  </td>
                   <td className="p-4">
                     <span className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 capitalize">
                       {template.type}
                     </span>
                   </td>
-                  <td className="p-4 text-gray-500 max-w-xs truncate">{template.subject || "—"}</td>
+                  <td className="p-4 text-gray-500 max-w-xs truncate">
+                    {template.subject || "—"}
+                  </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-1">
                       {/* VIEW BUTTON */}
@@ -218,7 +252,10 @@ export default function TemplatesTable() {
 
       <div className="mt-5 flex items-center justify-between">
         <div className="text-sm font-medium text-violet-600 px-2">
-          Total: {templates.length} {isSelectionMode && selectedIds.length > 0 && `(${selectedIds.length} selected)`}
+          Total: {templates.length}{" "}
+          {isSelectionMode &&
+            selectedIds.length > 0 &&
+            `(${selectedIds.length} selected)`}
         </div>
       </div>
 
