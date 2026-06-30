@@ -45,7 +45,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
-  const isAuthRoute = pathname === "/sign-in" || pathname === "/sign-up";
+  const isAuthRoute = pathname === "/" || pathname === "/sign-in" || pathname === "/sign-up";
 
   return (
     <SidebarContext.Provider value={{ isCollapsed, toggleCollapse }}>
@@ -66,7 +66,7 @@ export function useSidebar() {
 }
 
 const menu: SidebarMenuItem[] = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/Dashboard", icon: LayoutDashboard },
   { name: "Campaigns", href: "/Campaign", icon: Megaphone },
   { name: "Contacts", href: "/Contacts", icon: Contact },
   { name: "Templates", href: "/templates", icon: LayoutTemplate },
@@ -78,6 +78,17 @@ interface SidebarItemProps {
   isCollapsed: boolean;
   isPermanentlyCollapsed: boolean;
   pathname: string;
+  hoveredItem: {
+  id: string;
+  top: number;
+} | null;
+
+setHoveredItem: (
+  value: {
+    id: string;
+    top: number;
+  } | null
+) => void;
   onClick: (e: React.MouseEvent<HTMLAnchorElement>, href: string) => void;
   onToggleCollapse?: () => void;
 }
@@ -88,11 +99,14 @@ function SidebarItem({
   isCollapsed,
   isPermanentlyCollapsed,
   pathname,
+  hoveredItem,
+  setHoveredItem,
   onClick,
   onToggleCollapse,
 }: SidebarItemProps) {
   const Icon = item.icon;
   const [isExpanded, setIsExpanded] = useState(false);
+
 
   const hasSubmenu = Boolean(item.items && item.items.length > 0);
 
@@ -120,10 +134,24 @@ function SidebarItem({
   return (
     <>
       <Link
-        href={item.href || "#"}
-        onClick={handleParentClick}
-        className={`relative group rounded-2xl flex items-center min-h-12 ${isCollapsed ? "justify-center" : "justify-start"}`}
-      >
+          onMouseEnter={(e) => {
+            if (!isCollapsed || isActive) return;
+
+            const rect = e.currentTarget.getBoundingClientRect();
+
+            setHoveredItem({
+              id: item.name,
+              top: rect.top + rect.height / 2,
+            });
+          }}
+
+          onMouseLeave={() => setHoveredItem(null)}
+          href={item.href || "#"}
+          onClick={handleParentClick}
+          className={`relative group rounded-2xl flex items-center min-h-12 ${
+          isCollapsed ? "justify-center" : "justify-start"
+          }`}
+        >
         {/* Active Background */}
         {isActive && (
           <motion.div
@@ -138,18 +166,19 @@ function SidebarItem({
         )}
 
         <div
-          className={`relative z-10 flex items-center gap-3.5 px-4 py-3 ${isCollapsed ? "justify-center w-full px-0" : "w-full"}`}
-        >
-          <Icon
-            className={`w-5 h-5 shrink-0 transition-all ${
-              isActive
-                ? "text-white"
-                : "text-slate-400 group-hover:text-violet-600"
+            className={`relative z-10 flex items-center gap-3.5 px-4 py-3 group ${
+              isCollapsed ? "justify-center w-full px-0" : "w-full"
             }`}
-            strokeWidth={isActive ? 2.5 : 2}
-          />
-
-          {/* Smooth label animation */}
+          >
+          <Icon
+              className={`w-5 h-5 shrink-0 transition-all ${
+                isActive
+                  ? "text-white"
+                  : "text-slate-400 group-hover:text-violet-600"
+              }`}
+              strokeWidth={isActive ? 2.5 : 2}
+            />
+                  {/* Smooth label animation */}
           <AnimatePresence>
             {!isCollapsed && (
               <motion.span
@@ -167,8 +196,7 @@ function SidebarItem({
               </motion.span>
             )}
           </AnimatePresence>
-
-          {!isCollapsed && hasSubmenu && (
+           {!isCollapsed && hasSubmenu && (
             <ChevronDown
               className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
                 isActive ? "text-white/80" : "text-slate-400"
@@ -184,7 +212,61 @@ function SidebarItem({
             </div>
           )}
         </div>
-      </Link>
+
+          {isCollapsed && hoveredItem && (
+          <motion.div
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -6 }}
+            transition={{ duration: 0.15 }}
+            className="fixed left-[73px] z-[99999]"
+            style={{
+              top: hoveredItem.top,
+              transform: "translateY(-50%)",
+            }}
+          >
+            <div className="relative flex items-center">
+
+              {/* Arrow */}
+              <div
+              className="
+                absolute
+                -left-[7px]
+                top-1/2
+                -translate-y-1/2
+                w-0
+                h-0
+                border-t-[7px]
+                border-b-[7px]
+                border-r-[8px]
+                border-t-transparent
+                border-b-transparent
+                border-r-violet-600
+              "
+            />
+
+              {/* Label */}
+              <div
+                className="
+                  relative
+                  bg-violet-600
+                  text-white
+                  text-xs
+                  font-medium
+                  px-3
+                  py-2
+                  rounded-lg
+                  shadow-xl
+                  whitespace-nowrap  
+                "
+              >
+                {hoveredItem.id}
+              </div>
+
+            </div>
+          </motion.div>
+        )}
+        </Link>
 
       {/* Submenu */}
       <AnimatePresence>
@@ -245,11 +327,14 @@ export default function Sidebar({
   onHover,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [hoveredItem, setHoveredItem] = useState<{
+    id: string;
+    top: number;
+  } | null>(null);
   const pathname = usePathname();
-  const router = useRouter();
-  const [isHovered, setIsHovered] = useState(false);
-
+  const router = useRouter(); 
   const [isMobile, setIsMobile] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -262,6 +347,7 @@ export default function Sidebar({
     href: string,
   ) => {
     e.preventDefault();
+    setHoveredItem(null);
     router.push(href);
     if (isMobile && !isCollapsed) {
       onToggleCollapse();
@@ -288,7 +374,7 @@ export default function Sidebar({
       }, [])
     : menu;
 
-  const isEffectivelyCollapsed = isCollapsed && !isHovered;
+const isEffectivelyCollapsed = isMobile ? isCollapsed : (isCollapsed && !isHovering);
 
   return (
     <>
@@ -324,21 +410,15 @@ export default function Sidebar({
           stiffness: 90,
           damping: 20,
         }}
-        className={`fixed left-0 top-0 h-screen bg-white/95 backdrop-blur-xl border-r border-slate-200 shadow-2xl z-50 overflow-hidden flex flex-col transition-transform duration-300 md:translate-x-0 max-md:w-70! ${
-          isCollapsed ? "max-md:-translate-x-full" : "max-md:translate-x-0"
-        }`}
         onMouseEnter={() => {
-          if (isCollapsed && !isMobile) {
-            setIsHovered(true);
-            onHover?.(true);
-          }
+          if (!isMobile && isCollapsed) setIsHovering(true);
         }}
         onMouseLeave={() => {
-          if (isCollapsed && !isMobile) {
-            setIsHovered(false);
-            onHover?.(false);
-          }
+          if (!isMobile && isCollapsed) setIsHovering(false);
         }}
+        className={`fixed left-0 top-0 h-screen bg-white/95 backdrop-blur-xl border-r border-slate-200 shadow-2xl z-50 overflow-visible flex flex-col transition-transform duration-300 md:translate-x-0 max-md:w-70! ${
+          isCollapsed ? "max-md:-translate-x-full" : "max-md:translate-x-0"
+         }`}
       >
         {/* ================= HEADER ================= */}
         <div
@@ -346,16 +426,24 @@ export default function Sidebar({
         >
           <div
             className={`flex items-center gap-3 overflow-hidden cursor-pointer ${isEffectivelyCollapsed && !isMobile ? "w-full h-full justify-center group" : ""}`}
-            onClick={isCollapsed && !isMobile ? onToggleCollapse : undefined}
+
             title={isCollapsed && !isMobile ? "Expand Sidebar" : undefined}
           >
-            <div className="w-10 h-10 bg-linear-to-br from-violet-600 to-purple-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-violet-600/30 group-hover:scale-105 transition-transform duration-200">
+            <button
+              type="button"
+              onClick={() => {
+                if (isCollapsed && !isMobile) {
+                  onToggleCollapse();
+                }
+              }}
+              className="w-10 h-10 bg-linear-to-br from-violet-600 to-purple-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-violet-600/30 group-hover:scale-105 transition-transform duration-200"
+            >
               {isEffectivelyCollapsed && !isMobile ? (
                 <Menu className="w-5 h-5 text-white" />
               ) : (
                 <Rocket className="w-5 h-5 text-white" />
               )}
-            </div>
+            </button>
             <AnimatePresence>
               {(!isEffectivelyCollapsed || isMobile) && (
                 <motion.div
@@ -391,8 +479,7 @@ export default function Sidebar({
             <button
               onClick={onToggleCollapse}
               className="p-2.5 rounded-xl hover:bg-slate-100 text-slate-500 transition-colors mx-auto block"
-              title="Search"
-            >
+             >
               <Search className="w-5 h-5" />
             </button>
           ) : (
@@ -410,7 +497,7 @@ export default function Sidebar({
         </div>
 
         {/* ================= NAVIGATION ================= */}
-        <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
+        <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
           {displayMenu.length > 0
             ? displayMenu.map((item) => {
                 const isParent = !!item.items;
@@ -424,6 +511,8 @@ export default function Sidebar({
                     isCollapsed={isEffectivelyCollapsed && !isMobile}
                     isPermanentlyCollapsed={isCollapsed && !isMobile}
                     pathname={pathname}
+                    hoveredItem={hoveredItem}
+                    setHoveredItem={setHoveredItem}
                     onClick={handleNavigation}
                     onToggleCollapse={onToggleCollapse}
                   />

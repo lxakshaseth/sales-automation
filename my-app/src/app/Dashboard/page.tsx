@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSidebar } from "@/Components/SideBar";
 import { DashboardHeader } from "@/Components/dashboard/StatsCards";
 import EmailStats from "@/Components/dashboard/EmailStats";
 import LeadFunnelChart from "@/Components/dashboard/LeadFunnelChart";
@@ -20,6 +21,7 @@ import {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { isCollapsed } = useSidebar();
   const [timePeriod, setTimePeriod] = useState<"7" | "30">("7");
   const [funnelData, setFunnelData] = useState<FunnelItem[]>([]);
   const [dateRangeLabel, setDateRangeLabel] = useState("");
@@ -71,9 +73,9 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-gray-100">
-      <main className="w-full">
-        <div className="w-full">
+    <div className="flex h-screen bg-zinc-50 font-sans overflow-hidden">
+      <main className={`flex flex-1 w-full flex-col py-10 px-8 bg-zinc-50 overflow-y-auto transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
+        <div className="max-w-[1700px] w-full mx-auto">
           <DashboardHeader />
 
           {/* Quick Access Cards */}

@@ -1,12 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Plus, Search, ChevronLeft, ChevronRight, Eye, ArrowUpDown, Pencil, Trash2, X, Loader2 } from "lucide-react";
+import { Plus, Search, ChevronLeft, ChevronRight, Eye, ArrowUpDown, Pencil, Trash2, X, Loader2, FileText, Check } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { getCampaigns, updateCampaign, deleteCampaign as deleteCampaignApi } from "@/services/campaign.service";
+import { getTemplates, Template } from "@/services/template.service";
 
 type TemplateRef = {
   _id: string;
@@ -77,6 +78,13 @@ export default function Campaigns() {
   const [editDescription, setEditDescription] = useState("");
   const [editStatus, setEditStatus] = useState<Campaign["status"]>("draft");
   const [savingEdit, setSavingEdit] = useState(false);
+  const [editNameTaken, setEditNameTaken] = useState(false);
+  const [checkingEditName, setCheckingEditName] = useState(false);
+
+  const [allTemplates, setAllTemplates] = useState<Template[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [editTemplateId, setEditTemplateId] = useState<string | null>(null);
 
   const [deleteCampaignTarget, setDeleteCampaignTarget] = useState<Campaign | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -110,10 +118,68 @@ export default function Campaigns() {
 
   const totalPages = Math.max(1, Math.ceil(totalData / PAGE_SIZE));
 
+  useEffect(() => {
+    if (!editCampaign) return;
+    let cancelled = false;
+    setTemplatesLoading(true);
+    getTemplates()
+      .then((res) => {
+        if (!cancelled) setAllTemplates(res.data || []);
+      })
+      .catch(() => {
+        if (!cancelled) setAllTemplates([]);
+      })
+      .finally(() => {
+        if (!cancelled) setTemplatesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editCampaign]);
+
+  const filteredEditTemplates = allTemplates.filter(
+    (t) =>
+      t.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
+      t.subject?.toLowerCase().includes(templateSearch.toLowerCase()),
+  );
+
+  useEffect(() => {
+    if (!editCampaign) return;
+    const trimmed = editName.trim();
+    if (!trimmed) {
+      setEditNameTaken(false);
+      setCheckingEditName(false);
+      return;
+    }
+
+    setCheckingEditName(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await getCampaigns({ name: trimmed, limit: 50 });
+        const exists = (res.data || []).some(
+          (c: { _id: string; name: string }) =>
+            c._id !== editCampaign._id &&
+            c.name.trim().toLowerCase() === trimmed.toLowerCase(),
+        );
+        setEditNameTaken(exists);
+      } catch {
+        setEditNameTaken(false);
+      } finally {
+        setCheckingEditName(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [editName, editCampaign]);
+
   const handleSaveEdit = async () => {
     if (!editCampaign) return;
     if (!editName.trim()) {
       toast.error("Campaign name is required");
+      return;
+    }
+    if (editNameTaken) {
+      toast.error("A campaign with this name already exists");
       return;
     }
     try {
@@ -122,6 +188,7 @@ export default function Campaigns() {
         name: editName,
         description: editDescription,
         status: editStatus,
+        emailTemplates: editTemplateId ? [editTemplateId] : [],
       });
       toast.success("Campaign updated successfully");
       setEditCampaign(null);
@@ -151,11 +218,7 @@ export default function Campaigns() {
   return (
     <div className="flex flex-col gap-8">
       {/* Table Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-        className="bg-white rounded-2xl border border-zinc-400 mt-5 shadow-sm overflow-hidden"
+        <div className="bg-white rounded-2xl border border-zinc-400 mt-5 shadow-sm overflow-hidden"
       >
         {/* Tabs + Create button */}
         <div className="flex items-center justify-between gap-3 px-4 pt-4 border-b border-zinc-100">
@@ -313,6 +376,8 @@ export default function Campaigns() {
                                 setEditName(c.name);
                                 setEditDescription(c.description || "");
                                 setEditStatus(c.status);
+                                setEditTemplateId(c.emailTemplates?.[0]?._id || null);
+                                setTemplateSearch("");
                               }}
                               title="Edit"
                               className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
@@ -369,27 +434,37 @@ export default function Campaigns() {
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Edit Modal */}
       {editCampaign && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-zinc-200">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-zinc-200">
             <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100">
               <h2 className="text-lg font-bold text-zinc-900">Edit Campaign</h2>
               <button onClick={() => setEditCampaign(null)} className="p-1.5 rounded-lg hover:bg-zinc-100 transition-colors">
                 <X size={18} className="text-zinc-500" />
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
               <div>
                 <label className="block text-sm font-medium text-zinc-700 mb-1.5">Campaign Name</label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full border border-zinc-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
+                  className={`w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all ${
+                    editNameTaken ? "border-red-400" : "border-zinc-200"
+                  }`}
                 />
+                {checkingEditName && (
+                  <p className="text-xs text-zinc-400 mt-1">Checking name...</p>
+                )}
+                {!checkingEditName && editNameTaken && (
+                  <p className="text-xs text-red-500 mt-1">
+                    A campaign with this name already exists.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-zinc-700 mb-1.5">Description</label>
@@ -414,6 +489,87 @@ export default function Campaigns() {
                   ))}
                 </select>
               </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-medium text-zinc-700">Template</label>
+                  <Link
+                    href="/templates"
+                    className="text-xs font-medium text-violet-600 hover:text-violet-700"
+                  >
+                    + Create Template
+                  </Link>
+                </div>
+                <div>
+                  <p className="mt-1.5 text-xs text-zinc-500">
+                  {editTemplateId
+                    ? `Selected: ${allTemplates.find((t) => t._id === editTemplateId)?.name ?? ""}`
+                    : "No template assigned"}
+                </p>
+                </div>
+                <div className="relative mb-2">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-3.5 h-3.5" />
+                  <input
+                    type="text"
+                    placeholder="Search templates..."
+                    value={templateSearch}
+                    onChange={(e) => setTemplateSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 border border-zinc-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
+                  />
+                </div>
+
+                <div className="border border-zinc-200 rounded-xl max-h-48 overflow-y-auto divide-y divide-zinc-100">
+                  {templatesLoading ? (
+                    <div className="flex items-center justify-center gap-2 py-6 text-sm text-zinc-400">
+                      <Loader2 size={14} className="animate-spin" />
+                      Loading templates...
+                    </div>
+                  ) : filteredEditTemplates.length === 0 ? (
+                    <div className="py-6 text-center text-sm text-zinc-400">
+                      No templates found
+                    </div>
+                  ) : (
+                    filteredEditTemplates.map((template) => {
+                      const isSelected = editTemplateId === template._id;
+                      return (
+                        <button
+                          key={template._id}
+                          type="button"
+                          onClick={() =>
+                            setEditTemplateId(isSelected ? null : template._id)
+                          }
+                          className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left transition-colors ${
+                            isSelected ? "bg-violet-50" : "hover:bg-zinc-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <FileText size={14} className="text-zinc-400 shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-zinc-800 truncate">
+                                {template.name}
+                              </p>
+                              {template.subject && (
+                                <p className="text-xs text-zinc-500 truncate">
+                                  {template.subject}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-600 capitalize">
+                              {template.type}
+                            </span>
+                            {isSelected && (
+                              <Check size={15} className="text-violet-600" />
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
+              </div>
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-zinc-100">
               <button
@@ -425,7 +581,7 @@ export default function Campaigns() {
               </button>
               <button
                 onClick={handleSaveEdit}
-                disabled={savingEdit}
+                disabled={savingEdit || editNameTaken}
                 className="px-4 py-2 text-sm bg-violet-600 hover:bg-violet-700 text-white rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
               >
                 {savingEdit && <Loader2 size={14} className="animate-spin" />}

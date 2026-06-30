@@ -102,12 +102,12 @@ export default function TopBar({
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-transparent"
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                {initials || "A"}
+              <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-semibold ${!isUserLoaded ? "opacity-0" : "opacity-100"}`}>
+                {initials || ""}
               </div>
               <div className="hidden lg:block text-left">
                 <p className="text-sm font-semibold">
-                  {user.name || "Admin"}
+                  {user.name || ""}
                 </p>
               </div>
 
