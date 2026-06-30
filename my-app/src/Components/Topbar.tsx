@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { LogOut, User, ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -64,7 +65,12 @@ export default function TopBar({
 
   return (
     <>
-      <div className="flex items-start justify-between gap-6 border-b border-slate-200 pb-4">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-start justify-between gap-6 border-b border-slate-200 pb-4"
+      >
         <div>
           <h1 className="text-4xl font-bold tracking-tight text-slate-900">
             {title}
@@ -123,7 +129,7 @@ export default function TopBar({
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <ProfileModal
         isOpen={showProfileModal}
