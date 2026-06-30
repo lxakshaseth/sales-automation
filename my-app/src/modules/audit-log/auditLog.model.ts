@@ -18,10 +18,15 @@ const AuditLogSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    lastCleanupAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
   }
+  
 );
 
 const AuditLog =
