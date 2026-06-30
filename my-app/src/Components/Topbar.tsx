@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { LogOut, User, ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -23,12 +24,12 @@ export default function TopBar({
     name: "",
     role: "",
   });
-  const [isUserLoaded, setIsUserLoaded] = useState(false);
 
   const router = useRouter();
 
   const handleLogout = () => {
     sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
     toast.success("Logout Successfully");
     router.push("/sign-in");
   };
@@ -38,29 +39,19 @@ export default function TopBar({
   };
 
   useEffect(() => {
-    if (isUserLoaded) return;
-    const fetchProfile = async () => {
-      const token = sessionStorage.getItem("token") || localStorage.getItem("token") || localStorage.getItem("authToken");
-      if (!token) return;
+    const stored = sessionStorage.getItem("user");
+    if (stored) {
       try {
-        const res = await fetch("/api/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) return;
-        const json = await res.json();
-        const d = json?.data || {};
+        const parsed = JSON.parse(stored);
         setUser({
-          name: d.name || "",
-          role: d.role || "",
+          name: parsed.name || "",
+          role: parsed.role || "",
         });
       } catch {
         // ignore
-      } finally {
-        setIsUserLoaded(true);
       }
-    };
-    fetchProfile();
-  }, [isUserLoaded]);
+    }
+  }, []);
 
   const initials = useMemo(() => {
     const names = user.name.trim().split(" ").filter(Boolean);
@@ -72,18 +63,14 @@ export default function TopBar({
     );
   }, [user.name]);
 
-  const firstName = useMemo(() => {
-    return user.name.trim().split(" ").filter(Boolean)[0] || "";
-  }, [user.name]);
-
-  const lastName = useMemo(() => {
-    const names = user.name.trim().split(" ").filter(Boolean);
-    return names.length > 1 ? names[names.length - 1] : "";
-  }, [user.name]);
-
   return (
     <>
-      <div className="flex items-start justify-between gap-6 border-b border-slate-200 pb-4">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-start justify-between gap-6 border-b border-slate-200 pb-4"
+      >
         <div>
           <h1 className="text-4xl font-bold tracking-tight text-slate-900">
             {title}
@@ -102,12 +89,12 @@ export default function TopBar({
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-transparent"
             >
-              <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-semibold ${!isUserLoaded ? "opacity-0" : "opacity-100"}`}>
-                {initials || ""}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                {initials}
               </div>
               <div className="hidden lg:block text-left">
                 <p className="text-sm font-semibold">
-                  {user.name || ""}
+                  {user.name}
                 </p>
               </div>
 
@@ -117,7 +104,6 @@ export default function TopBar({
                   showProfileMenu ? "rotate-180" : ""
                 }`}
               />
-
             </button>
 
             {showProfileMenu && (
@@ -143,7 +129,7 @@ export default function TopBar({
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <ProfileModal
         isOpen={showProfileModal}
