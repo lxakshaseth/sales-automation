@@ -5,6 +5,7 @@ import Unsubscribed from "./unsubscribed.model";
 import { injectTrackingLinks } from "./email.util";
 import Template from "./template.model";
 import { renderTemplate } from "./email.util";
+import Lead from "@/modules/leads/leads.model";
 
 import { createUnsubscribeLink } from "./email.util";
 
@@ -20,6 +21,7 @@ interface EmailBody {
   };
 
   emailId?: string;
+  leadId?: string;
   attachments?: EmailAttachment[];
 }
 
@@ -30,6 +32,7 @@ export const sendEmail = async ({
   templateName,
   variables = {},
   attachments = [],
+  leadId,
 }: EmailBody) => {
   try {
     // 1. Check unsubscribe list
@@ -44,7 +47,7 @@ export const sendEmail = async ({
         to,
         subject: subject || "UNSUBSCRIBED",
         body: body || "",
-        status: "SKIPPED", 
+        status: "SKIPPED",
       });
 
       return null;
@@ -119,6 +122,18 @@ export const sendEmail = async ({
     // 9. Update status
     savedEmail.status = "SENT";
     await savedEmail.save();
+
+    // 10. Stamp the lead so the 24h cron eligibility window actually works,
+    // and reflect the real outcome — only on a confirmed successful send
+    // (i.e. here, after sendEmailService resolved without throwing).
+    if (leadId) {
+      await Lead.findByIdAndUpdate(leadId, {
+        lastEmailSentAt: new Date(),
+        status: "contacted",
+        stageEnteredAt: new Date(),
+        lastActivity: `Email sent: ${finalSubject}`,
+      });
+    }
 
     return savedEmail;
   } catch (error) {

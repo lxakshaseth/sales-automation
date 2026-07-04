@@ -86,6 +86,11 @@ const leadSchema = new Schema(
       type: Date,
     },
 
+    lastEmailSentAt: {
+      type: Date,
+      default: null,
+    },
+
     nextFollowUpAt: {
       type: Date,
     },
