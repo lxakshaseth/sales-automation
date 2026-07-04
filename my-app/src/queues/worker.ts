@@ -1,4 +1,4 @@
-import dotenv from "dotenv";   // Importing the dotenv package to load environment variables from a .env file into process.env
+import dotenv from "dotenv";
 
 dotenv.config({
   path: ".env",
@@ -6,5 +6,10 @@ dotenv.config({
 
 import "./email.worker";
 import "./whatsapp-lifecycle.worker";
+import "./campaignAutomation.worker";
 
-// import "./email.queue"; --> This will clear the queue every time the worker starts.
+import { scheduleCampaignAutomationCron } from "./campaignAutomation.queue";
+
+void scheduleCampaignAutomationCron().catch((error) => {
+  console.error("Failed to schedule campaign automation cron:", error);
+});

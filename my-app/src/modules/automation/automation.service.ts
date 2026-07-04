@@ -42,6 +42,8 @@ export const startCampaignFlow = async (leadId: string) => {
     await emailQueue.add("send-email", {
       to: lead.email,
 
+      leadId: lead._id.toString(),
+
       subject: template.subject,
 
       body: template.body,
@@ -55,12 +57,5 @@ export const startCampaignFlow = async (leadId: string) => {
     });
 
     console.log("Email job added to queue successfully");
-
-    // Reflect what just happened using fields that already exist on the Lead
-    await Lead.findByIdAndUpdate(leadId, {
-      status: "contacted",
-      stageEnteredAt: new Date(),
-      lastActivity: `Email sent: ${firstStep.action}`,
-    });
   }
 };
