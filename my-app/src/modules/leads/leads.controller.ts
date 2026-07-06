@@ -73,12 +73,24 @@ export const createLeadController = async (req: NextRequest) => {
     const { country, state, campaign, email } = body;
 
     if (campaign) {
-      const campaignExists = await Campaign.exists({ _id: campaign });
-      if (!campaignExists)
+      const campaignDoc = await Campaign.findById(campaign);
+
+      if (!campaignDoc) {
         return NextResponse.json(
           { success: false, message: "Campaign not found" },
           { status: 404 },
         );
+      }
+
+      if (campaignDoc.status !== "active") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Cannot assign lead: campaign is "${campaignDoc.status}", not active`,
+          },
+          { status: 400 },
+        );
+      }
     }
 
     const checkLeadEmail = await Lead.exists({ email });
@@ -294,11 +306,42 @@ export const updateLeadController = async (
         body.lastActivity =
           `Moved from ${existingLead.status} to ${body.status}`;
       }
+
+      const isReassigningCampaign =
+        body.campaign &&
+        body.campaign.toString() !==
+          existingLead.campaign?.toString();
+
+      if (isReassigningCampaign) {
+        const campaignDoc = await Campaign.findById(body.campaign);
+
+        if (!campaignDoc) {
+          return NextResponse.json(
+            { success: false, message: "Campaign not found" },
+            { status: 404 },
+          );
+        }
+
+        if (campaignDoc.status !== "active") {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `Cannot assign lead: campaign is "${campaignDoc.status}", not active`,
+            },
+            { status: 400 },
+          );
+        }
+      }
+
     const updatedLead = await Lead.findByIdAndUpdate(
       id,
       body,
       { new: true, runValidators: true }
     );
+
+    if (isReassigningCampaign) {
+      await startCampaignFlow(updatedLead._id.toString());
+    }
 
     const changes: string[] = [];
 
