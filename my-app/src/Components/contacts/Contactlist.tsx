@@ -219,11 +219,13 @@ export default function ContactsList({
           <thead>
             <tr className="border-b border-[#e5e7eb] bg-[#f9fafb]">
               <th className="w-12 px-6 py-4 text-left">
-                <input type="checkbox"
-                  checked={selectedContacts.length === contacts.length && contacts.length > 0}
-                  onChange={handleSelectAll}
-                  className="w-4 h-4 rounded border-[#d1d5db] cursor-pointer"
-                />
+                {!loading && contacts.length > 0 && (
+                  <input type="checkbox"
+                    checked={selectedContacts.length === contacts.length}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-[#d1d5db] cursor-pointer"
+                  />
+                )}
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-[#374151]">NAME</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-[#374151]">EMAIL</th>
