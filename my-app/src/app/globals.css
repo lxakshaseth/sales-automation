@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-
 :root {
   --background: #f8fafc; /* slate-50 */
   --foreground: #0f172a;
@@ -63,4 +62,4 @@ input:disabled {
 
 .ProseMirror:focus {
   outline: none;
-} 
+}

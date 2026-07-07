@@ -1,12 +1,29 @@
-  "use client";
+"use client";
 
 import { motion } from "framer-motion";
-import { Plus, Search, ChevronLeft, ChevronRight, Eye, ArrowUpDown, Pencil, Trash2, X, Loader2, FileText, Check } from "lucide-react";
+import {
+  Plus,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  ArrowUpDown,
+  Pencil,
+  Trash2,
+  X,
+  Loader2,
+  FileText,
+  Check,
+} from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { getCampaigns, updateCampaign, deleteCampaign as deleteCampaignApi } from "@/services/campaign.service";
+import {
+  getCampaigns,
+  updateCampaign,
+  deleteCampaign as deleteCampaignApi,
+} from "@/services/campaign.service";
 import { getTemplates, Template } from "@/services/template.service";
 
 type TemplateRef = {
@@ -86,7 +103,8 @@ export default function Campaigns() {
   const [templateSearch, setTemplateSearch] = useState("");
   const [editTemplateId, setEditTemplateId] = useState<string | null>(null);
 
-  const [deleteCampaignTarget, setDeleteCampaignTarget] = useState<Campaign | null>(null);
+  const [deleteCampaignTarget, setDeleteCampaignTarget] =
+    useState<Campaign | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const fetchCampaigns = useCallback(async () => {
@@ -222,8 +240,7 @@ export default function Campaigns() {
   return (
     <div className="flex flex-col gap-8">
       {/* Table Card */}
-        <div className="bg-white rounded-2xl border border-zinc-400 mt-5 shadow-sm overflow-hidden"
-      >
+      <div className="bg-white rounded-2xl border border-zinc-400 mt-5 shadow-sm overflow-hidden">
         {/* Tabs + Create button */}
         <div className="flex items-center justify-between gap-3 px-4 pt-4 border-b border-zinc-100">
           <div className="flex items-center gap-1">
@@ -269,7 +286,9 @@ export default function Campaigns() {
             />
           </div>
           <span className="text-sm text-zinc-500 ml-auto">
-            {loading ? "Loading..." : `${totalData} campaign${totalData === 1 ? "" : "s"}`}
+            {loading
+              ? "Loading..."
+              : `${totalData} campaign${totalData === 1 ? "" : "s"}`}
           </span>
         </div>
 
@@ -292,7 +311,9 @@ export default function Campaigns() {
                   >
                     <span className="flex items-center gap-1">
                       {col.label}
-                      {col.sort && <ArrowUpDown size={11} className="text-zinc-400" />}
+                      {col.sort && (
+                        <ArrowUpDown size={11} className="text-zinc-400" />
+                      )}
                     </span>
                   </th>
                 ))}
@@ -301,7 +322,10 @@ export default function Campaigns() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-16 text-zinc-400 text-sm">
+                  <td
+                    colSpan={6}
+                    className="text-center py-16 text-zinc-400 text-sm"
+                  >
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 size={16} className="animate-spin" />
                       Loading campaigns...
@@ -310,13 +334,19 @@ export default function Campaigns() {
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-16 text-red-500 text-sm">
+                  <td
+                    colSpan={6}
+                    className="text-center py-16 text-red-500 text-sm"
+                  >
                     {error}
                   </td>
                 </tr>
               ) : campaigns.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-16 text-zinc-400 text-sm">
+                  <td
+                    colSpan={6}
+                    className="text-center py-16 text-zinc-400 text-sm"
+                  >
                     No campaigns found
                   </td>
                 </tr>
@@ -332,7 +362,9 @@ export default function Campaigns() {
                     >
                       {/* Name */}
                       <td className="px-4 py-3">
-                        <span className="text-sm font-medium text-zinc-800">{c.name}</span>
+                        <span className="text-sm font-medium text-zinc-800">
+                          {c.name}
+                        </span>
                       </td>
                       {/* Description */}
                       <td className="px-4 py-3 max-w-xs">
@@ -372,31 +404,33 @@ export default function Campaigns() {
                         {formatDate(c.createdAt)}
                       </td>
                       {/* Actions */}
-                        <td className="px-3 py-3 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => {
-                                setEditCampaign(c);
-                                setEditName(c.name);
-                                setEditDescription(c.description || "");
-                                setEditStatus(c.status);
-                                setEditTemplateId(c.emailTemplates?.[0]?._id || null);
-                                setTemplateSearch("");
-                              }}
-                              title="Edit"
-                              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
-                            >
-                              <Pencil size={16} />
-                            </button>
-                            <button
-                              onClick={() => setDeleteCampaignTarget(c)}
-                              title="Delete"
-                              className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
+                      <td className="px-3 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => {
+                              setEditCampaign(c);
+                              setEditName(c.name);
+                              setEditDescription(c.description || "");
+                              setEditStatus(c.status);
+                              setEditTemplateId(
+                                c.emailTemplates?.[0]?._id || null,
+                              );
+                              setTemplateSearch("");
+                            }}
+                            title="Edit"
+                            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            onClick={() => setDeleteCampaignTarget(c)}
+                            title="Delete"
+                            className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })
@@ -407,7 +441,9 @@ export default function Campaigns() {
 
         {/* Footer */}
         <div className="flex items-center justify-between px-5 py-4 border-t border-zinc-100">
-          <p className="text-xs text-zinc-400">Showing {campaigns.length} of {totalData} campaigns</p>
+          <p className="text-xs text-zinc-400">
+            Showing {campaigns.length} of {totalData} campaigns
+          </p>
           {totalPages > 1 && (
             <div className="flex items-center gap-1">
               <button
@@ -422,7 +458,9 @@ export default function Campaigns() {
                   key={n}
                   onClick={() => setPage(n)}
                   className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                    page === n ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-100"
+                    page === n
+                      ? "bg-zinc-900 text-white"
+                      : "text-zinc-500 hover:bg-zinc-100"
                   }`}
                 >
                   {n}
@@ -446,13 +484,18 @@ export default function Campaigns() {
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-zinc-200">
             <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100">
               <h2 className="text-lg font-bold text-zinc-900">Edit Campaign</h2>
-              <button onClick={() => setEditCampaign(null)} className="p-1.5 rounded-lg hover:bg-zinc-100 transition-colors">
+              <button
+                onClick={() => setEditCampaign(null)}
+                className="p-1.5 rounded-lg hover:bg-zinc-100 transition-colors"
+              >
                 <X size={18} className="text-zinc-500" />
               </button>
             </div>
             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">Campaign Name</label>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">
+                  Campaign Name
+                </label>
                 <input
                   type="text"
                   value={editName}
@@ -471,7 +514,9 @@ export default function Campaigns() {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">Description</label>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">
+                  Description
+                </label>
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
@@ -480,10 +525,14 @@ export default function Campaigns() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">Status</label>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">
+                  Status
+                </label>
                 <select
                   value={editStatus}
-                  onChange={(e) => setEditStatus(e.target.value as Campaign["status"])}
+                  onChange={(e) =>
+                    setEditStatus(e.target.value as Campaign["status"])
+                  }
                   className="w-full border border-zinc-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all bg-white capitalize"
                 >
                   {["draft", "active"].map((s) => (
@@ -496,7 +545,9 @@ export default function Campaigns() {
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-medium text-zinc-700">Template</label>
+                  <label className="block text-sm font-medium text-zinc-700">
+                    Template
+                  </label>
                   <Link
                     href="/templates"
                     className="text-xs font-medium text-violet-600 hover:text-violet-700"
@@ -506,10 +557,10 @@ export default function Campaigns() {
                 </div>
                 <div>
                   <p className="mt-1.5 text-xs text-zinc-500">
-                  {editTemplateId
-                    ? `Selected: ${allTemplates.find((t) => t._id === editTemplateId)?.name ?? ""}`
-                    : "No template assigned"}
-                </p>
+                    {editTemplateId
+                      ? `Selected: ${allTemplates.find((t) => t._id === editTemplateId)?.name ?? ""}`
+                      : "No template assigned"}
+                  </p>
                 </div>
                 <div className="relative mb-2">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-3.5 h-3.5" />
@@ -547,7 +598,10 @@ export default function Campaigns() {
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <FileText size={14} className="text-zinc-400 shrink-0" />
+                            <FileText
+                              size={14}
+                              className="text-zinc-400 shrink-0"
+                            />
                             <div className="min-w-0">
                               <p className="text-sm font-medium text-zinc-800 truncate">
                                 {template.name}
@@ -572,7 +626,6 @@ export default function Campaigns() {
                     })
                   )}
                 </div>
-
               </div>
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-zinc-100">
@@ -601,50 +654,72 @@ export default function Campaigns() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-zinc-200">
             <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100">
-              <h2 className="text-lg font-bold text-zinc-900">Campaign Details</h2>
-              <button onClick={() => setViewCampaign(null)} className="p-1.5 rounded-lg hover:bg-zinc-100 transition-colors">
+              <h2 className="text-lg font-bold text-zinc-900">
+                Campaign Details
+              </h2>
+              <button
+                onClick={() => setViewCampaign(null)}
+                className="p-1.5 rounded-lg hover:bg-zinc-100 transition-colors"
+              >
                 <X size={18} className="text-zinc-500" />
               </button>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">Name</p>
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">
+                  Name
+                </p>
                 <p className="text-sm text-zinc-800">{viewCampaign.name}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">Description</p>
-                <p className="text-sm text-zinc-700">{viewCampaign.description || "-"}</p>
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">
+                  Description
+                </p>
+                <p className="text-sm text-zinc-700">
+                  {viewCampaign.description || "-"}
+                </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">Template Assigned</p>
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">
+                  Template Assigned
+                </p>
                 {getAssignedTemplateNames(viewCampaign) ? (
                   <div className="flex flex-wrap gap-1">
-                    {getAssignedTemplateNames(viewCampaign)!.map((name, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600 border border-zinc-200"
-                      >
-                        {name}
-                      </span>
-                    ))}
+                    {getAssignedTemplateNames(viewCampaign)!.map(
+                      (name, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600 border border-zinc-200"
+                        >
+                          {name}
+                        </span>
+                      ),
+                    )}
                   </div>
                 ) : (
                   <p className="text-sm text-zinc-400">-</p>
                 )}
               </div>
               <div>
-                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">Status</p>
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">
+                  Status
+                </p>
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${
-                    statusColor[viewCampaign.status] ?? "bg-zinc-100 text-zinc-600"
+                    statusColor[viewCampaign.status] ??
+                    "bg-zinc-100 text-zinc-600"
                   }`}
                 >
                   {viewCampaign.status}
                 </span>
               </div>
               <div>
-                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">Date</p>
-                <p className="text-sm text-zinc-700">{formatDate(viewCampaign.createdAt)}</p>
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">
+                  Date
+                </p>
+                <p className="text-sm text-zinc-700">
+                  {formatDate(viewCampaign.createdAt)}
+                </p>
               </div>
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-zinc-100">
@@ -667,9 +742,14 @@ export default function Campaigns() {
               <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
                 <Trash2 size={22} className="text-red-500" />
               </div>
-              <h2 className="text-lg font-bold text-zinc-900 mb-1">Delete Campaign?</h2>
+              <h2 className="text-lg font-bold text-zinc-900 mb-1">
+                Delete Campaign?
+              </h2>
               <p className="text-sm text-zinc-500">
-                <span className="font-semibold text-zinc-700">&ldquo;{deleteCampaignTarget.name}&rdquo;</span> cannot be undone once deleted.
+                <span className="font-semibold text-zinc-700">
+                  &ldquo;{deleteCampaignTarget.name}&rdquo;
+                </span>{" "}
+                cannot be undone once deleted.
               </p>
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-zinc-100">

@@ -10,11 +10,16 @@ export const registerController = async (req: NextRequest) => {
 
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return NextResponse.json({ success: false, message: "User already exists" },{ status: 400 },
+      return NextResponse.json(
+        { success: false, message: "User already exists" },
+        { status: 400 },
       );
     }
     if (!/^[0-9]{10}$/.test(mobile)) {
-      return NextResponse.json({ success: false, message: "Invalid mobile number" },{ status: 400 });
+      return NextResponse.json(
+        { success: false, message: "Invalid mobile number" },
+        { status: 400 },
+      );
     }
 
     const hashedPassword = await bycrypt.hash(password, 10);
@@ -22,7 +27,7 @@ export const registerController = async (req: NextRequest) => {
     // const token = generateToken(user._id.toString());
 
     return NextResponse.json(
-      { success: true,  message: "Registration successful", },
+      { success: true, message: "Registration successful" },
       { status: 201 },
     );
   } catch (error: any) {

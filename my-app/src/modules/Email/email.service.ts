@@ -6,7 +6,8 @@ export interface EmailAttachment {
   contentType?: string;
 }
 
-interface SendEmailProps {  // Defining an interface for the properties required to send an email
+interface SendEmailProps {
+  // Defining an interface for the properties required to send an email
   to: string;
   subject: string;
   body: string;
@@ -19,7 +20,6 @@ export const sendEmailService = async ({
   body,
   attachments = [],
 }: SendEmailProps) => {
-
   const SMTP_EMAIL = process.env.SMTP_EMAIL;
   const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
 

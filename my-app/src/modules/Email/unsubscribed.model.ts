@@ -10,7 +10,7 @@ const UnsubscribedSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export default mongoose.models.Unsubscribed ||

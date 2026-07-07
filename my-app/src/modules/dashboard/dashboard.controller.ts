@@ -12,7 +12,7 @@ export async function getDashboardStatsController() {
       },
       {
         status: 200,
-      }
+      },
     );
   } catch (error: any) {
     return NextResponse.json(
@@ -22,7 +22,7 @@ export async function getDashboardStatsController() {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }

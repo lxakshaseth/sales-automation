@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     if (!url || !emailId) {
       return NextResponse.json(
         { message: "Missing parameters" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     if (!event) {
       return NextResponse.json(
         { message: "Failed to store click event" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
         message: "Click tracking failed",
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -25,12 +25,10 @@ const AuditLogSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
-  
+  },
 );
 
 const AuditLog =
-  mongoose.models.AuditLog ||
-  mongoose.model("AuditLog", AuditLogSchema);
+  mongoose.models.AuditLog || mongoose.model("AuditLog", AuditLogSchema);
 
 export default AuditLog;

@@ -11,10 +11,7 @@ export const renderTemplate = (
   Object.keys(variables).forEach((key) => {
     const regex = new RegExp(`{{${key}}}`, "g");
 
-    renderedTemplate = renderedTemplate.replace(
-      regex,
-      variables[key],
-    );
+    renderedTemplate = renderedTemplate.replace(regex, variables[key]);
   });
 
   return renderedTemplate;
@@ -32,8 +29,7 @@ export const injectTrackingLinks = ({
   return html.replace(
     /<a\s+(?:[^>]*?\s+)?href=["']([^"']*)["']/g,
     (_, originalUrl) => {
-      const trackedUrl =
-        `${baseUrl}/api/email/click?url=${encodeURIComponent(originalUrl)}&emailId=${emailId}`;
+      const trackedUrl = `${baseUrl}/api/email/click?url=${encodeURIComponent(originalUrl)}&emailId=${emailId}`;
 
       return `<a href="${trackedUrl}"`;
     },
