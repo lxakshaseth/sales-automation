@@ -18,6 +18,14 @@ export const createCampaignController = async (req: NextRequest) => {
       );
     }
 
+    if (body.status === "active") {
+      // Enforce "only one active campaign at a time" on creation too.
+      await Campaign.updateMany(
+        { status: "active" },
+        { $set: { status: "paused" } },
+      );
+    }
+
     const campaign = await Campaign.create(body);
     await createAuditLog("Campaigns", "Create", campaign.name, "Campaign created");
 
@@ -138,6 +146,15 @@ export const updateCampaignController = async (
           { status: 409 }
         );
       }
+    }
+
+    if (body.status === "active") {
+      // Enforce "only one active campaign at a time": demote any other
+      // currently-active campaign to paused before activating this one.
+      await Campaign.updateMany(
+        { _id: { $ne: id }, status: "active" },
+        { $set: { status: "paused" } },
+      );
     }
 
     const updatedCampaign = await Campaign.findByIdAndUpdate(
