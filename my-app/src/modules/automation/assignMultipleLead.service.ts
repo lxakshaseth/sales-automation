@@ -13,6 +13,12 @@ export const assignMultipleLeadsToCampaign = async (
     throw new Error("Campaign not found");
   }
 
+  if (campaign.status !== "active") {
+    throw new Error(
+      `Cannot assign leads: campaign is "${campaign.status}", not active`,
+    );
+  }
+
   const leads = await Lead.find({
     _id: {
       $in: leadIds,

@@ -12,7 +12,11 @@ import {
   updateContactName,
 } from "./whatsapp.service";
 import { generateSalesReply } from "@/modules/whatsapp/ai-reply.service";
-import { startConversationLifecycle } from "@/modules/whatsapp/conversation-lifecycle.service";
+import { detectConversationClosingIntent } from "@/modules/whatsapp/conversation-closing-intent.service";
+import {
+  closeConversationForClientIntent,
+  startConversationLifecycle,
+} from "@/modules/whatsapp/conversation-lifecycle.service";
 
 type WhatsAppWebhookMessage = {
   id?: string;
@@ -80,6 +84,7 @@ export async function handleIncomingMessage(payload: WhatsAppWebhookPayload) {
   const contactData = contacts[0];
   const msg = messages[0];
   const waId = contactData?.wa_id || msg?.from;
+  const incomingMessageText = getIncomingMessageText(msg);
 
   if (!isActualCustomerMessage(msg) || !waId) {
     return;
@@ -98,11 +103,35 @@ export async function handleIncomingMessage(payload: WhatsAppWebhookPayload) {
   await saveInboundMessage({
     contactId: contact._id,
     waMessageId: msg.id,
-    message: getIncomingMessageText(msg),
+    message: incomingMessageText,
     rawPayload: payload,
   });
 
-  await startConversationLifecycle(contact._id.toString());
+  const lifecycleRunId = await startConversationLifecycle(contact._id.toString());
+  const closingIntent = detectConversationClosingIntent(incomingMessageText);
+
+  if (closingIntent.shouldClose) {
+    console.log("[whatsapp:lifecycle] Client requested chat close", {
+      contactId: contact._id.toString(),
+      waId: contact.waId,
+      reason: closingIntent.reason,
+    });
+
+    try {
+      await closeConversationForClientIntent(
+        contact._id.toString(),
+        lifecycleRunId,
+      );
+    } catch (error) {
+      console.error("[whatsapp:lifecycle] Failed to close client-requested chat", {
+        contactId: contact._id.toString(),
+        waId: contact.waId,
+        error,
+      });
+    }
+
+    return;
+  }
 
   if (!contact.aiEnabled || !msg?.text?.body?.trim()) {   // If AI is not enabled for the contact or the message body is empty, do not generate a reply
     return;

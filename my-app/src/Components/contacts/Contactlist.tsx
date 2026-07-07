@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { MoreVertical, X, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 import { getContacts, createContact, updateContact, deleteContact, bulkDeleteContacts, getCampaigns, assignLead, assignMultipleLeads } from "@/services/contact.service";
 
 interface Contact {
@@ -143,21 +144,21 @@ export default function ContactsList({
       setCampaigns(data.data || []);
       setSelectedCampaignId("");
       setShowAssignModal(true);
-    } catch (err) { console.error("Failed to fetch campaigns", err); alert("Failed to load campaigns"); }
+    } catch (err) { console.error("Failed to fetch campaigns", err); toast.error("Failed to load campaigns"); }
   };
 
   const handleAssign = async () => {
-    if (!selectedCampaignId) { alert("Please select a campaign"); return; }
+    if (!selectedCampaignId) { toast.error("Please select a campaign"); return; }
     setAssigning(true);
     try {
       if (selectedContacts.length === 1) await assignLead(selectedContacts[0], selectedCampaignId);
       else await assignMultipleLeads(selectedContacts, selectedCampaignId);
-      alert(`${selectedContacts.length} lead(s) assigned successfully!`);
+      toast.success(`${selectedContacts.length} lead(s) assigned successfully!`);
       setShowAssignModal(false);
       setSelectedContacts([]);
       fetchContacts();
     } catch (err: any) {
-      alert(err.message || "Failed to assign leads");
+      toast.error(err.message || "Failed to assign leads");
     } finally { setAssigning(false); }
   };
 
@@ -180,7 +181,7 @@ export default function ContactsList({
       onCloseAddContact();
       fetchContacts();
     } catch (err: any) {
-      alert(err.message || "Failed to add contact");
+      toast.error(err.message || "Failed to add contact");
     } finally { setSaving(false); }
   };
 
@@ -219,11 +220,13 @@ export default function ContactsList({
           <thead>
             <tr className="border-b border-[#e5e7eb] bg-[#f9fafb]">
               <th className="w-12 px-6 py-4 text-left">
-                <input type="checkbox"
-                  checked={selectedContacts.length === contacts.length && contacts.length > 0}
-                  onChange={handleSelectAll}
-                  className="w-4 h-4 rounded border-[#d1d5db] cursor-pointer"
-                />
+                {!loading && contacts.length > 0 && (
+                  <input type="checkbox"
+                    checked={selectedContacts.length === contacts.length}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-[#d1d5db] cursor-pointer"
+                  />
+                )}
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-[#374151]">NAME</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-[#374151]">EMAIL</th>

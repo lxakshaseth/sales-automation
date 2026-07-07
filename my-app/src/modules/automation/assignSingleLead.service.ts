@@ -16,6 +16,12 @@ export const assignSingleLead = async (leadId: string, campaignId: string) => {
     throw new Error("Campaign not found");
   }
 
+  if (campaign.status !== "active") {
+    throw new Error(
+      `Cannot assign lead: campaign is "${campaign.status}", not active`,
+    );
+  }
+
   lead.campaign = campaign._id;
 
   await lead.save();

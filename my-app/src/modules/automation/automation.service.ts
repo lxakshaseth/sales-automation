@@ -22,25 +22,35 @@ export const startCampaignFlow = async (leadId: string) => {
     throw new Error("Campaign not found");
   }
 
-  // 2. Get first enabled funnel step
+  // 2. Guard: never run automation for a campaign that isn't active
+  if (campaign.status !== "active") {
+    console.log(
+      `Skipping automation: campaign "${campaign.name}" is "${campaign.status}", not active`,
+    );
+    return;
+  }
+
+  // 3. Get first enabled funnel step
   const firstStep = campaign.funnel.find((step: any) => step.enabled);
 
   if (!firstStep) {
     throw new Error("No enabled funnel step found");
   }
 
-  // 3. Handle email step only
+  // 4. Handle email step only
   if (firstStep.step === "email") {
-    // 4. Find matching template
+    // 5. Find matching template
     const template = campaign.emailTemplates?.[0];
 
     if (!template) {
       throw new Error("No email template attached to this campaign");
     }
 
-    // 5. Queue email job
+    // 6. Queue email job
     await emailQueue.add("send-email", {
       to: lead.email,
+
+      leadId: lead._id.toString(),
 
       subject: template.subject,
 
@@ -55,12 +65,5 @@ export const startCampaignFlow = async (leadId: string) => {
     });
 
     console.log("Email job added to queue successfully");
-
-    // Reflect what just happened using fields that already exist on the Lead
-    await Lead.findByIdAndUpdate(leadId, {
-      status: "contacted",
-      stageEnteredAt: new Date(),
-      lastActivity: `Email sent: ${firstStep.action}`,
-    });
   }
 };
