@@ -9,7 +9,9 @@ export async function GET() {
     return getDashboardStatsController();
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Failed to fetch dashboard stats";
+      error instanceof Error
+        ? error.message
+        : "Failed to fetch dashboard stats";
 
     return NextResponse.json(
       {

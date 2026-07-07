@@ -7,10 +7,7 @@ function getAuthHeaders() {
   };
 }
 
-export const createCampaign = async (
-  payload: any,
-  token: string
-) => {
+export const createCampaign = async (payload: any, token: string) => {
   const response = await fetch("/api/campaigns", {
     method: "POST",
     headers: {

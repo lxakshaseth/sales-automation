@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";  // Importing Google fonts Geist and Geist Mono from the next/font/google module for use in the application
+import { Geist, Geist_Mono } from "next/font/google"; // Importing Google fonts Geist and Geist Mono from the next/font/google module for use in the application
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { SidebarProvider } from "@/Components/SideBar";
@@ -35,9 +35,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SidebarProvider>
-          {children}
-        </SidebarProvider>
+        <SidebarProvider>{children}</SidebarProvider>
 
         <Toaster
           position="top-right"

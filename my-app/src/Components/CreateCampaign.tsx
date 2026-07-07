@@ -140,7 +140,7 @@ export default function CreateCampaign() {
     }
   }
 
-    async function handleLaunch() {
+  async function handleLaunch() {
     if (status !== "active") {
       toast.error("Set status to Active to create");
       return;
@@ -216,7 +216,6 @@ export default function CreateCampaign() {
           >
             <p>&lt; Back</p>
           </Link>
-          
         </div>
         <div className="flex items-center gap-3">
           <button

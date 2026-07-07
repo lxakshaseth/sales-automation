@@ -15,9 +15,7 @@ export async function GET() {
     const totalUnsubscribed = await Unsubscribed.countDocuments();
 
     const clickThroughRate =
-      sentEmails > 0
-        ? ((totalClicks / sentEmails) * 100).toFixed(2)
-        : "0";
+      sentEmails > 0 ? ((totalClicks / sentEmails) * 100).toFixed(2) : "0";
 
     return NextResponse.json(
       {
@@ -28,7 +26,7 @@ export async function GET() {
         totalUnsubscribed,
         clickThroughRate: `${clickThroughRate}%`,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return NextResponse.json(
@@ -36,7 +34,7 @@ export async function GET() {
         message: "Failed to fetch analytics",
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

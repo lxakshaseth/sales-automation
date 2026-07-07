@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Calendar,
-  Mail,
-  Phone,
-  Shield,
-  User,
-  X,
-} from "lucide-react";
+import { Calendar, Mail, Phone, Shield, User, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useSidebar } from "@/Components/SideBar";
@@ -47,12 +40,8 @@ const getAuthToken = () => {
   );
 };
 
-export default function ProfileModal({
-  isOpen,
-  onClose,
-}: ProfileModalProps) {
-  const [profileData, setProfileData] =
-    useState<ProfileData>(emptyProfileData);
+export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
+  const [profileData, setProfileData] = useState<ProfileData>(emptyProfileData);
   const { isCollapsed } = useSidebar();
   const modalOffsetClass = isCollapsed ? "md:left-20" : "md:left-64";
 
@@ -140,9 +129,7 @@ export default function ProfileModal({
     },
   ];
 
-  const renderEditableField = (
-    field: (typeof editableFields)[number]
-  ) => {
+  const renderEditableField = (field: (typeof editableFields)[number]) => {
     const Icon = field.icon;
 
     return (
@@ -151,9 +138,7 @@ export default function ProfileModal({
           {field.label}
         </label>
 
-        <div
-          className="relative flex min-h-16 overflow-hidden rounded-lg border border-slate-200 bg-white"
-        >
+        <div className="relative flex min-h-16 overflow-hidden rounded-lg border border-slate-200 bg-white">
           <Icon
             size={22}
             strokeWidth={2.2}

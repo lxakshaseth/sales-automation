@@ -20,9 +20,6 @@ const getAuthUserIdFromRequest = (req: NextRequest) => {
   }
 };
 
-// Note: keep helpers untyped to minimum; no ts errors
-
-
 export async function GET(req: NextRequest) {
   await connectDB();
 
@@ -30,7 +27,7 @@ export async function GET(req: NextRequest) {
   if (!userId) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
@@ -38,7 +35,7 @@ export async function GET(req: NextRequest) {
   if (!user) {
     return NextResponse.json(
       { success: false, message: "User not found" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
@@ -48,8 +45,7 @@ export async function GET(req: NextRequest) {
       name: user.name || "",
       email: user.email || "",
       phoneNumber: (user as { mobile?: string }).mobile || "",
-      companyName:
-        (user as { companyName?: string }).companyName || "",
+      companyName: (user as { companyName?: string }).companyName || "",
       role: "Administrator",
       memberSince: user.createdAt
         ? new Date(user.createdAt).toLocaleDateString("en-GB", {
@@ -69,7 +65,7 @@ export async function PUT(req: NextRequest) {
   if (!userId) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
@@ -84,33 +80,31 @@ export async function PUT(req: NextRequest) {
   if (!nameStr) {
     return NextResponse.json(
       { success: false, message: "Full Name is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
   if (!/^[A-Za-z ]+$/.test(nameStr) || nameStr.length < 2) {
     return NextResponse.json(
       { success: false, message: "Invalid Full Name" },
-      { status: 400 }
+      { status: 400 },
     );
   }
   if (!emailStr) {
     return NextResponse.json(
       { success: false, message: "Email is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
-  if (
-    !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(emailStr)
-  ) {
+  if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(emailStr)) {
     return NextResponse.json(
       { success: false, message: "Enter a valid email" },
-      { status: 400 }
+      { status: 400 },
     );
   }
   if (!/^\d{10}$/.test(mobileStr)) {
     return NextResponse.json(
       { success: false, message: "Enter a valid 10-digit number" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -134,13 +128,13 @@ export async function PUT(req: NextRequest) {
     {
       $set: updatePayload,
     },
-    { new: true }
+    { new: true },
   ).lean();
 
   if (!updated) {
     return NextResponse.json(
       { success: false, message: "User not found" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
