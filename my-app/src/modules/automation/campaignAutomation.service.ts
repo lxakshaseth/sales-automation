@@ -17,29 +17,18 @@ export type CampaignAutomationResult = {
   skippedLeadCount: number;
 };
 
-/**
- * 1. Finds the single active campaign.
- * 2. Fetches leads that are not unsubscribed and whose last email
- *    (if any) went out 24h+ ago.
- * 3. Assigns them to the active campaign and kicks off the email step.
- *
- * lastEmailSentAt itself is only updated by the email worker once a
- * send actually succeeds (see queues/email.worker.ts).
- */
 export const runCampaignAutomationCycle =
   async (): Promise<CampaignAutomationResult> => {
     const ranAt = new Date();
 
-    // 1. Find the active campaign. Only one is expected to be active at a
-    // time; if more than one is ever marked active (e.g. due to manual DB
-    // edits), the most recently updated one wins and the rest are ignored
-    // this cycle.
     const campaign = await Campaign.findOne({ status: "active" }).sort({
       updatedAt: -1,
     });
 
     if (!campaign) {
-      console.log("[campaign-automation] No active campaign found. Skipping cycle.");
+      console.log(
+        "[campaign-automation] No active campaign found. Skipping cycle.",
+      );
 
       return {
         ranAt,
@@ -53,9 +42,6 @@ export const runCampaignAutomationCycle =
 
     const cutoff = new Date(ranAt.getTime() - ELIGIBILITY_WINDOW_MS);
 
-    // 2. Fetch eligible leads: not unsubscribed, and either never emailed
-    // or last emailed 24h+ ago. Use the live Unsubscribed collection name
-    // rather than hardcoding it, in case pluralization ever changes.
     const eligibleLeads = await Lead.aggregate([
       {
         $match: {
@@ -100,7 +86,6 @@ export const runCampaignAutomationCycle =
 
     const leadIds = eligibleLeads.map((lead) => lead._id);
 
-    // 3. Assign eligible leads to the active campaign.
     await Lead.updateMany(
       { _id: { $in: leadIds } },
       { $set: { campaign: campaign._id } },
@@ -109,10 +94,6 @@ export const runCampaignAutomationCycle =
     let assignedLeadCount = 0;
     let skippedLeadCount = 0;
 
-    // Fire the campaign's first funnel step (email) for each lead. Run
-    // sequentially to avoid hammering the queue/DB in one burst; the queue
-    // itself is durable so a mid-batch crash just resumes leads on the
-    // next cron tick since lastEmailSentAt is only set on real delivery.
     for (const lead of eligibleLeads) {
       try {
         await startCampaignFlow(lead._id.toString());

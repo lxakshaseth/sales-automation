@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     if (!email || !emailId) {
       return NextResponse.json(
         { message: "Missing parameters" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     await Unsubscribed.findOneAndUpdate(
       { email },
       { email },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     return NextResponse.json({
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
         message: "Unsubscribe failed",
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

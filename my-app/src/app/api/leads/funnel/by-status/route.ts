@@ -46,6 +46,9 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to load funnel data" }, { status: 503 });
+    return NextResponse.json(
+      { error: "Failed to load funnel data" },
+      { status: 503 },
+    );
   }
 }

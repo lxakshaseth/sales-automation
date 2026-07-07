@@ -11,7 +11,9 @@ export interface FunnelResponse {
   };
 }
 
-export async function fetchLeadFunnel(days: "7" | "30"): Promise<FunnelResponse> {
+export async function fetchLeadFunnel(
+  days: "7" | "30",
+): Promise<FunnelResponse> {
   const res = await fetch(`/api/leads/funnel/by-status?days=${days}`);
 
   if (res.status === 503) {

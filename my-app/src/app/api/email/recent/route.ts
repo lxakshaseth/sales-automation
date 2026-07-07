@@ -11,14 +11,11 @@ export async function GET() {
       .limit(5)
       .select("to subject status createdAt");
 
-    return NextResponse.json(
-      { recentEmails },
-      { status: 200 }
-    );
+    return NextResponse.json({ recentEmails }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { message: "Failed to fetch recent emails" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

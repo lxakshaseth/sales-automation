@@ -13,11 +13,7 @@ interface TopBarProps {
   children?: React.ReactNode;
 }
 
-export default function TopBar({
-  title,
-  description,
-  children,
-}: TopBarProps) {
+export default function TopBar({ title, description, children }: TopBarProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [user, setUser] = useState({
@@ -76,9 +72,7 @@ export default function TopBar({
             {title}
           </h1>
           {description && (
-            <p className="mt-1 text-slate-500 text-sm">
-              {description}
-            </p>
+            <p className="mt-1 text-slate-500 text-sm">{description}</p>
           )}
         </div>
 
@@ -93,9 +87,7 @@ export default function TopBar({
                 {initials}
               </div>
               <div className="hidden lg:block text-left">
-                <p className="text-sm font-semibold">
-                  {user.name}
-                </p>
+                <p className="text-sm font-semibold">{user.name}</p>
               </div>
 
               <ChevronDown

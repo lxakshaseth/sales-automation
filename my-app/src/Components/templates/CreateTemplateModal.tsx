@@ -31,10 +31,10 @@ export default function CreateTemplateModal({
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(false);
   const [editor, setEditor] = useState<any>(null);
-  
+
   const [subjectVars, setSubjectVars] = useState<CustomVar[]>([]);
   const [bodyVars, setBodyVars] = useState<CustomVar[]>([]);
-  
+
   const [previewFirstName, setPreviewFirstName] = useState("");
   const [previewLastName, setPreviewLastName] = useState("");
 
@@ -69,11 +69,17 @@ export default function CreateTemplateModal({
   if (!isOpen) return null;
 
   const addSubjectVar = () => {
-    setSubjectVars([...subjectVars, { id: Date.now().toString(), label: "", value: "" }]);
+    setSubjectVars([
+      ...subjectVars,
+      { id: Date.now().toString(), label: "", value: "" },
+    ]);
   };
 
   const addBodyVar = () => {
-    setBodyVars([...bodyVars, { id: Date.now().toString(), label: "", value: "" }]);
+    setBodyVars([
+      ...bodyVars,
+      { id: Date.now().toString(), label: "", value: "" },
+    ]);
   };
 
   const injectIntoSubject = (tokenLabel: string) => {
@@ -81,13 +87,17 @@ export default function CreateTemplateModal({
     const formatToken = `{{${tokenLabel.trim()}}}`;
     const start = subjectInputRef.current?.selectionStart || 0;
     const end = subjectInputRef.current?.selectionEnd || 0;
-    const nextSubject = subject.substring(0, start) + formatToken + subject.substring(end);
+    const nextSubject =
+      subject.substring(0, start) + formatToken + subject.substring(end);
     setSubject(nextSubject);
-    
+
     setTimeout(() => {
       if (subjectInputRef.current) {
         subjectInputRef.current.focus();
-        subjectInputRef.current.setSelectionRange(start + formatToken.length, start + formatToken.length);
+        subjectInputRef.current.setSelectionRange(
+          start + formatToken.length,
+          start + formatToken.length,
+        );
       }
     }, 10);
   };
@@ -104,22 +114,31 @@ export default function CreateTemplateModal({
 
   const renderLivePreview = (text: string) => {
     let updatedText = text;
-    updatedText = updatedText.replace(/{{\s*first_name\s*}}/g, previewFirstName);
+    updatedText = updatedText.replace(
+      /{{\s*first_name\s*}}/g,
+      previewFirstName,
+    );
     updatedText = updatedText.replace(/{{\s*last_name\s*}}/g, previewLastName);
     updatedText = updatedText.replace(/{{\s*company\s*}}/g, "Indux Technology");
     updatedText = updatedText.replace(/{{\s*email\s*}}/g, "user@example.com");
-    
+
     subjectVars.forEach((v) => {
       if (v.label.trim()) {
         const regex = new RegExp(`{{\\s*${v.label.trim()}\\s*}}`, "g");
-        updatedText = updatedText.replace(regex, v.value || `[${v.label.trim()}]`);
+        updatedText = updatedText.replace(
+          regex,
+          v.value || `[${v.label.trim()}]`,
+        );
       }
     });
 
     bodyVars.forEach((v) => {
       if (v.label.trim()) {
         const regex = new RegExp(`{{\\s*${v.label.trim()}\\s*}}`, "g");
-        updatedText = updatedText.replace(regex, v.value || `[${v.label.trim()}]`);
+        updatedText = updatedText.replace(
+          regex,
+          v.value || `[${v.label.trim()}]`,
+        );
       }
     });
 
@@ -144,7 +163,7 @@ export default function CreateTemplateModal({
 
     try {
       setLoading(true);
-      
+
       const payload = { name, type, subject, body };
 
       if (initialData?._id) {
@@ -158,8 +177,12 @@ export default function CreateTemplateModal({
       onClose();
     } catch (err: any) {
       const msg = err?.response?.data?.message || "";
-      
-      if (msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("exists") || err?.response?.status === 409) {
+
+      if (
+        msg.toLowerCase().includes("duplicate") ||
+        msg.toLowerCase().includes("exists") ||
+        err?.response?.status === 409
+      ) {
         toast.error("Template name already exists");
       } else {
         toast.error(msg || "Failed to save template");
@@ -197,7 +220,11 @@ export default function CreateTemplateModal({
             className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-semibold rounded-xl text-sm transition-all duration-200 flex items-center gap-2 shadow-sm border border-violet-700"
           >
             <Save size={16} />
-            {loading ? "Saving..." : initialData ? "Update Template" : "Save Template"}
+            {loading
+              ? "Saving..."
+              : initialData
+                ? "Update Template"
+                : "Save Template"}
           </button>
         </div>
 
@@ -205,7 +232,6 @@ export default function CreateTemplateModal({
         <div className="flex-1 flex overflow-hidden bg-gray-50">
           {/* LEFT: FORM EDITOR */}
           <div className="w-7/12 bg-white border-r border-gray-100 flex flex-col overflow-y-auto p-6 space-y-6">
-            
             {/* Template Name */}
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
@@ -230,7 +256,9 @@ export default function CreateTemplateModal({
 
               {/* Badges bar */}
               <div className="flex flex-wrap gap-1.5 items-center bg-white p-2 rounded-lg border border-gray-100">
-                <span className="text-[10px] text-gray-400 font-bold mr-1">Inject:</span>
+                <span className="text-[10px] text-gray-400 font-bold mr-1">
+                  Inject:
+                </span>
                 <button
                   type="button"
                   onClick={() => injectIntoSubject("first_name")}
@@ -245,42 +273,74 @@ export default function CreateTemplateModal({
                 >
                   {"{last_name}"}
                 </button>
-                {subjectVars.map((v) => (
-                  v.label.trim() && (
-                    <button
-                      key={v.id}
-                      type="button"
-                      onClick={() => injectIntoSubject(v.label)}
-                      className="px-1.5 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-[10px] font-bold rounded"
-                    >
-                      {"{"}{v.label}{"}"}
-                    </button>
-                  )
-                ))}
+                {subjectVars.map(
+                  (v) =>
+                    v.label.trim() && (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => injectIntoSubject(v.label)}
+                        className="px-1.5 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-[10px] font-bold rounded"
+                      >
+                        {"{"}
+                        {v.label}
+                        {"}"}
+                      </button>
+                    ),
+                )}
               </div>
 
               {/* Dynamic Key-Value Inputs */}
               {subjectVars.length > 0 && (
                 <div className="space-y-1.5">
                   {subjectVars.map((v) => (
-                    <div key={v.id} className="flex items-center gap-2 bg-white p-1.5 border border-gray-200 rounded-lg shadow-sm">
+                    <div
+                      key={v.id}
+                      className="flex items-center gap-2 bg-white p-1.5 border border-gray-200 rounded-lg shadow-sm"
+                    >
                       <input
                         type="text"
                         placeholder="Variable name"
                         value={v.label}
-                        onChange={(e) => setSubjectVars(subjectVars.map((item) => item.id === v.id ? { ...item, label: e.target.value.replace(/[^a-zA-Z0-9_]/g, "") } : item))}
+                        onChange={(e) =>
+                          setSubjectVars(
+                            subjectVars.map((item) =>
+                              item.id === v.id
+                                ? {
+                                    ...item,
+                                    label: e.target.value.replace(
+                                      /[^a-zA-Z0-9_]/g,
+                                      "",
+                                    ),
+                                  }
+                                : item,
+                            ),
+                          )
+                        }
                         className="w-1/2 border border-gray-200 rounded px-2 py-1 text-[11px] outline-none font-semibold text-gray-800"
                       />
                       <input
                         type="text"
                         placeholder="Placeholder value"
                         value={v.value}
-                        onChange={(e) => setSubjectVars(subjectVars.map((item) => item.id === v.id ? { ...item, value: e.target.value } : item))}
+                        onChange={(e) =>
+                          setSubjectVars(
+                            subjectVars.map((item) =>
+                              item.id === v.id
+                                ? { ...item, value: e.target.value }
+                                : item,
+                            ),
+                          )
+                        }
                         className="w-1/2 border border-gray-200 rounded px-2 py-1 text-[11px] outline-none text-gray-600"
                       />
                       <button
                         type="button"
-                        onClick={() => setSubjectVars(subjectVars.filter((item) => item.id !== v.id))}
+                        onClick={() =>
+                          setSubjectVars(
+                            subjectVars.filter((item) => item.id !== v.id),
+                          )
+                        }
                         className="text-gray-400 hover:text-red-500 p-1"
                       >
                         <Trash2 size={13} />
@@ -310,7 +370,9 @@ export default function CreateTemplateModal({
 
               {/* Badges bar */}
               <div className="flex flex-wrap gap-1.5 items-center bg-white p-2 rounded-lg border border-gray-100">
-                <span className="text-[10px] text-gray-400 font-bold mr-1">Inject:</span>
+                <span className="text-[10px] text-gray-400 font-bold mr-1">
+                  Inject:
+                </span>
                 <button
                   type="button"
                   onClick={() => injectIntoBody("first_name")}
@@ -339,42 +401,74 @@ export default function CreateTemplateModal({
                 >
                   {"{email}"}
                 </button>
-                {bodyVars.map((v) => (
-                  v.label.trim() && (
-                    <button
-                      key={v.id}
-                      type="button"
-                      onClick={() => injectIntoBody(v.label)}
-                      className="px-1.5 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-[10px] font-bold rounded"
-                    >
-                      {"{"}{v.label}{"}"}
-                    </button>
-                  )
-                ))}
+                {bodyVars.map(
+                  (v) =>
+                    v.label.trim() && (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => injectIntoBody(v.label)}
+                        className="px-1.5 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-[10px] font-bold rounded"
+                      >
+                        {"{"}
+                        {v.label}
+                        {"}"}
+                      </button>
+                    ),
+                )}
               </div>
 
               {/* Dynamic Key-Value Inputs */}
               {bodyVars.length > 0 && (
                 <div className="space-y-1.5">
                   {bodyVars.map((v) => (
-                    <div key={v.id} className="flex items-center gap-2 bg-white p-1.5 border border-gray-200 rounded-lg shadow-sm">
+                    <div
+                      key={v.id}
+                      className="flex items-center gap-2 bg-white p-1.5 border border-gray-200 rounded-lg shadow-sm"
+                    >
                       <input
                         type="text"
                         placeholder="Variable name"
                         value={v.label}
-                        onChange={(e) => setBodyVars(bodyVars.map((item) => item.id === v.id ? { ...item, label: e.target.value.replace(/[^a-zA-Z0-9_]/g, "") } : item))}
+                        onChange={(e) =>
+                          setBodyVars(
+                            bodyVars.map((item) =>
+                              item.id === v.id
+                                ? {
+                                    ...item,
+                                    label: e.target.value.replace(
+                                      /[^a-zA-Z0-9_]/g,
+                                      "",
+                                    ),
+                                  }
+                                : item,
+                            ),
+                          )
+                        }
                         className="w-1/2 border border-gray-200 rounded px-2 py-1 text-[11px] outline-none font-semibold text-gray-800"
                       />
                       <input
                         type="text"
                         placeholder="Placeholder value"
                         value={v.value}
-                        onChange={(e) => setBodyVars(bodyVars.map((item) => item.id === v.id ? { ...item, value: e.target.value } : item))}
+                        onChange={(e) =>
+                          setBodyVars(
+                            bodyVars.map((item) =>
+                              item.id === v.id
+                                ? { ...item, value: e.target.value }
+                                : item,
+                            ),
+                          )
+                        }
                         className="w-1/2 border border-gray-200 rounded px-2 py-1 text-[11px] outline-none text-gray-600"
                       />
                       <button
                         type="button"
-                        onClick={() => setBodyVars(bodyVars.filter((item) => item.id !== v.id))}
+                        onClick={() =>
+                          setBodyVars(
+                            bodyVars.filter((item) => item.id !== v.id),
+                          )
+                        }
                         className="text-gray-400 hover:text-red-500 p-1"
                       >
                         <Trash2 size={13} />
@@ -398,13 +492,19 @@ export default function CreateTemplateModal({
           <div className="w-5/12 flex flex-col p-6 overflow-y-auto bg-gray-50/50 space-y-4">
             <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-3">
               <div>
-                <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Configure Variable Values</h4>
-                <p className="text-[10px] text-gray-400">Fill standard variables here to test the live preview compiler</p>
+                <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                  Configure Variable Values
+                </h4>
+                <p className="text-[10px] text-gray-400">
+                  Fill standard variables here to test the live preview compiler
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-gray-500 font-mono">{"{{first_name}}"}</label>
+                  <label className="text-[10px] font-bold text-gray-500 font-mono">
+                    {"{{first_name}}"}
+                  </label>
                   <input
                     type="text"
                     value={previewFirstName}
@@ -413,7 +513,9 @@ export default function CreateTemplateModal({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-gray-500 font-mono">{"{{last_name}}"}</label>
+                  <label className="text-[10px] font-bold text-gray-500 font-mono">
+                    {"{{last_name}}"}
+                  </label>
                   <input
                     type="text"
                     value={previewLastName}
@@ -426,7 +528,9 @@ export default function CreateTemplateModal({
 
             <div className="flex-1 flex flex-col">
               <div className="mb-2">
-                <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Live System Preview</h3>
+                <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  Live System Preview
+                </h3>
               </div>
 
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col flex-1 min-h-[400px]">
@@ -435,23 +539,31 @@ export default function CreateTemplateModal({
                     I
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-gray-900">Indux Technology</h4>
+                    <h4 className="text-xs font-bold text-gray-900">
+                      Indux Technology
+                    </h4>
                   </div>
                 </div>
 
                 <div className="py-5 space-y-4 flex-1 overflow-y-auto">
                   <h2 className="text-base font-bold text-gray-900 leading-snug break-words">
-                    {subject.trim() ? renderLivePreview(subject) : "Untitled Subject Line"}
+                    {subject.trim()
+                      ? renderLivePreview(subject)
+                      : "Untitled Subject Line"}
                   </h2>
 
                   <div className="text-xs text-gray-600 leading-relaxed font-normal break-words">
                     {body.trim() && body !== "<p></p>" ? (
                       <div
                         className="prose prose-sm max-w-none [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-violet-600 [&_a]:underline"
-                        dangerouslySetInnerHTML={{ __html: renderLivePreview(body) }}
+                        dangerouslySetInnerHTML={{
+                          __html: renderLivePreview(body),
+                        }}
                       />
                     ) : (
-                      <span className="text-gray-300 italic">body content...</span>
+                      <span className="text-gray-300 italic">
+                        body content...
+                      </span>
                     )}
                   </div>
                 </div>

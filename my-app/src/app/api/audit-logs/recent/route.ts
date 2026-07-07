@@ -15,17 +15,17 @@ export async function DELETE(req: Request) {
   try {
     const { fromDate, toDate } = await req.json();
 
-      const startDate = new Date(fromDate);
+    const startDate = new Date(fromDate);
 
-      const endDate = new Date(toDate);
-      endDate.setHours(23, 59, 59, 999);
+    const endDate = new Date(toDate);
+    endDate.setHours(23, 59, 59, 999);
 
-      const result = await AuditLog.deleteMany({
-        createdAt: {
-          $gte: startDate,
-          $lte: endDate,
-        },
-      });
+    const result = await AuditLog.deleteMany({
+      createdAt: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    });
 
     return NextResponse.json({
       success: true,
@@ -37,7 +37,7 @@ export async function DELETE(req: Request) {
         success: false,
         message: error.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

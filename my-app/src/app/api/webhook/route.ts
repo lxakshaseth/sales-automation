@@ -5,7 +5,6 @@ import {
 } from "@/modules/whatsapp/whatsapp.controller";
 
 export async function GET(req: NextRequest) {
-
   const searchParams = req.nextUrl.searchParams;
   const mode = searchParams.get("hub.mode");
   const token = searchParams.get("hub.verify_token");
@@ -19,11 +18,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-
   const body = await req.json();
 
   await handleIncomingMessage(body);
   await handleStatusUpdate(body);
-  
+
   return NextResponse.json({ success: true });
 }

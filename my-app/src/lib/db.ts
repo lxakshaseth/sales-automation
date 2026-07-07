@@ -28,7 +28,10 @@ const connectDB = async () => {
     throw new Error("MONGODB_URI is missing");
   }
 
-  if (mongoose.connection.readyState === 1 && mongoose.connection.name === dbName) {
+  if (
+    mongoose.connection.readyState === 1 &&
+    mongoose.connection.name === dbName
+  ) {
     cached.conn = mongoose;
     cached.uri = MONGODB_URI;
     cached.dbName = dbName;
@@ -40,7 +43,11 @@ const connectDB = async () => {
     cached.promise = null;
   }
 
-  if (!cached.promise || cached.uri !== MONGODB_URI || cached.dbName !== dbName) {
+  if (
+    !cached.promise ||
+    cached.uri !== MONGODB_URI ||
+    cached.dbName !== dbName
+  ) {
     cached.uri = MONGODB_URI;
     cached.dbName = dbName;
     cached.promise = mongoose

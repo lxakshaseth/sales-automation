@@ -1,7 +1,7 @@
 export interface Contact {
   _id: string;
   waId: string;
-  name?: string;    // The name of the contact as provided by WhatsApp
+  name?: string; // The name of the contact as provided by WhatsApp
   customName?: string;
   phone?: string;
   aiEnabled?: boolean;
@@ -94,8 +94,11 @@ async function readResponseData(response: Response) {
   }
 }
 
-async function readJsonResponse<T>(response: Response, fallbackMessage: string) {
-  const data = await readResponseData(response) as T & {
+async function readJsonResponse<T>(
+  response: Response,
+  fallbackMessage: string,
+) {
+  const data = (await readResponseData(response)) as T & {
     message?: string;
   };
 
@@ -167,14 +170,17 @@ export async function updateContactName(
   const request = createRequestSignal(options);
 
   try {
-    const response = await fetch(`/api/whatsapp/contacts/${encodeURIComponent(contactId)}`, {
-      method: "PATCH",
-      headers: getAuthHeaders(),
-      signal: request.signal,
-      body: JSON.stringify({
-        customName,
-      }),
-    });
+    const response = await fetch(
+      `/api/whatsapp/contacts/${encodeURIComponent(contactId)}`,
+      {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        signal: request.signal,
+        body: JSON.stringify({
+          customName,
+        }),
+      },
+    );
 
     return await readJsonResponse<ApiResponse<Contact>>(
       response,
@@ -212,14 +218,17 @@ export async function updateContactAiEnabled(
   const request = createRequestSignal(options);
 
   try {
-    const response = await fetch(`/api/whatsapp/contacts/${encodeURIComponent(contactId)}`, {
-      method: "PATCH",
-      headers: getAuthHeaders(),
-      signal: request.signal,
-      body: JSON.stringify({
-        aiEnabled,
-      }),
-    });
+    const response = await fetch(
+      `/api/whatsapp/contacts/${encodeURIComponent(contactId)}`,
+      {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        signal: request.signal,
+        body: JSON.stringify({
+          aiEnabled,
+        }),
+      },
+    );
 
     return await readJsonResponse<ApiResponse<Contact>>(
       response,
@@ -253,11 +262,14 @@ export async function getChatByWaId(waId: string, options?: RequestOptions) {
   const request = createRequestSignal(options);
 
   try {
-    const response = await fetch(`/api/whatsapp/chat/${encodeURIComponent(waId)}`, {
-      headers: getAuthHeaders(),
-      signal: request.signal,
-      cache: "no-store",
-    });
+    const response = await fetch(
+      `/api/whatsapp/chat/${encodeURIComponent(waId)}`,
+      {
+        headers: getAuthHeaders(),
+        signal: request.signal,
+        cache: "no-store",
+      },
+    );
 
     return await readJsonResponse<ApiResponse<ChatData>>(
       response,

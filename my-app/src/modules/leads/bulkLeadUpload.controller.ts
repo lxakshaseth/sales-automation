@@ -11,11 +11,14 @@ const countryTimezoneMap: Record<string, any> = {
 
 export const bulkUploadLeadController = async (req: NextRequest) => {
   try {
-    const formData = await req.formData();   
+    const formData = await req.formData();
     const file = formData.get("file") as File;
 
     if (!file) {
-      return NextResponse.json({success: false,message: "CSV file required",},{ status: 400 },);
+      return NextResponse.json(
+        { success: false, message: "CSV file required" },
+        { status: 400 },
+      );
     }
 
     const bytes = await file.arrayBuffer();
@@ -24,7 +27,9 @@ export const bulkUploadLeadController = async (req: NextRequest) => {
     const results: any[] = [];
 
     await new Promise((resolve, reject) => {
-      Readable.from(buffer).pipe(csv()).on("data", (data) => {
+      Readable.from(buffer)
+        .pipe(csv())
+        .on("data", (data) => {
           results.push(data);
         })
         .on("end", resolve)
@@ -34,15 +39,8 @@ export const bulkUploadLeadController = async (req: NextRequest) => {
     const insertedLeads = [];
 
     for (const row of results) {
-      const {
-        firstName,
-        lastName,
-        email,
-        phone,
-        company,
-        country,
-        state,
-      } = row;
+      const { firstName, lastName, email, phone, company, country, state } =
+        row;
 
       if (!email) {
         continue;
@@ -54,8 +52,7 @@ export const bulkUploadLeadController = async (req: NextRequest) => {
         continue;
       }
 
-      const countryData =
-        countryTimezoneMap[country?.toLowerCase()];
+      const countryData = countryTimezoneMap[country?.toLowerCase()];
 
       const timezone =
         typeof countryData === "string"

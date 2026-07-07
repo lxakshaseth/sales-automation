@@ -6,9 +6,7 @@ export async function GET() {
   try {
     await connectDB();
 
-    const leads = await Lead.find()
-      .sort({ stageEnteredAt: -1 })
-      .limit(10);
+    const leads = await Lead.find().sort({ stageEnteredAt: -1 }).limit(10);
 
     const result = leads.map((lead: any) => ({
       id: lead._id,
@@ -17,8 +15,9 @@ export async function GET() {
       stage: lead.status,
       lastActivity: lead.lastActivity || "Lead Created",
       agingDays: Math.floor(
-        (Date.now() - new Date(lead.stageEnteredAt || lead.createdAt).getTime()) /
-        (1000 * 60 * 60 * 24)
+        (Date.now() -
+          new Date(lead.stageEnteredAt || lead.createdAt).getTime()) /
+          (1000 * 60 * 60 * 24),
       ),
       email: lead.email,
     }));
@@ -27,7 +26,7 @@ export async function GET() {
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
