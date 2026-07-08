@@ -23,6 +23,7 @@ interface EmailBody {
   emailId?: string;
   leadId?: string;
   attachments?: EmailAttachment[];
+  followUpStage?: number;
 }
 
 export const sendEmail = async ({
@@ -33,6 +34,7 @@ export const sendEmail = async ({
   variables = {},
   attachments = [],
   leadId,
+  followUpStage,
 }: EmailBody) => {
   try {
     // 1. Check unsubscribe list
@@ -128,10 +130,13 @@ export const sendEmail = async ({
     // (i.e. here, after sendEmailService resolved without throwing).
     if (leadId) {
       await Lead.findByIdAndUpdate(leadId, {
-        lastEmailSentAt: new Date(),
-        status: "contacted",
-        stageEnteredAt: new Date(),
-        lastActivity: `Email sent: ${finalSubject}`,
+        $set: {
+          lastEmailSentAt: new Date(),
+          status: "contacted",
+          stageEnteredAt: new Date(),
+          lastActivity: `Email sent: ${finalSubject}`,
+        },
+        ...(followUpStage !== undefined && { $max: { followUpStage } }),
       });
     }
 
