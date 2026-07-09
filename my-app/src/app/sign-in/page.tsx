@@ -121,7 +121,6 @@ export default function Signin() {
         {/* Main Interface Wrapper Container */}
         <Card className="w-full max-w-5xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-md shadow-2xl border border-white/20">
           <CardContent className="p-0 grid md:grid-cols-[1.1fr_0.9fr]">
-            
             {/* Left Portion - Actionable Auth Form */}
             <div className="p-12 flex flex-col justify-center">
               <h2 className="text-2xl font-bold text-center text-slate-900 mb-8">
@@ -165,7 +164,11 @@ export default function Signin() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 hover:bg-transparent"
                     >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -264,7 +267,6 @@ export default function Signin() {
                 </div>
               </div>
             </div>
-
           </CardContent>
         </Card>
       </div>
