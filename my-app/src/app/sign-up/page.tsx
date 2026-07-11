@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { Rocket, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
+import PasswordRequirementChecklist from "@/Components/auth/PasswordRequirementChecklist";
+import { getPasswordValidationError } from "@/lib/passwordValidation";
 
 export default function Signup() {
   const router = useRouter();
@@ -17,6 +19,12 @@ export default function Signup() {
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const passwordValidationError = getPasswordValidationError(
+    formData.password,
+  );
+  const isPasswordValid = !passwordValidationError;
+  const shouldShowPasswordError =
+    formData.password.length > 0 && Boolean(passwordValidationError);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -28,6 +36,10 @@ export default function Signup() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (passwordValidationError) {
+      toast.error(passwordValidationError);
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match");
       return;
@@ -192,14 +204,18 @@ export default function Signup() {
                     type={showPassword ? "text" : "password"}
                     name="password"
                     required
+                    aria-label="Password"
                     placeholder="Password"
                     value={formData.password}
                     onChange={handleChange}
                     disabled={loading}
+                    aria-invalid={shouldShowPasswordError}
+                    aria-describedby="password-requirements"
                     className="w-full border border-gray-300 rounded-lg p-3 pr-12 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
                   <button
                     type="button"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
@@ -211,10 +227,16 @@ export default function Signup() {
                   </button>
                 </div>
 
+                <PasswordRequirementChecklist
+                  password={formData.password}
+                  className="-mt-2"
+                />
+
                 <input
                   type="text"
                   name="confirmPassword"
                   required
+                  aria-label="Confirm password"
                   placeholder="Confirm Password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
@@ -224,7 +246,7 @@ export default function Signup() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !isPasswordValid}
                   className="w-full bg-[#7C3AED] text-white py-3 rounded-lg font-semibold hover:bg-violet-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed pt-2"
                 >
                   {loading ? "Registering..." : "Register"}
