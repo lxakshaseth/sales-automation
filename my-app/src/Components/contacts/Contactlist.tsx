@@ -12,6 +12,7 @@ import { //
 } from "react";
 import { MoreVertical, X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import Pagination from "@/Components/ui/Pagination";
 import {
   getContacts,
   createContact,
@@ -22,6 +23,8 @@ import {
   assignLead,
   assignMultipleLeads,
 } from "@/services/contact.service";
+
+const DEFAULT_PAGE_SIZE = 10;
 
 interface Contact {
   _id: string;
@@ -84,6 +87,7 @@ function ContactsList(
   const [totalData, setTotalData] = useState(0);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
@@ -115,8 +119,6 @@ function ContactsList(
   const [assigning, setAssigning] = useState(false);
   const skipNextFetchRef = useRef(false);
 
-  const itemsPerPage = 11;
-
   const fetchContacts = useCallback(
     async (
       page = currentPage,
@@ -125,21 +127,21 @@ function ContactsList(
         throwOnError = false,
       }: RefreshContactsOptions = {},
     ) => {
-    try {
-      if (showLoading) setLoading(true);
-      const data = await getContacts(page, itemsPerPage, searchQuery);
-      if (data.success) {
-        setContacts(data.data);
-        setTotalData(data.totalData);
+      try {
+        if (showLoading) setLoading(true);
+        const data = await getContacts(page, pageSize, searchQuery);
+        if (data.success) {
+          setContacts(data.data);
+          setTotalData(data.totalData);
+        }
+      } catch (err) {
+        console.error("Failed to fetch contacts", err);
+        if (throwOnError) throw err;
+      } finally {
+        if (showLoading) setLoading(false);
       }
-    } catch (err) {
-      console.error("Failed to fetch contacts", err);
-      if (throwOnError) throw err;
-    } finally {
-      if (showLoading) setLoading(false);
-    }
     },
-    [currentPage, searchQuery],
+    [currentPage, pageSize, searchQuery],
   );
 
   useEffect(() => {
@@ -191,7 +193,22 @@ function ContactsList(
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const totalPages = Math.ceil(totalData / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(totalData / pageSize));
+
+  const handlePageChange = (page: number) => {
+    if (isInteractionDisabled) return;
+    setSelectedContacts([]);
+    setOpenMenu(null);
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    if (isInteractionDisabled) return;
+    setSelectedContacts([]);
+    setOpenMenu(null);
+    setPageSize(size);
+    setCurrentPage(1);
+  };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isInteractionDisabled) return;
@@ -515,27 +532,17 @@ function ContactsList(
         </table>
       </div>
 
-      {/* PAGINATION */}
-      <div className="px-6 py-4 bg-[#f9fafb] border-t border-[#e5e7eb] flex items-center justify-between">
-        <p className="text-sm text-[#64748b]">
-          Items Per Page: <span className="font-medium">11</span>
-        </p>
-        <div className="flex items-center gap-2">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              disabled={isInteractionDisabled || currentPage === page}
-              className={`w-9 h-9 rounded flex items-center justify-center text-sm font-medium transition-colors ${
-                currentPage === page
-                  ? "bg-[#7c3aed] text-white"
-                  : "bg-white text-[#64748b] border border-[#e5e7eb] hover:border-[#7c3aed]"
-              } disabled:opacity-60 disabled:hover:border-[#e5e7eb]`}
-            >
-              {page}
-            </button>
-          ))}
-        </div>
+      <div className="border-t border-[#e5e7eb] bg-[#f9fafb] p-4">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalData}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          itemLabel="contacts"
+          disabled={isInteractionDisabled}
+        />
       </div>
 
       {/* ADD CONTACT MODAL */}
@@ -766,4 +773,6 @@ function ContactsList(
     </div>
   );
 }
+
+export default forwardRef(ContactsList);
 

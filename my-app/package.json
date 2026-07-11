@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/clear-next-dev-cache.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -26,6 +27,7 @@
     "csv-parser": "^3.2.1",
     "dompurify": "^3.4.10",
     "dotenv": "^17.4.2",
+    "es-toolkit": "^1.49.0",
     "framer-motion": "^12.40.0",
     "ioredis": "^5.10.1",
     "jose": "^6.2.3",
