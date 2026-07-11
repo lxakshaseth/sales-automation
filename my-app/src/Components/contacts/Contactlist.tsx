@@ -1,6 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  type ForwardedRef,
+  forwardRef,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useImperativeHandle,
+} from "react";
 import { MoreVertical, X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -30,15 +38,45 @@ interface Campaign {
   name: string;
 }
 
-export default function ContactsList({
-  searchQuery,
-  isAddingContact,
-  onCloseAddContact,
-}: {
+interface ContactFormFields {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  company: string;
+  state: string;
+  country: string;
+}
+
+type ContactFormField = keyof ContactFormFields;
+
+interface ContactsListProps {
   searchQuery: string;
   isAddingContact: boolean;
   onCloseAddContact: () => void;
-}) {
+  isInteractionDisabled?: boolean;
+}
+
+interface RefreshContactsOptions {
+  resetPage?: boolean;
+  showLoading?: boolean;
+  throwOnError?: boolean;
+}
+
+export interface ContactsListHandle {
+  refreshContacts: (options?: RefreshContactsOptions) => Promise<void>;
+  resetPage: () => void;
+}
+
+function ContactsList(
+  {
+    searchQuery,
+    isAddingContact,
+    onCloseAddContact,
+    isInteractionDisabled = false,
+  }: ContactsListProps,
+  ref: ForwardedRef<ContactsListHandle>,
+) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -51,7 +89,7 @@ export default function ContactsList({
   const [deletingContactId, setDeletingContactId] = useState<string | null>(
     null,
   );
-  const [addingContactData, setAddingContactData] = useState({
+  const [addingContactData, setAddingContactData] = useState<ContactFormFields>({
     firstName: "",
     lastName: "",
     phone: "",
@@ -60,7 +98,7 @@ export default function ContactsList({
     state: "",
     country: "",
   });
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ContactFormFields>({
     firstName: "",
     lastName: "",
     phone: "",
@@ -74,31 +112,73 @@ export default function ContactsList({
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState("");
   const [assigning, setAssigning] = useState(false);
+  const skipNextFetchRef = useRef(false);
 
   const itemsPerPage = 11;
 
-  const fetchContacts = useCallback(async () => {
+  const fetchContacts = useCallback(
+    async (
+      page = currentPage,
+      {
+        showLoading = true,
+        throwOnError = false,
+      }: RefreshContactsOptions = {},
+    ) => {
     try {
-      setLoading(true);
-      const data = await getContacts(currentPage, itemsPerPage, searchQuery);
+      if (showLoading) setLoading(true);
+      const data = await getContacts(page, itemsPerPage, searchQuery);
       if (data.success) {
         setContacts(data.data);
         setTotalData(data.totalData);
       }
     } catch (err) {
       console.error("Failed to fetch contacts", err);
+      if (throwOnError) throw err;
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
-  }, [currentPage, searchQuery]);
+    },
+    [currentPage, searchQuery],
+  );
 
   useEffect(() => {
+    if (skipNextFetchRef.current) {
+      skipNextFetchRef.current = false;
+      return;
+    }
+
     fetchContacts();
   }, [fetchContacts]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      resetPage: () => {
+        if (currentPage !== 1) setCurrentPage(1);
+      },
+      refreshContacts: async ({
+        resetPage = false,
+        showLoading = false,
+        throwOnError = false,
+      } = {}) => {
+        setSelectedContacts([]);
+        setOpenMenu(null);
+
+        if (resetPage) {
+          if (currentPage !== 1) {
+            skipNextFetchRef.current = true;
+            setCurrentPage(1);
+          }
+
+          await fetchContacts(1, { showLoading, throwOnError });
+          return;
+        }
+
+        await fetchContacts(currentPage, { showLoading, throwOnError });
+      },
+    }),
+    [currentPage, fetchContacts],
+  );
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -113,17 +193,20 @@ export default function ContactsList({
   const totalPages = Math.ceil(totalData / itemsPerPage);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isInteractionDisabled) return;
     if (e.target.checked) setSelectedContacts(contacts.map((c) => c._id));
     else setSelectedContacts([]);
   };
 
   const handleSelectContact = (id: string) => {
+    if (isInteractionDisabled) return;
     setSelectedContacts((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
     );
   };
 
   const handleEditClick = (contact: Contact) => {
+    if (isInteractionDisabled) return;
     setEditingContact(contact);
     setFormData({
       firstName: contact.firstName,
@@ -138,13 +221,14 @@ export default function ContactsList({
   };
 
   const handleDeleteClick = (id: string) => {
+    if (isInteractionDisabled) return;
     setDeletingContactId(id);
     setOpenMenu(null);
   };
   const cancelDelete = () => setDeletingContactId(null);
 
   const confirmDelete = async () => {
-    if (!deletingContactId) return;
+    if (!deletingContactId || isInteractionDisabled) return;
     try {
       await deleteContact(deletingContactId);
       setDeletingContactId(null);
@@ -155,13 +239,14 @@ export default function ContactsList({
   };
 
   const handleBulkDelete = () => {
-    if (!selectedContacts.length) return;
+    if (!selectedContacts.length || isInteractionDisabled) return;
     setShowBulkDeleteModal(true);
   };
 
   const cancelBulkDelete = () => setShowBulkDeleteModal(false);
 
   const confirmBulkDelete = async () => {
+    if (isInteractionDisabled) return;
     try {
       await bulkDeleteContacts(selectedContacts);
       setSelectedContacts([]);
@@ -173,6 +258,7 @@ export default function ContactsList({
   };
 
   const openAssignModal = async () => {
+    if (isInteractionDisabled) return;
     try {
       const data = await getCampaigns();
       setCampaigns(data.data || []);
@@ -185,6 +271,7 @@ export default function ContactsList({
   };
 
   const handleAssign = async () => {
+    if (isInteractionDisabled) return;
     if (!selectedCampaignId) {
       toast.error("Please select a campaign");
       return;
@@ -200,15 +287,17 @@ export default function ContactsList({
       setShowAssignModal(false);
       setSelectedContacts([]);
       fetchContacts();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to assign leads");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to assign leads";
+      toast.error(message);
     } finally {
       setAssigning(false);
     }
   };
 
   const handleSaveEdit = async () => {
-    if (!editingContact) return;
+    if (!editingContact || isInteractionDisabled) return;
     setSaving(true);
     try {
       await updateContact(editingContact._id, formData);
@@ -222,6 +311,7 @@ export default function ContactsList({
   };
 
   const handleSaveNewContact = async () => {
+    if (isInteractionDisabled) return;
     setSaving(true);
     try {
       await createContact(addingContactData);
@@ -236,14 +326,20 @@ export default function ContactsList({
       });
       onCloseAddContact();
       fetchContacts();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to add contact");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to add contact";
+      toast.error(message);
     } finally {
       setSaving(false);
     }
   };
 
-  const inputFields = [
+  const inputFields: Array<{
+    label: string;
+    field: ContactFormField;
+    type: string;
+  }> = [
     { label: "First Name", field: "firstName", type: "text" },
     { label: "Last Name", field: "lastName", type: "text" },
     { label: "Phone", field: "phone", type: "text" },
@@ -254,7 +350,10 @@ export default function ContactsList({
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-[#e5e7eb] shadow-sm overflow-hidden">
+    <div
+      aria-busy={isInteractionDisabled || loading}
+      className="bg-white rounded-2xl border border-[#e5e7eb] shadow-sm overflow-hidden"
+    >
       {/* BULK ACTIONS */}
       {selectedContacts.length > 0 && (
         <div className="px-6 py-3 bg-[#f9fafb] border-b border-[#e5e7eb] flex items-center justify-between">
@@ -265,7 +364,8 @@ export default function ContactsList({
           <div className="flex items-center gap-3">
             <button
               onClick={openAssignModal}
-              className="px-4 py-2 bg-gradient-to-r from-[#7c3aed] to-[#9333ea] text-white text-sm font-medium rounded-lg hover:shadow-lg transition-all"
+              disabled={isInteractionDisabled}
+              className="px-4 py-2 bg-gradient-to-r from-[#7c3aed] to-[#9333ea] text-white text-sm font-medium rounded-lg hover:shadow-lg transition-all disabled:opacity-60 disabled:hover:shadow-none"
             >
               {selectedContacts.length === 1
                 ? "Assign Lead"
@@ -273,7 +373,8 @@ export default function ContactsList({
             </button>
             <button
               onClick={handleBulkDelete}
-              className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+              disabled={isInteractionDisabled}
+              className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60 disabled:hover:bg-red-600"
             >
               Delete Selected
             </button>
@@ -292,6 +393,7 @@ export default function ContactsList({
                     type="checkbox"
                     checked={selectedContacts.length === contacts.length}
                     onChange={handleSelectAll}
+                    disabled={isInteractionDisabled}
                     className="w-4 h-4 rounded border-[#d1d5db] cursor-pointer"
                   />
                 )}
@@ -346,6 +448,7 @@ export default function ContactsList({
                       type="checkbox"
                       checked={selectedContacts.includes(contact._id)}
                       onChange={() => handleSelectContact(contact._id)}
+                      disabled={isInteractionDisabled}
                       className="w-4 h-4 rounded border-[#d1d5db] cursor-pointer"
                     />
                   </td>
@@ -381,7 +484,8 @@ export default function ContactsList({
                             openMenu === contact._id ? null : contact._id,
                           )
                         }
-                        className="text-[#94a3b8] hover:text-[#64748b] transition-colors"
+                        disabled={isInteractionDisabled}
+                        className="text-[#94a3b8] hover:text-[#64748b] transition-colors disabled:opacity-50"
                       >
                         <MoreVertical size={18} />
                       </button>
@@ -420,11 +524,12 @@ export default function ContactsList({
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
+              disabled={isInteractionDisabled || currentPage === page}
               className={`w-9 h-9 rounded flex items-center justify-center text-sm font-medium transition-colors ${
                 currentPage === page
                   ? "bg-[#7c3aed] text-white"
                   : "bg-white text-[#64748b] border border-[#e5e7eb] hover:border-[#7c3aed]"
-              }`}
+              } disabled:opacity-60 disabled:hover:border-[#e5e7eb]`}
             >
               {page}
             </button>
@@ -455,7 +560,7 @@ export default function ContactsList({
                   </label>
                   <input
                     type={type}
-                    value={(addingContactData as any)[field]}
+                    value={addingContactData[field]}
                     onChange={(e) =>
                       setAddingContactData((prev) => ({
                         ...prev,
@@ -507,7 +612,7 @@ export default function ContactsList({
                   </label>
                   <input
                     type={type}
-                    value={(formData as any)[field]}
+                    value={formData[field]}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
@@ -660,3 +765,5 @@ export default function ContactsList({
     </div>
   );
 }
+
+export default forwardRef<ContactsListHandle, ContactsListProps>(ContactsList);
