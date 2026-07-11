@@ -7,7 +7,7 @@ export async function proxy(req: NextRequest) {
   if (!authHeader?.startsWith("Bearer ")) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
-      { status: 401 }
+      { status: 401 },
     );
   }
   console.log("Proxy executed");
@@ -23,15 +23,15 @@ export async function proxy(req: NextRequest) {
   } catch {
     return NextResponse.json(
       { success: false, message: "Invalid token" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 }
 export const config = {
-    matcher: [
-      "/api/campaigns/:path*",
-      "/api/leads/((?!funnel).*)",
-      "/api/templates/:path*",
-      "/api/automation/:path*",
-    ],
+  matcher: [
+    "/api/campaigns/:path*",
+    "/api/leads/((?!funnel).*)",
+    "/api/templates/:path*",
+    "/api/automation/:path*",
+  ],
 };

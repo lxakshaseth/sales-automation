@@ -4,7 +4,7 @@ export async function createAuditLog(
   module: string,
   action: string,
   item: string,
-  details: string
+  details: string,
 ) {
   try {
     await AuditLog.create({

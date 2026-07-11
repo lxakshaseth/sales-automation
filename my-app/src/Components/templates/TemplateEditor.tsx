@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
 import { Bold, Italic, Link as LinkIcon, List, ListOrdered, Check, X, Unlink } from "lucide-react";
 
 type TemplateEditorProps = {
@@ -18,10 +19,9 @@ export default function TemplateEditor({
 }: TemplateEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        link: {
-          openOnClick: false,
-        },
+      StarterKit,
+      Link.configure({
+        openOnClick: false,
       }),
     ],
     content,
@@ -98,7 +98,9 @@ export default function TemplateEditor({
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
           className={`p-1.5 rounded-lg transition-colors ${
-            editor.isActive("bold") ? "bg-gray-200 text-gray-900" : "hover:bg-gray-100 text-gray-500"
+            editor.isActive("bold")
+              ? "bg-gray-200 text-gray-900"
+              : "hover:bg-gray-100 text-gray-500"
           }`}
         >
           <Bold size={15} />
@@ -108,7 +110,9 @@ export default function TemplateEditor({
           type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
           className={`p-1.5 rounded-lg transition-colors ${
-            editor.isActive("italic") ? "bg-gray-200 text-gray-900" : "hover:bg-gray-100 text-gray-500"
+            editor.isActive("italic")
+              ? "bg-gray-200 text-gray-900"
+              : "hover:bg-gray-100 text-gray-500"
           }`}
         >
           <Italic size={15} />
@@ -118,7 +122,9 @@ export default function TemplateEditor({
           type="button"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           className={`p-1.5 rounded-lg transition-colors ${
-            editor.isActive("bulletList") ? "bg-gray-200 text-gray-900" : "hover:bg-gray-100 text-gray-500"
+            editor.isActive("bulletList")
+              ? "bg-gray-200 text-gray-900"
+              : "hover:bg-gray-100 text-gray-500"
           }`}
         >
           <List size={15} />
@@ -128,7 +134,9 @@ export default function TemplateEditor({
           type="button"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           className={`p-1.5 rounded-lg transition-colors ${
-            editor.isActive("orderedList") ? "bg-gray-200 text-gray-900" : "hover:bg-gray-100 text-gray-500"
+            editor.isActive("orderedList")
+              ? "bg-gray-200 text-gray-900"
+              : "hover:bg-gray-100 text-gray-500"
           }`}
         >
           <ListOrdered size={15} />
@@ -138,7 +146,9 @@ export default function TemplateEditor({
           type="button"
           onClick={openLinkPopover}
           className={`p-1.5 rounded-lg transition-colors ${
-            editor.isActive("link") ? "bg-gray-200 text-gray-900" : "hover:bg-gray-100 text-gray-500"
+            editor.isActive("link")
+              ? "bg-gray-200 text-gray-900"
+              : "hover:bg-gray-100 text-gray-500"
           }`}
         >
           <LinkIcon size={15} />
@@ -193,6 +203,7 @@ export default function TemplateEditor({
         )}
       </div>
 
+      {/* Editor */}
       <div className="flex-1 overflow-y-auto cursor-text min-h-[280px]">
         <EditorContent
           editor={editor}
@@ -200,6 +211,7 @@ export default function TemplateEditor({
         />
       </div>
 
+      {/* Footer */}
       <div className="px-3 py-1.5 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 text-right font-medium select-none">
         {(content || "").replace(/<[^>]*>/g, "").length} characters written
       </div>

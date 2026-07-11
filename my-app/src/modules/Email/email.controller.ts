@@ -125,9 +125,6 @@ export const sendEmail = async ({
     savedEmail.status = "SENT";
     await savedEmail.save();
 
-    // 10. Stamp the lead so the 24h cron eligibility window actually works,
-    // and reflect the real outcome — only on a confirmed successful send
-    // (i.e. here, after sendEmailService resolved without throwing).
     if (leadId) {
       await Lead.findByIdAndUpdate(leadId, {
         $set: {

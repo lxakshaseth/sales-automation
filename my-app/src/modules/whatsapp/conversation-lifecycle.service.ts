@@ -32,6 +32,25 @@ type ConversationMessage = {
   createdAt: Date | string;
 };
 
+type ConversationSummaryAttachment = {
+  filename: string;
+  content: Buffer;
+  contentType: string;
+};
+
+type SendConversationSummaryToOwnerInput = {
+  contact: ConversationContact;
+  messages: ConversationMessage[];
+  ownerEmail?: string;
+  sendOwnerEmail?: (email: {
+    to: string;
+    subject: string;
+    body: string;
+    attachments: ConversationSummaryAttachment[];
+  }) => Promise<unknown>;
+  buildSummaryPdf?: typeof buildConversationSummaryPdf;
+};
+
 type LifecycleTimer = ReturnType<typeof setTimeout>;
 type LifecycleTimerState = {
   runId: string;
@@ -81,6 +100,15 @@ export async function startConversationLifecycle(contactId: string) {
   });
 
   return runId;
+}
+
+export async function closeConversationForClientIntent(
+  contactId: string,
+  runId: string,
+) {
+  clearLocalLifecycleTimers(contactId);
+
+  await processCloseChatJob(contactId, runId);
 }
 
 async function scheduleQueuedLifecycle(contactId: string, runId: string) {
@@ -325,33 +353,13 @@ export async function processCloseChatJob(contactId: string, runId: string) {
     .sort({ createdAt: 1 })
     .lean();
 
-  const ownerEmail = process.env.OWNER_EMAIL;
-
-  if (ownerEmail) {
-    const summary = buildConversationSummary({
+  if (
+    await sendConversationSummaryToOwner({
       contact,
       messages,
-    });
-    const summaryPdf = buildConversationSummaryPdf({
-      contact,
-      messages,
-    });
-    const contactLabel = getContactLabel(contact);
-    const closedDate = formatSummaryDate(contact.closedAt || closeStartedAt);
-
-    await sendEmail({
-      to: ownerEmail,
-      subject: `Conversation Summary - ${contactLabel} (${closedDate})`,
-      body: summary,
-      attachments: [
-        {
-          filename: getSummaryPdfFileName(contactLabel, closedDate),
-          content: summaryPdf,
-          contentType: "application/pdf",
-        },
-      ],
-    });
-
+      ownerEmail: process.env.OWNER_EMAIL,
+    })
+  ) {
     await Contact.updateOne(
       {
         _id: contact._id,
@@ -364,6 +372,44 @@ export async function processCloseChatJob(contactId: string, runId: string) {
       },
     );
   }
+}
+
+export async function sendConversationSummaryToOwner({
+  contact,
+  messages,
+  ownerEmail,
+  sendOwnerEmail = sendEmail,
+  buildSummaryPdf = buildConversationSummaryPdf,
+}: SendConversationSummaryToOwnerInput) {
+  if (!ownerEmail) {
+    return false;
+  }
+
+  const summary = buildConversationSummary({
+    contact,
+    messages,
+  });
+  const summaryPdf = buildSummaryPdf({
+    contact,
+    messages,
+  });
+  const contactLabel = getContactLabel(contact);
+  const closedDate = formatSummaryDate(contact.closedAt || new Date());
+
+  await sendOwnerEmail({
+    to: ownerEmail,
+    subject: `Conversation Summary - ${contactLabel} (${closedDate})`,
+    body: summary,
+    attachments: [
+      {
+        filename: getSummaryPdfFileName(contactLabel, closedDate),
+        content: summaryPdf,
+        contentType: "application/pdf",
+      },
+    ],
+  });
+
+  return true;
 }
 
 async function sendLifecycleWhatsAppMessage({

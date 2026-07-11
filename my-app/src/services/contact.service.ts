@@ -6,11 +6,18 @@ function getAuthHeaders() {
   };
 }
 
-export async function getContacts(page: number = 1, limit: number = 11, search?: string) {
+export async function getContacts(
+  page: number = 1,
+  limit: number = 11,
+  search?: string,
+) {
   const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
-  const response = await fetch(`/api/leads?limit=${limit}&page=${page}${searchParam}`, {
-    headers: getAuthHeaders(),
-  });
+  const response = await fetch(
+    `/api/leads?limit=${limit}&page=${page}${searchParam}`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || "Failed to fetch contacts");
   return data;
@@ -45,7 +52,7 @@ export async function updateContact(
     company: string;
     state: string;
     country: string;
-  }
+  },
 ) {
   const response = await fetch(`/api/leads/${contactId}`, {
     method: "PUT",
@@ -74,7 +81,8 @@ export async function bulkDeleteContacts(ids: string[]) {
     body: JSON.stringify({ ids }),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Failed to delete contacts");
+  if (!response.ok)
+    throw new Error(data.message || "Failed to delete contacts");
   return data;
 }
 
@@ -83,7 +91,8 @@ export async function getCampaigns() {
     headers: getAuthHeaders(),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Failed to fetch campaigns");
+  if (!response.ok)
+    throw new Error(data.message || "Failed to fetch campaigns");
   return data;
 }
 
@@ -98,7 +107,10 @@ export async function assignLead(leadId: string, campaignId: string) {
   return data;
 }
 
-export async function assignMultipleLeads(leadIds: string[], campaignId: string) {
+export async function assignMultipleLeads(
+  leadIds: string[],
+  campaignId: string,
+) {
   const response = await fetch("/api/automation/assign-multiple-leads", {
     method: "POST",
     headers: getAuthHeaders(),
@@ -119,6 +131,7 @@ export async function bulkUploadContacts(file: File) {
     body: formData,
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Failed to upload contacts");
+  if (!response.ok)
+    throw new Error(data.message || "Failed to upload contacts");
   return data;
 }

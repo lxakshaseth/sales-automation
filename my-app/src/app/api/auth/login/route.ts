@@ -3,6 +3,6 @@ import { NextRequest } from "next/server";
 import connectDB from "@/lib/db";
 
 export const POST = async (req: NextRequest) => {
-     await connectDB();
-    return loginController(req as any)
-}
+  await connectDB();
+  return loginController(req);
+};

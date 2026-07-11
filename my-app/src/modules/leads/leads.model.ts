@@ -63,14 +63,14 @@ const leadSchema = new Schema(
     },
 
     stageEnteredAt: {
-          type: Date,
-          default: Date.now,
-        },
+      type: Date,
+      default: Date.now,
+    },
 
-        lastActivity: {
-          type: String,
-          default: "Lead Created",
-        },
+    lastActivity: {
+      type: String,
+      default: "Lead Created",
+    },
 
     score: {
       type: Number,

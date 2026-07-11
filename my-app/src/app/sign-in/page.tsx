@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Rocket, Eye, EyeOff } from "lucide-react";
 
+// Shadcn UI Components Imports
+import { Card, CardContent } from "@/Components/ui/card";
+
 export default function Signin() {
   const router = useRouter();
 
@@ -36,7 +39,6 @@ export default function Signin() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     setLoading(true);
 
     try {
@@ -86,7 +88,6 @@ export default function Signin() {
         email: savedEmail,
         password: savedPassword,
       }));
-
       setRememberMe(true);
     }
   }, []);
@@ -95,16 +96,16 @@ export default function Signin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-linear-to-br from-violet-50 via-white to-indigo-100 relative overflow-hidden">
+      {/* Background Decoratives */}
       <div className="absolute top-20 left-20 h-72 w-72 rounded-full bg-violet-300/30 blur-3xl"></div>
-
       <div className="absolute bottom-20 right-20 h-72 w-72 rounded-full bg-indigo-300/30 blur-3xl"></div>
 
       <div className="relative z-10 flex flex-col items-center w-full max-w-6xl">
+        {/* Header App Brand */}
         <div className="mb-6 flex items-center gap-3">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7C3AED] text-white shadow-lg">
             <Rocket className="h-7 w-7" />
           </div>
-
           <div>
             <h1 className="text-3xl font-bold text-slate-900">
               Sales Automation
@@ -113,15 +114,16 @@ export default function Signin() {
           </div>
         </div>
 
-        <div className="w-full max-w-5xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-md shadow-2xl border border-white/20">
-          <div className="grid md:grid-cols-[1.1fr_0.9fr]">
-            {/* Left Side - Form */}
+        {/* Main Interface Wrapper Container */}
+        <Card className="w-full max-w-5xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-md shadow-2xl border border-white/20">
+          <CardContent className="p-0 grid md:grid-cols-[1.1fr_0.9fr]">
+            {/* Left Portion - Actionable Auth Form */}
             <div className="p-12 flex flex-col justify-center">
-              <h2 className="text-2xl font-bold text-center text-slate-900 mb-8">
-                Sign In
+              <h2 className="text-2xl font-bold text-center text-slate-900 mb-6">
+                Sign In!
               </h2>
 
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <input
                   type="email"
                   name="email"
@@ -130,9 +132,10 @@ export default function Signin() {
                   value={formData.email}
                   onChange={handleChange}
                   disabled={loading}
-                  className="w-full border border-gray-300 rounded-lg p-3 mb-4 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="w-full border border-gray-300 rounded-lg p-3 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
-                <div className="relative mb-6">
+
+                <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
@@ -141,35 +144,32 @@ export default function Signin() {
                     value={formData.password}
                     onChange={handleChange}
                     disabled={loading}
-                    className="w-full border border-gray-300 rounded-lg p-3 mb-6 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    className="w-full border border-gray-300 rounded-lg p-3 pr-12 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
 
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/3 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
-                    {showPassword ? <EyeOff></EyeOff> : <Eye></Eye>}
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between mb-6">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                      className="h-4 w-4 rounded border-gray-300 accent-violet-600"
                     />
-                    <span className="text-sm text-slate-600">Remember me</span>
+                    Remember me
                   </label>
-
-                  <button
-                    type="button"
-                    className="text-sm text-violet-600 hover:underline"
-                  >
-                    {/* Forgot Password? */}
-                  </button>
                 </div>
 
                 <button
@@ -193,9 +193,8 @@ export default function Signin() {
               </p>
             </div>
 
-            {/* Right Side - Premium Welcome */}
+            {/* Right Portion - Platform Marketing Display */}
             <div className="hidden md:flex relative overflow-hidden flex-col justify-center bg-linear-to-br from-violet-700 via-violet-600 to-indigo-700 text-white p-12">
-              {/* Decorative Blobs */}
               <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
               <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-indigo-300/20 blur-3xl"></div>
 
@@ -209,36 +208,30 @@ export default function Signin() {
                   Back
                 </h2>
 
-                {/* Features */}
                 <div className="mt-10 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="h-2 w-2 rounded-full bg-green-400"></div>
                     <span>Lead Management & Tracking</span>
                   </div>
-
                   <div className="flex items-center gap-3">
                     <div className="h-2 w-2 rounded-full bg-green-400"></div>
                     <span>Bulk CSV Lead Import</span>
                   </div>
-
                   <div className="flex items-center gap-3">
                     <div className="h-2 w-2 rounded-full bg-green-400"></div>
                     <span>Campaign Automation</span>
                   </div>
-
                   <div className="flex items-center gap-3">
                     <div className="h-2 w-2 rounded-full bg-green-400"></div>
                     <span>Real-time Analytics</span>
                   </div>
                 </div>
 
-                {/* Stats Cards */}
                 <div className="mt-10 grid grid-cols-2 gap-4">
                   <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-4">
                     <p className="text-violet-200 text-sm">Leads Managed</p>
                     <h3 className="text-2xl font-bold">10K+</h3>
                   </div>
-
                   <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-4">
                     <p className="text-violet-200 text-sm">Campaigns</p>
                     <h3 className="text-2xl font-bold">500+</h3>
@@ -246,8 +239,8 @@ export default function Signin() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

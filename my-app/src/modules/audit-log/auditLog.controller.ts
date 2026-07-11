@@ -21,14 +21,13 @@ export async function getRecentAuditLogs() {
       data: logs,
       autoDeleted: deleted.deletedCount > 0,
     });
-
   } catch (error: any) {
     return NextResponse.json(
       {
         success: false,
         message: error.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

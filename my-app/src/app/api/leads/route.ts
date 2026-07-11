@@ -1,7 +1,10 @@
-import  connectDB  from "@/lib/db";
+import connectDB from "@/lib/db";
 import { NextRequest } from "next/server";
 
-import {createLeadController,getLeadsController} from "@/modules/leads/leads.controller";
+import {
+  createLeadController,
+  getLeadsController,
+} from "@/modules/leads/leads.controller";
 
 export async function POST(req: NextRequest) {
   await connectDB();

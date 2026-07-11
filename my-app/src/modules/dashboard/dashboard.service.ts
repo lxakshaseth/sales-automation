@@ -4,12 +4,7 @@ import Template from "@/modules/Email/template.model";
 import Contact from "@/modules/whatsapp/contact.model";
 
 export async function getDashboardStats() {
-  const [
-    campaigns,
-    templates,
-    leads,
-    whatsappContacts,
-  ] = await Promise.all([
+  const [campaigns, templates, leads, whatsappContacts] = await Promise.all([
     Campaign.countDocuments(),
     Template.countDocuments(),
     Lead.countDocuments(),
