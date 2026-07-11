@@ -767,4 +767,3 @@ function ContactsList(
   );
 }
 
-export default forwardRef<ContactsListHandle, ContactsListProps>(ContactsList);

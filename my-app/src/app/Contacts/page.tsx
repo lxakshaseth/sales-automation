@@ -1,4 +1,4 @@
-"use client"; //
+"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -87,7 +87,8 @@ export default function ContactsPage() {
       });
 
       const importedCount =
-        result.totalUploaded ?? (Array.isArray(result.data) ? result.data.length : 0);
+        result.totalUploaded ??
+        (Array.isArray(result.data) ? result.data.length : 0);
 
       successMessage = `Successfully imported ${importedCount} contacts.`;
       await sleep(300);

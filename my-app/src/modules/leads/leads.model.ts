@@ -95,6 +95,11 @@ const leadSchema = new Schema(
       type: Date,
     },
 
+    followUpStage: {
+      type: Number,
+      default: 0, 
+    },
+
     campaign: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Campaign",
