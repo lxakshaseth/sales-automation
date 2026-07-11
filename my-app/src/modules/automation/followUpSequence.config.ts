@@ -3,4 +3,4 @@ export const FOLLOW_UP_DELAYS_HOURS: Record<number, number> = {
   2: 48,
 };
 
-export const MAX_FOLLOW_UP_STAGE = 3; 
+export const MAX_FOLLOW_UP_STAGE = 3;
