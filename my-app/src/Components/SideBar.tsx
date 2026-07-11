@@ -117,7 +117,7 @@ function SidebarItem({
     ? item.items?.some((sub) => pathname === sub.href)
     : false;
 
-  const isActive = item.href ? pathname === item.href : isChildActive;
+  const isActive = item.href ? pathname.startsWith(item.href) : isChildActive;
 
   const handleParentClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (hasSubmenu) {
