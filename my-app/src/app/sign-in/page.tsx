@@ -6,11 +6,7 @@ import toast from "react-hot-toast";
 import { Rocket, Eye, EyeOff } from "lucide-react";
 
 // Shadcn UI Components Imports
-import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
 import { Card, CardContent } from "@/Components/ui/card";
-import { Checkbox } from "@/Components/ui/checkbox";
 
 export default function Signin() {
   const router = useRouter();
@@ -123,101 +119,77 @@ export default function Signin() {
           <CardContent className="p-0 grid md:grid-cols-[1.1fr_0.9fr]">
             {/* Left Portion - Actionable Auth Form */}
             <div className="p-12 flex flex-col justify-center">
-              <h2 className="text-2xl font-bold text-center text-slate-900 mb-8">
-                Sign In
+              <h2 className="text-2xl font-bold text-center text-slate-900 mb-6">
+                Sign In!
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    name="email"
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={loading}
+                  className="w-full border border-gray-300 rounded-lg p-3 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
+                />
+
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
                     required
-                    placeholder="name@example.com"
-                    value={formData.email}
+                    placeholder="Password"
+                    value={formData.password}
                     onChange={handleChange}
                     disabled={loading}
-                    className="w-full border-gray-300 text-black focus-visible:ring-violet-500"
+                    className="w-full border border-gray-300 rounded-lg p-3 pr-12 text-black focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      required
-                      placeholder="Enter your password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      disabled={loading}
-                      className="w-full border-gray-300 text-black pr-10 focus-visible:ring-violet-500"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 hover:bg-transparent"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
-                        <Eye className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Account Context Options */}
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="rememberMe"
-                      checked={rememberMe}
-                      onCheckedChange={(checked) => setRememberMe(!!checked)}
-                      className="border-gray-300 data-[state=checked]:bg-[#7C3AED] data-[state=checked]:border-[#7C3AED]"
-                    />
-                    <Label
-                      htmlFor="rememberMe"
-                      className="text-sm font-medium leading-none text-slate-600 cursor-pointer select-none"
-                    >
-                      Remember me
-                    </Label>
-                  </div>
-
-                  <Button
+                  <button
                     type="button"
-                    variant="link"
-                    className="text-sm text-violet-600 p-0 h-auto hover:underline"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
-                    {/* Forgot Password Space */}
-                  </Button>
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
 
-                <Button
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 accent-violet-600"
+                    />
+                    Remember me
+                  </label>
+                </div>
+
+                <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#7C3AED] hover:bg-violet-700 text-white font-semibold transition-all py-6 mt-4"
+                  className="w-full bg-[#7C3AED] text-white py-3 rounded-lg font-semibold hover:bg-violet-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? "Signing In..." : "Sign In"}
-                </Button>
+                </button>
               </form>
 
               <p className="text-center text-sm text-slate-600 mt-6">
                 Don't have an account?{" "}
-                <Button
+                <button
                   type="button"
-                  variant="link"
                   onClick={() => router.push("/sign-up")}
-                  className="text-violet-600 font-semibold p-0 h-auto hover:underline"
+                  className="text-violet-600 font-semibold hover:underline"
                 >
                   Sign Up
-                </Button>
+                </button>
               </p>
             </div>
 
