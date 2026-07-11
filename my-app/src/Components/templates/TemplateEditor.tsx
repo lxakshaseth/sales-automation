@@ -1,18 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
-import {
-  Bold,
-  Italic,
-  Link as LinkIcon,
-  List,
-  ListOrdered,
-  Check,
-  X,
-} from "lucide-react";
+import { Bold, Italic, Link as LinkIcon, List, ListOrdered, Check, X, Unlink } from "lucide-react";
 
 type TemplateEditorProps = {
   content?: string;
@@ -25,9 +17,6 @@ export default function TemplateEditor({
   onChange,
   onEditorReady,
 }: TemplateEditorProps) {
-  const [showLinkPopup, setShowLinkPopup] = useState(false);
-  const [linkUrl, setLinkUrl] = useState("");
-
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -45,28 +34,66 @@ export default function TemplateEditor({
     },
   });
 
+  const [showLinkPopover, setShowLinkPopover] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const linkInputRef = useRef<HTMLInputElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showLinkPopover) {
+      linkInputRef.current?.focus();
+      linkInputRef.current?.select();
+    }
+  }, [showLinkPopover]);
+
+  useEffect(() => {
+    if (!showLinkPopover) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setShowLinkPopover(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showLinkPopover]);
+
   if (!editor) return null;
 
-  const saveLink = () => {
-    if (!linkUrl.trim()) {
-      editor.chain().focus().unsetLink().run();
-    } else {
-      editor
-        .chain()
-        .focus()
-        .extendMarkRange("link")
-        .setLink({ href: linkUrl })
-        .run();
-    }
+  const openLinkPopover = () => {
+    const existingUrl = editor.getAttributes("link").href || "";
+    setLinkUrl(existingUrl);
+    setShowLinkPopover(true);
+  };
 
-    setShowLinkPopup(false);
-    setLinkUrl("");
+  const confirmLink = () => {
+    const url = linkUrl.trim();
+    if (!url) {
+      setShowLinkPopover(false);
+      return;
+    }
+    const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
+    setShowLinkPopover(false);
+  };
+
+  const removeLink = () => {
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    setShowLinkPopover(false);
+  };
+
+  const handleLinkKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      confirmLink();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setShowLinkPopover(false);
+    }
   };
 
   return (
-    <div className="relative border border-gray-200 rounded-xl overflow-hidden h-full flex flex-col">
-      {/* Toolbar */}
-      <div className="flex items-center gap-1 p-2 border-b border-gray-100 bg-gray-50/50">
+    <div className="border border-gray-200 rounded-xl overflow-hidden h-full flex flex-col">
+      <div className="relative flex items-center gap-1 p-2 border-b border-gray-100 bg-gray-50/50">
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -117,10 +144,7 @@ export default function TemplateEditor({
 
         <button
           type="button"
-          onClick={() => {
-            setLinkUrl(editor.getAttributes("link").href || "");
-            setShowLinkPopup(true);
-          }}
+          onClick={openLinkPopover}
           className={`p-1.5 rounded-lg transition-colors ${
             editor.isActive("link")
               ? "bg-gray-200 text-gray-900"
@@ -129,49 +153,55 @@ export default function TemplateEditor({
         >
           <LinkIcon size={15} />
         </button>
-      </div>
 
-      {/* Link Popup */}
-      {showLinkPopup && (
-        <div className="absolute top-14 left-3 z-50 w-96 rounded-2xl border border-gray-200 bg-white p-4 shadow-2xl">
-          <label className="block text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
-            Link URL
-          </label>
-
-          <div className="flex items-center gap-2">
-            <input
-              autoFocus
-              type="url"
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") saveLink();
-              }}
-              placeholder="https://example.com"
-              className="flex-1 rounded-xl border border-violet-300 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
-            />
-
-            <button
-              type="button"
-              onClick={saveLink}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600 text-white hover:bg-violet-700"
-            >
-              <Check size={16} />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setShowLinkPopup(false);
-                setLinkUrl("");
-              }}
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100"
-            >
-              <X size={16} />
-            </button>
+        {showLinkPopover && (
+          <div
+            ref={popoverRef}
+            className="absolute left-2 top-full mt-2 z-20 w-96 bg-white border border-gray-200 rounded-xl shadow-lg p-4"
+          >
+            <label className="block text-xs font-semibold tracking-wide text-gray-400 uppercase mb-2">
+              Link URL
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                ref={linkInputRef}
+                type="text"
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                onKeyDown={handleLinkKeyDown}
+                placeholder="https://example.com"
+                className="flex-1 text-base px-3 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-colors text-gray-700 placeholder:text-gray-300"
+              />
+              <button
+                type="button"
+                onClick={confirmLink}
+                title="Apply link"
+                className="p-2.5 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+              >
+                <Check size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowLinkPopover(false)}
+                title="Cancel"
+                className="p-2.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            {editor.isActive("link") && (
+              <button
+                type="button"
+                onClick={removeLink}
+                className="mt-3 flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <Unlink size={13} />
+                Remove link
+              </button>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Editor */}
       <div className="flex-1 overflow-y-auto cursor-text min-h-[280px]">
