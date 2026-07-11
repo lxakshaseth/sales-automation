@@ -4,5 +4,5 @@ import connectDB from "@/lib/db";
 
 export const POST = async (req: NextRequest) => {
   await connectDB();
-  return registerController(req as any);
+  return registerController(req);
 };
