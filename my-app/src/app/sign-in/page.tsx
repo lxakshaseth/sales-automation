@@ -4,29 +4,71 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Rocket, Eye, EyeOff } from "lucide-react";
+import { readApiResponse } from "@/services/api";
 
 // Shadcn UI Components Imports
 import { Card, CardContent } from "@/Components/ui/card";
 
+type LoginResponse = {
+  success?: boolean;
+  token?: string;
+  data?: unknown;
+  message?: string;
+};
+
+const emptySignInForm = {
+  email: "",
+  password: "",
+};
+
+function getInitialFormData() {
+  if (typeof window === "undefined") {
+    return emptySignInForm;
+  }
+
+  const savedEmail = localStorage.getItem("savedEmail");
+  const savedPassword = localStorage.getItem("savedPassword");
+
+  if (!savedEmail || !savedPassword) {
+    return emptySignInForm;
+  }
+
+  return {
+    email: savedEmail,
+    password: savedPassword,
+  };
+}
+
+function getInitialRememberMe() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return Boolean(
+    localStorage.getItem("savedEmail") && localStorage.getItem("savedPassword"),
+  );
+}
+
+function hasActiveSession() {
+  return (
+    typeof window !== "undefined" && Boolean(sessionStorage.getItem("token"))
+  );
+}
+
 export default function Signin() {
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState(getInitialFormData);
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [rememberMe, setRememberMe] = useState(getInitialRememberMe);
+  const [checking] = useState(hasActiveSession);
 
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     if (token) {
       router.replace("/Dashboard");
-    } else {
-      setChecking(false);
     }
   }, [router]);
 
@@ -50,9 +92,12 @@ export default function Signin() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const data = await readApiResponse<LoginResponse>(
+        response,
+        "Login failed",
+      );
 
-      if (response.ok) {
+      if (response.ok && data.token) {
         toast.success("Login successful");
         sessionStorage.setItem("token", data.token);
         sessionStorage.setItem("user", JSON.stringify(data.data));
@@ -77,20 +122,6 @@ export default function Signin() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    const savedEmail = localStorage.getItem("savedEmail");
-    const savedPassword = localStorage.getItem("savedPassword");
-
-    if (savedEmail && savedPassword) {
-      setFormData((prev) => ({
-        ...prev,
-        email: savedEmail,
-        password: savedPassword,
-      }));
-      setRememberMe(true);
-    }
-  }, []);
 
   if (checking) return null;
 
@@ -182,7 +213,7 @@ export default function Signin() {
               </form>
 
               <p className="text-center text-sm text-slate-600 mt-6">
-                Don't have an account?{" "}
+                Do not have an account?{" "}
                 <button
                   type="button"
                   onClick={() => router.push("/sign-up")}

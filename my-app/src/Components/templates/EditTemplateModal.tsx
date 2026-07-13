@@ -7,6 +7,8 @@ import { X } from "lucide-react";
 import { Template, updateTemplate } from "@/services/template.service";
 import toast from "react-hot-toast";
 
+type TemplateType = Template["type"];
+
 type EditTemplateModalProps = {
   template: Template | null;
   isOpen: boolean;
@@ -21,7 +23,7 @@ export default function EditTemplateModal({
   onSuccess,
 }: EditTemplateModalProps) {
   const [name, setName] = useState("");
-  const [type, setType] = useState("email");
+  const [type, setType] = useState<TemplateType>("email");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
 
@@ -40,12 +42,14 @@ export default function EditTemplateModal({
 
   if (!isOpen || !template) return null;
 
+  const selectedTemplate = template;
+
   async function handleUpdate() {
     try {
       setLoading(true);
       setError("");
 
-      await updateTemplate(template._id, {
+      await updateTemplate(selectedTemplate._id, {
         name,
         type,
         subject,
@@ -109,7 +113,7 @@ export default function EditTemplateModal({
 
               <select
                 value={type}
-                onChange={(e) => setType(e.target.value)}
+                onChange={(e) => setType(e.target.value as TemplateType)}
                 className="w-full border border-[#d7dce5] rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500 transition-all duration-200"
               >
                 <option value="email">Email</option>

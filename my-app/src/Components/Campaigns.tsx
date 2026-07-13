@@ -1,11 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
 import {
   Plus,
   Search,
-  ChevronLeft,
-  ChevronRight,
   Eye,
   ArrowUpDown,
   Pencil,
@@ -25,6 +22,7 @@ import {
   deleteCampaign as deleteCampaignApi,
 } from "@/services/campaign.service";
 import { getTemplates, Template } from "@/services/template.service";
+import Pagination from "@/Components/ui/Pagination";
 
 type TemplateRef = {
   _id: string;
@@ -43,12 +41,16 @@ type Campaign = {
 };
 
 const STATUS_TABS = ["All", "Draft", "Active"];
-const PAGE_SIZE = 8;
+const DEFAULT_PAGE_SIZE = 10;
 
 const statusColor: Record<string, string> = {
   active: "bg-emerald-100 text-emerald-700 border border-emerald-200",
   draft: "bg-orange-100 text-orange-600 border border-orange-200",
 };
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
 
 function formatDate(dateStr?: string) {
   if (!dateStr) return "-";
@@ -77,7 +79,7 @@ export default function Campaigns() {
     if (!token) {
       router.replace("/sign-in");
     }
-  }, []);
+  }, [router]);
 
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [totalData, setTotalData] = useState(0);
@@ -87,6 +89,7 @@ export default function Campaigns() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("All");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const [viewCampaign, setViewCampaign] = useState<Campaign | null>(null);
 
@@ -115,43 +118,56 @@ export default function Campaigns() {
         activeTab === "All" ? undefined : activeTab.toLowerCase();
       const res = await getCampaigns({
         page,
-        limit: PAGE_SIZE,
+        limit: pageSize,
         name: searchTerm || undefined,
         status: statusParam,
       });
       setCampaigns(res.data || []);
       setTotalData(res.totalData || 0);
-    } catch (err: any) {
-      setError(err.message || "Failed to load campaigns");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to load campaigns"));
       setCampaigns([]);
       setTotalData(0);
     } finally {
       setLoading(false);
     }
-  }, [page, searchTerm, activeTab]);
+  }, [page, pageSize, searchTerm, activeTab]);
 
   useEffect(() => {
-    fetchCampaigns();
+    const timer = window.setTimeout(() => {
+      void fetchCampaigns();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [fetchCampaigns]);
 
-  const totalPages = Math.max(1, Math.ceil(totalData / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(totalData / pageSize));
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setPage(1);
+  };
 
   useEffect(() => {
     if (!editCampaign) return;
     let cancelled = false;
-    setTemplatesLoading(true);
-    getTemplates()
-      .then((res) => {
-        if (!cancelled) setAllTemplates(res.data || []);
-      })
-      .catch(() => {
-        if (!cancelled) setAllTemplates([]);
-      })
-      .finally(() => {
-        if (!cancelled) setTemplatesLoading(false);
-      });
+    const timer = window.setTimeout(() => {
+      setTemplatesLoading(true);
+      getTemplates()
+        .then((res) => {
+          if (!cancelled) setAllTemplates(res.data || []);
+        })
+        .catch(() => {
+          if (!cancelled) setAllTemplates([]);
+        })
+        .finally(() => {
+          if (!cancelled) setTemplatesLoading(false);
+        });
+    }, 0);
+
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
   }, [editCampaign]);
 
@@ -165,13 +181,16 @@ export default function Campaigns() {
     if (!editCampaign) return;
     const trimmed = editName.trim();
     if (!trimmed) {
-      setEditNameTaken(false);
-      setCheckingEditName(false);
-      return;
+      const timer = window.setTimeout(() => {
+        setEditNameTaken(false);
+        setCheckingEditName(false);
+      }, 0);
+
+      return () => window.clearTimeout(timer);
     }
 
-    setCheckingEditName(true);
     const timer = setTimeout(async () => {
+      setCheckingEditName(true);
       try {
         const res = await getCampaigns({ name: trimmed, limit: 50 });
         const exists = (res.data || []).some(
@@ -215,8 +234,8 @@ export default function Campaigns() {
       toast.success("Campaign updated successfully");
       setEditCampaign(null);
       fetchCampaigns();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update campaign");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to update campaign"));
     } finally {
       setSavingEdit(false);
     }
@@ -230,8 +249,8 @@ export default function Campaigns() {
       toast.success("Campaign deleted successfully");
       setDeleteCampaignTarget(null);
       fetchCampaigns();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to delete campaign");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to delete campaign"));
     } finally {
       setDeleting(false);
     }
@@ -407,6 +426,13 @@ export default function Campaigns() {
                       <td className="px-3 py-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
+                            onClick={() => setViewCampaign(c)}
+                            title="View"
+                            className="p-1.5 rounded-lg text-zinc-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
                             onClick={() => {
                               setEditCampaign(c);
                               setEditName(c.name);
@@ -439,42 +465,17 @@ export default function Campaigns() {
           </table>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-4 border-t border-zinc-100">
-          <p className="text-xs text-zinc-400">
-            Showing {campaigns.length} of {totalData} campaigns
-          </p>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 disabled:opacity-40 transition-colors"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setPage(n)}
-                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                    page === n
-                      ? "bg-zinc-900 text-white"
-                      : "text-zinc-500 hover:bg-zinc-100"
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 disabled:opacity-40 transition-colors"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          )}
+        <div className="border-t border-zinc-100 p-4">
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={totalData}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={handlePageSizeChange}
+            itemLabel="campaigns"
+            disabled={loading}
+          />
         </div>
       </div>
 
