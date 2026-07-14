@@ -14,10 +14,11 @@ export default function WhatsAppPage() {
           isCollapsed ? "md:ml-20" : "md:ml-64"
         }`}
       >
-        <div className="p-6 lg:p-8">
+        <div className="p-6 lg:p-8" >
           <TopBar
             title="WhatsApp Conversations"
             description="Manage customer conversations, send messages, and track delivery status in real time."
+            
           />
 
           <div className="mt-6">

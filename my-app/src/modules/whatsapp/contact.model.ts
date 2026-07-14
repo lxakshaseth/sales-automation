@@ -22,7 +22,7 @@ const ContactSchema = new mongoose.Schema(
 
     aiEnabled: {
       type: Boolean,
-      default: false,
+      default: true,
     },
 
     conversationStatus: {

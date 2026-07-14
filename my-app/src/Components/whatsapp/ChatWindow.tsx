@@ -556,8 +556,8 @@ export default function ChatWindow({
   }
 
   async function handleMessageSent(data: {
-    inboundMessage?: Message;
-    outboundMessage?: Message;
+    inboundMessage?: Message | null;
+    outboundMessage?: Message | null;
   }) {
     setMessages((currentMessages) => {
       const nextMessages = [

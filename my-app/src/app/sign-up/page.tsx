@@ -5,6 +5,12 @@ import { Rocket, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import PasswordRequirementChecklist from "@/Components/auth/PasswordRequirementChecklist";
 import { getPasswordValidationError } from "@/lib/passwordValidation";
+import { readApiResponse } from "@/services/api";
+
+type RegisterResponse = {
+  success?: boolean;
+  message?: string;
+};
 
 export default function Signup() {
   const router = useRouter();
@@ -64,7 +70,10 @@ export default function Signup() {
         }),
       });
 
-      const data = await response.json();
+      const data = await readApiResponse<RegisterResponse>(
+        response,
+        "Registration failed",
+      );
 
       if (response.ok) {
         toast.success("Registration successful");
