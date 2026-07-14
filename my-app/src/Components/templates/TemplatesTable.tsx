@@ -5,13 +5,16 @@ import CreateTemplateModal from "./CreateTemplateModal";
 import TemplatePreviewModal from "./TemplatePreviewModal";
 import DeleteTemplateDialog from "./DeleteTemplateDialog";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getTemplates,
   Template,
   deleteTemplate,
 } from "@/services/template.service";
 import toast from "react-hot-toast";
+import Pagination from "@/Components/ui/Pagination";
+
+const DEFAULT_PAGE_SIZE = 10;
 
 export default function TemplatesTable() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -20,11 +23,13 @@ export default function TemplatesTable() {
   );
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editData, setEditData] = useState<any>(null);
+  const [editData, setEditData] = useState<Template | null>(null);
 
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   /* Selection mode states */
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -41,7 +46,8 @@ export default function TemplatesTable() {
       const response = await getTemplates();
       setTemplates(response.data);
       setSelectedIds([]);
-    } catch (err) {
+      setCurrentPage(1);
+    } catch {
       setError("Failed to fetch templates");
       toast.error("Failed to load templates");
     } finally {
@@ -49,11 +55,23 @@ export default function TemplatesTable() {
     }
   }
 
+  const totalPages = Math.max(1, Math.ceil(templates.length / pageSize));
+  const activePage = Math.min(currentPage, totalPages);
+  const paginatedTemplates = useMemo(() => {
+    const start = (activePage - 1) * pageSize;
+    return templates.slice(start, start + pageSize);
+  }, [activePage, pageSize, templates]);
+
   const handleSelectAll = () => {
-    if (selectedIds.length === templates.length) {
-      setSelectedIds([]);
+    const visibleIds = paginatedTemplates.map((template) => template._id);
+    const allVisibleSelected = visibleIds.every((id) =>
+      selectedIds.includes(id),
+    );
+
+    if (allVisibleSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
     } else {
-      setSelectedIds(templates.map((t) => t._id));
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])));
     }
   };
 
@@ -79,6 +97,12 @@ export default function TemplatesTable() {
     } finally {
       setIsBulkDeleting(false);
     }
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+    setSelectedIds([]);
   };
 
   return (
@@ -152,8 +176,10 @@ export default function TemplatesTable() {
                     <input
                       type="checkbox"
                       checked={
-                        selectedIds.length === templates.length &&
-                        templates.length > 0
+                        paginatedTemplates.length > 0 &&
+                        paginatedTemplates.every((template) =>
+                          selectedIds.includes(template._id),
+                        )
                       }
                       onChange={handleSelectAll}
                       className="rounded border-gray-300 text-violet-600 focus:ring-violet-500 h-4 w-4"
@@ -175,7 +201,7 @@ export default function TemplatesTable() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eef2f7]">
-              {templates.map((template) => (
+              {paginatedTemplates.map((template) => (
                 <tr
                   key={template._id}
                   className="hover:bg-gray-50 transition-colors"
@@ -250,13 +276,21 @@ export default function TemplatesTable() {
         </div>
       )}
 
-      <div className="mt-5 flex items-center justify-between">
-        <div className="text-sm font-medium text-violet-600 px-2">
-          Total: {templates.length}{" "}
-          {isSelectionMode &&
-            selectedIds.length > 0 &&
-            `(${selectedIds.length} selected)`}
-        </div>
+      <div className="mt-5">
+        {isSelectionMode && selectedIds.length > 0 && (
+          <div className="mb-3 px-2 text-sm font-medium text-violet-600">
+            {selectedIds.length} selected
+          </div>
+        )}
+        <Pagination
+          currentPage={activePage}
+          totalPages={totalPages}
+          totalItems={templates.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={handlePageSizeChange}
+          itemLabel="templates"
+        />
       </div>
 
       {/* MODALS */}
