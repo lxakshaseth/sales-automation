@@ -222,19 +222,31 @@ const confirmDelete = async () => {
 
          <div className="flex items-center gap-2">
 
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            className="border border-violet-300 rounded-lg px-3 py-2 text-sm"
-          />
+          <div className="flex items-center gap-1.5">
+            <label htmlFor="audit-from-date" className="text-xs font-medium text-zinc-500">
+              From
+            </label>
+            <input
+              id="audit-from-date"
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="border border-violet-300 rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
 
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            className="border border-violet-300 rounded-lg px-3 py-2 text-sm"
-          />
+          <div className="flex items-center gap-1.5">
+            <label htmlFor="audit-to-date" className="text-xs font-medium text-zinc-500">
+              To
+            </label>
+            <input
+              id="audit-to-date"
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="border border-violet-300 rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
 
           <button
             className="text-xs font-medium text-violet-600 hover:text-violet-700"

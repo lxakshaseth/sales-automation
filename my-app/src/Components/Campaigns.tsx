@@ -109,7 +109,7 @@ export default function Campaigns() {
   const [deleteCampaignTarget, setDeleteCampaignTarget] =
     useState<Campaign | null>(null);
   const [deleting, setDeleting] = useState(false);
-
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
   const fetchCampaigns = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -255,7 +255,36 @@ export default function Campaigns() {
       setDeleting(false);
     }
   };
+  const handleQuickStatusChange = async (
+    campaign: Campaign,
+    newStatus: Campaign["status"],
+  ) => {
+    if (newStatus === campaign.status) return;
 
+    if (newStatus === "active" && !campaign.emailTemplates?.length && !campaign.smsTemplates?.length) {
+      toast.error("Please assign a template before setting this campaign as Active");
+      return;
+    }
+
+    const previousCampaigns = campaigns;
+    setCampaigns((prev) =>
+      prev.map((c) =>
+        c._id === campaign._id ? { ...c, status: newStatus } : c,
+      ),
+    );
+    setStatusUpdatingId(campaign._id);
+
+    try {
+      await updateCampaign(campaign._id, { status: newStatus });
+      toast.success("Campaign status updated successfully");
+    } catch (err: unknown) {
+      setCampaigns(previousCampaigns);
+      toast.error(getErrorMessage(err, "Failed to update campaign status"));
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  };
+  
   return (
     <div className="flex flex-col gap-8">
       {/* Table Card */}

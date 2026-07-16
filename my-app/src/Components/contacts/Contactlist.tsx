@@ -10,7 +10,7 @@ import { //
   useRef,
   useImperativeHandle,
 } from "react";
-import { MoreVertical, X, Loader2 } from "lucide-react";
+import { MoreVertical, X, Loader2, Pencil, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import Pagination from "@/Components/ui/Pagination";
 import {
@@ -25,6 +25,20 @@ import {
 } from "@/services/contact.service";
 
 const DEFAULT_PAGE_SIZE = 10;
+const PHONE_REGEX = /^[0-9]{10}$/;
+
+function validatePhone(phone: string): string | null {
+  const trimmed = phone.trim();
+  if (!trimmed) return "Phone number is required";
+  if (!PHONE_REGEX.test(trimmed)) return "Phone number must be exactly 10 digits";
+  return null;
+}
+
+function validateCompany(company: string): string | null {
+  const trimmed = company.trim();
+  if (!trimmed) return "Company name is required";
+  return null;
+}
 
 interface Contact {
   _id: string;
@@ -250,9 +264,13 @@ function ContactsList(
     try {
       await deleteContact(deletingContactId);
       setDeletingContactId(null);
+      toast.success("Contact deleted successfully");
       fetchContacts();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Delete failed", err);
+      const message =
+        err instanceof Error ? err.message : "Failed to delete contact";
+      toast.error(message);
     }
   };
 
@@ -265,13 +283,18 @@ function ContactsList(
 
   const confirmBulkDelete = async () => {
     if (isInteractionDisabled) return;
+    const deletedCount = selectedContacts.length;
     try {
       await bulkDeleteContacts(selectedContacts);
       setSelectedContacts([]);
       setShowBulkDeleteModal(false);
+      toast.success(`${deletedCount} contact(s) deleted successfully`);
       fetchContacts();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Bulk delete failed", err);
+      const message =
+        err instanceof Error ? err.message : "Failed to delete contacts";
+      toast.error(message);
     }
   };
 
@@ -316,13 +339,30 @@ function ContactsList(
 
   const handleSaveEdit = async () => {
     if (!editingContact || isInteractionDisabled) return;
+
+    const phoneError = validatePhone(formData.phone);
+    if (phoneError) {
+      toast.error(phoneError);
+      return;
+    }
+    
+     const companyError = validateCompany(addingContactData.company);
+      if (companyError) {
+        toast.error(companyError);
+        return;
+      }
+
     setSaving(true);
     try {
       await updateContact(editingContact._id, formData);
       setEditingContact(null);
+      toast.success("Contact updated successfully");
       fetchContacts();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Update failed", err);
+      const message =
+        err instanceof Error ? err.message : "Failed to update contact";
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -330,6 +370,17 @@ function ContactsList(
 
   const handleSaveNewContact = async () => {
     if (isInteractionDisabled) return;
+
+    const phoneError = validatePhone(addingContactData.phone);
+    if (phoneError) {
+      toast.error(phoneError);
+      return;
+    }
+    const companyError = validateCompany(addingContactData.company);
+    if (companyError) {
+      toast.error(companyError);
+      return;
+    }
     setSaving(true);
     try {
       await createContact(addingContactData);
@@ -343,6 +394,7 @@ function ContactsList(
         country: "",
       });
       onCloseAddContact();
+      toast.success("Contact added successfully");
       fetchContacts();
     } catch (err: unknown) {
       const message =
@@ -490,39 +542,24 @@ function ContactsList(
                   <td className="px-6 py-4 text-sm text-[#64748b]">
                     {contact.country}
                   </td>
-                  <td className="px-6 py-4 text-center relative">
-                    <div
-                      ref={(el) => {
-                        if (openMenu === contact._id) menuRef.current = el;
-                      }}
-                    >
+                 <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center gap-4">
                       <button
-                        onClick={() =>
-                          setOpenMenu(
-                            openMenu === contact._id ? null : contact._id,
-                          )
-                        }
+                        onClick={() => handleEditClick(contact)}
                         disabled={isInteractionDisabled}
-                        className="text-[#94a3b8] hover:text-[#64748b] transition-colors disabled:opacity-50"
+                        title="Edit"
+                        className="text-[#94a3b8] hover:text-[#7c3aed] transition-colors disabled:opacity-50"
                       >
-                        <MoreVertical size={18} />
+                        <Pencil size={16} />
                       </button>
-                      {openMenu === contact._id && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white border border-[#e5e7eb] rounded-lg shadow-lg z-10">
-                          <button
-                            onClick={() => handleEditClick(contact)}
-                            className="w-full text-left px-4 py-2 text-sm text-[#111827] hover:bg-[#f3f4f6] border-b border-[#e5e7eb]"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(contact._id)}
-                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
+                      <button
+                        onClick={() => handleDeleteClick(contact._id)}
+                        disabled={isInteractionDisabled}
+                        title="Delete"
+                        className="text-[#94a3b8] hover:text-red-600 transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -568,13 +605,20 @@ function ContactsList(
                   </label>
                   <input
                     type={type}
+                    inputMode={field === "phone" ? "numeric" : undefined}
+                    maxLength={field === "phone" ? 10 : undefined}
                     value={addingContactData[field]}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const rawValue = e.target.value;
+                      const value =
+                        field === "phone"
+                          ? rawValue.replace(/\D/g, "").slice(0, 10)
+                          : rawValue;
                       setAddingContactData((prev) => ({
                         ...prev,
-                        [field]: e.target.value,
-                      }))
-                    }
+                        [field]: value,
+                      }));
+                    }}
                     className="w-full px-4 py-2 border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c3aed]"
                   />
                 </div>
@@ -620,13 +664,20 @@ function ContactsList(
                   </label>
                   <input
                     type={type}
+                    inputMode={field === "phone" ? "numeric" : undefined}
+                    maxLength={field === "phone" ? 10 : undefined}
                     value={formData[field]}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const rawValue = e.target.value;
+                      const value =
+                        field === "phone"
+                          ? rawValue.replace(/\D/g, "").slice(0, 10)
+                          : rawValue;
                       setFormData((prev) => ({
                         ...prev,
-                        [field]: e.target.value,
-                      }))
-                    }
+                        [field]: value,
+                      }));
+                    }}
                     className="w-full px-4 py-2 border border-[#e5e7eb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c3aed]"
                   />
                 </div>
@@ -775,4 +826,3 @@ function ContactsList(
 }
 
 export default forwardRef(ContactsList);
-
