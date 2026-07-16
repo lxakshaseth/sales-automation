@@ -289,7 +289,10 @@ export default function CreateCampaign() {
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-zinc-700 mb-2">
-              Description <span className="text-red-500">*</span>
+              Description
+              <span className="ml-1 text-gray-400 text-xs font-normal">
+                (optional)
+              </span>
             </label>
             <textarea
               value={description}
@@ -318,7 +321,7 @@ export default function CreateCampaign() {
           {/* Campaign Category */}
           <div>
             <label className="block text-sm font-medium text-zinc-700 mb-2">
-              Campaign Category
+              Campaign Category <span className="text-red-500">*</span>
             </label>
             <select
               value={campaignCategory}

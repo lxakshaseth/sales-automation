@@ -357,12 +357,13 @@ function ContactsList(
     label: string;
     field: ContactFormField;
     type: string;
+    required?: boolean;
   }> = [
-    { label: "First Name", field: "firstName", type: "text" },
-    { label: "Last Name", field: "lastName", type: "text" },
-    { label: "Phone", field: "phone", type: "text" },
-    { label: "Email", field: "email", type: "email" },
-    { label: "Company", field: "company", type: "text" },
+    { label: "First Name", field: "firstName", type: "text", required: true },
+    { label: "Last Name", field: "lastName", type: "text", required: true },
+    { label: "Phone", field: "phone", type: "text", required: true },
+    { label: "Email", field: "email", type: "email", required: true },
+    { label: "Company", field: "company", type: "text", required: true },
     { label: "State", field: "state", type: "text" },
     { label: "Country", field: "country", type: "text" },
   ];
@@ -561,10 +562,12 @@ function ContactsList(
               </button>
             </div>
             <div className="px-6 py-6 space-y-4 max-h-[60vh] overflow-y-auto">
-              {inputFields.map(({ label, field, type }) => (
+              {inputFields.map(({ label, field, type, required }) => (
                 <div key={field}>
                   <label className="block text-sm font-medium text-[#374151] mb-1">
                     {label}
+                    {required && <span className="text-red-500 ml-0.5">*</span>}
+                    {!required && <span className="text-gray-400 ml-1 text-xs font-normal">(optional)</span>}
                   </label>
                   <input
                     type={type}
@@ -613,10 +616,12 @@ function ContactsList(
               </button>
             </div>
             <div className="px-6 py-6 space-y-4 max-h-[60vh] overflow-y-auto">
-              {inputFields.map(({ label, field, type }) => (
+              {inputFields.map(({ label, field, type, required }) => (
                 <div key={field}>
                   <label className="block text-sm font-medium text-[#374151] mb-1">
                     {label}
+                    {required && <span className="text-red-500 ml-0.5">*</span>}
+                    {!required && <span className="text-gray-400 ml-1 text-xs font-normal">(optional)</span>}
                   </label>
                   <input
                     type={type}
