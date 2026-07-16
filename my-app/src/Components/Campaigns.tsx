@@ -109,7 +109,6 @@ export default function Campaigns() {
   const [deleteCampaignTarget, setDeleteCampaignTarget] =
     useState<Campaign | null>(null);
   const [deleting, setDeleting] = useState(false);
-
   const fetchCampaigns = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -255,7 +254,7 @@ export default function Campaigns() {
       setDeleting(false);
     }
   };
-
+  
   return (
     <div className="flex flex-col gap-8">
       {/* Table Card */}
