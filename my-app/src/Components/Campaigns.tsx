@@ -259,7 +259,7 @@ export default function Campaigns() {
   return (
     <div className="flex flex-col gap-8">
       {/* Table Card */}
-      <div className="bg-white rounded-2xl border border-zinc-400 mt-5 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-zinc-200 mt-5 shadow-sm overflow-hidden">
         {/* Tabs + Create button */}
         <div className="flex items-center justify-between gap-3 px-4 pt-4 border-b border-zinc-100">
           <div className="flex items-center gap-1">
