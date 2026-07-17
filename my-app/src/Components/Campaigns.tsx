@@ -254,7 +254,7 @@ export default function Campaigns() {
       setDeleting(false);
     }
   };
-  
+
   return (
     <div className="flex flex-col gap-8">
       {/* Table Card */}
@@ -317,21 +317,23 @@ export default function Campaigns() {
               <tr className="bg-zinc-50 border-b border-zinc-100">
                 {[
                   { label: "Name", sort: false },
-                  { label: "Description", sort: false },
                   { label: "Template Assigned", sort: false },
                   { label: "Status", sort: false },
                   { label: "Date", sort: false },
-                  { label: "", sort: false },
+                  { label: "Action", sort: false },
                 ].map((col) => (
                   <th
                     key={col.label}
-                    className="px-4 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide whitespace-nowrap"
+                    className={`px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide whitespace-nowrap ${
+                      col.label === "Action" ? "text-right" : "text-left"
+                    }`}
                   >
-                    <span className="flex items-center gap-1">
+                    <span
+                      className={`flex items-center gap-1 ${
+                        col.label === "Action" ? "justify-end" : ""
+                      }`}
+                    >
                       {col.label}
-                      {col.sort && (
-                        <ArrowUpDown size={11} className="text-zinc-400" />
-                      )}
                     </span>
                   </th>
                 ))}
@@ -382,12 +384,6 @@ export default function Campaigns() {
                       <td className="px-4 py-3">
                         <span className="text-sm font-medium text-zinc-800">
                           {c.name}
-                        </span>
-                      </td>
-                      {/* Description */}
-                      <td className="px-4 py-3 max-w-xs">
-                        <span className="text-sm text-zinc-600 line-clamp-1">
-                          {c.description || "-"}
                         </span>
                       </td>
                       {/* Template Assigned */}

@@ -1,7 +1,7 @@
 "use client";
 
-
-import { //
+import {
+  //
   type ForwardedRef,
   forwardRef,
   useState,
@@ -30,7 +30,8 @@ const PHONE_REGEX = /^[0-9]{10}$/;
 function validatePhone(phone: string): string | null {
   const trimmed = phone.trim();
   if (!trimmed) return "Phone number is required";
-  if (!PHONE_REGEX.test(trimmed)) return "Phone number must be exactly 10 digits";
+  if (!PHONE_REGEX.test(trimmed))
+    return "Phone number must be exactly 10 digits";
   return null;
 }
 
@@ -54,6 +55,7 @@ interface Contact {
 interface Campaign {
   _id: string;
   name: string;
+  status?: string;
 }
 
 interface ContactFormFields {
@@ -108,15 +110,17 @@ function ContactsList(
   const [deletingContactId, setDeletingContactId] = useState<string | null>(
     null,
   );
-  const [addingContactData, setAddingContactData] = useState<ContactFormFields>({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    email: "",
-    company: "",
-    state: "",
-    country: "",
-  });
+  const [addingContactData, setAddingContactData] = useState<ContactFormFields>(
+    {
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      company: "",
+      state: "",
+      country: "",
+    },
+  );
   const [formData, setFormData] = useState<ContactFormFields>({
     firstName: "",
     lastName: "",
@@ -136,10 +140,7 @@ function ContactsList(
   const fetchContacts = useCallback(
     async (
       page = currentPage,
-      {
-        showLoading = true,
-        throwOnError = false,
-      }: RefreshContactsOptions = {},
+      { showLoading = true, throwOnError = false }: RefreshContactsOptions = {},
     ) => {
       try {
         if (showLoading) setLoading(true);
@@ -301,8 +302,11 @@ function ContactsList(
   const openAssignModal = async () => {
     if (isInteractionDisabled) return;
     try {
-      const data = await getCampaigns();
-      setCampaigns(data.data || []);
+      const data = await getCampaigns({ status: "active" });
+      const activeCampaigns = (data.data || []).filter(
+        (c: Campaign) => c.status?.toLowerCase() === "active",
+      );
+      setCampaigns(activeCampaigns);
       setSelectedCampaignId("");
       setShowAssignModal(true);
     } catch (err) {
@@ -345,12 +349,12 @@ function ContactsList(
       toast.error(phoneError);
       return;
     }
-    
-     const companyError = validateCompany(addingContactData.company);
-      if (companyError) {
-        toast.error(companyError);
-        return;
-      }
+
+    const companyError = validateCompany(formData.company);
+    if (companyError) {
+      toast.error(companyError);
+      return;
+    }
 
     setSaving(true);
     try {
@@ -543,7 +547,7 @@ function ContactsList(
                   <td className="px-6 py-4 text-sm text-[#64748b]">
                     {contact.country}
                   </td>
-                 <td className="px-6 py-4 text-center">
+                  <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-4">
                       <button
                         onClick={() => handleEditClick(contact)}
@@ -604,7 +608,11 @@ function ContactsList(
                   <label className="block text-sm font-medium text-[#374151] mb-1">
                     {label}
                     {required && <span className="text-red-500 ml-0.5">*</span>}
-                    {!required && <span className="text-gray-400 ml-1 text-xs font-normal">(optional)</span>}
+                    {!required && (
+                      <span className="text-gray-400 ml-1 text-xs font-normal">
+                        (optional)
+                      </span>
+                    )}
                   </label>
                   <input
                     type={type}
@@ -665,7 +673,11 @@ function ContactsList(
                   <label className="block text-sm font-medium text-[#374151] mb-1">
                     {label}
                     {required && <span className="text-red-500 ml-0.5">*</span>}
-                    {!required && <span className="text-gray-400 ml-1 text-xs font-normal">(optional)</span>}
+                    {!required && (
+                      <span className="text-gray-400 ml-1 text-xs font-normal">
+                        (optional)
+                      </span>
+                    )}
                   </label>
                   <input
                     type={type}
