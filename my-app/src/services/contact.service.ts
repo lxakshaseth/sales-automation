@@ -86,8 +86,11 @@ export async function bulkDeleteContacts(ids: string[]) {
   return data;
 }
 
-export async function getCampaigns() {
-  const response = await fetch("/api/campaigns", {
+export async function getCampaigns(params?: { status?: string }) {
+  const query = new URLSearchParams();
+  if (params?.status) query.set("status", params.status);
+
+  const response = await fetch("/api/campaigns?${query.toString()}", {
     headers: getAuthHeaders(),
   });
   const data = await response.json();

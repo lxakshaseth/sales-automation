@@ -156,11 +156,6 @@ export default function CreateCampaign() {
       return;
     }
 
-    if (!description.trim()) {
-      toast.error("Campaign description is required");
-      return;
-    }
-
     if (!selectedTemplateId) {
       toast.error("No template selected");
       return;
@@ -232,7 +227,7 @@ export default function CreateCampaign() {
             className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-medium transition-all shadow-sm shadow-violet-600/20 disabled:opacity-50"
           >
             <Send size={16} />
-            {launching ? "Launching..." : "Create Campaign"}
+            {launching ? "Launching..." : "Save Campaign"}
           </button>
         </div>
       </div>
@@ -286,6 +281,21 @@ export default function CreateCampaign() {
             )}
           </div>
 
+          {/* Status */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-2">
+              Status <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as "draft" | "active")}
+              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm bg-white"
+            >
+              <option value="draft">Draft</option>
+              <option value="active">Active</option>
+            </select>
+          </div>
+
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-zinc-700 mb-2">
@@ -301,21 +311,6 @@ export default function CreateCampaign() {
               rows={3}
               className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm resize-none"
             />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">
-              Status <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as "draft" | "active")}
-              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm bg-white"
-            >
-              <option value="draft">Draft</option>
-              <option value="active">Active</option>
-            </select>
           </div>
 
           {/* Campaign Category */}
@@ -334,32 +329,6 @@ export default function CreateCampaign() {
               <option value="Welcome">Welcome</option>
               <option value="Re-engagement">Re-engagement</option>
             </select>
-          </div>
-
-          {/* Schedule Date */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">
-              Schedule Date <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={scheduleDate}
-              onChange={(e) => setScheduleDate(e.target.value)}
-              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
-            />
-          </div>
-
-          {/* Schedule Time */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">
-              Schedule Time <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="time"
-              value={scheduleTime}
-              onChange={(e) => setScheduleTime(e.target.value)}
-              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
-            />
           </div>
         </div>
       </motion.div>
