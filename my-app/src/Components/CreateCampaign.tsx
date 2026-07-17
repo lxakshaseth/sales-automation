@@ -238,7 +238,7 @@ export default function CreateCampaign() {
       </div>
 
       {/* Page Title */}
-      <div>
+      <div className="-mt-6">
         <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">
           Create New Campaign
         </h1>
@@ -404,7 +404,7 @@ export default function CreateCampaign() {
         </div>
         {filteredTemplates.length > 0 && (
           <div className="mt-6 border border-zinc-200 rounded-xl overflow-hidden">
-            <div className="grid grid-cols-12 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-700 border-b">
+            <div className="grid grid-cols-12 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-700 border-b border-zinc-200">
               <div className="col-span-4">Template Name</div>
               <div className="col-span-4">Subject</div>
               <div className="col-span-2">Type</div>
@@ -420,7 +420,7 @@ export default function CreateCampaign() {
                   onClick={() =>
                     setSelectedTemplateId(isSelected ? null : template._id)
                   }
-                  className={`w-full grid grid-cols-12 px-4 py-4 border-b text-left hover:bg-zinc-50 transition ${
+                  className={`w-full grid grid-cols-12 px-4 py-4 border-b border-zinc-200 text-left hover:bg-zinc-50 transition ${
                     isSelected ? "bg-violet-50" : ""
                   }`}
                 >
