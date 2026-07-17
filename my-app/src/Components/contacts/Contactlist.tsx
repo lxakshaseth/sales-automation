@@ -346,11 +346,11 @@ function ContactsList(
       return;
     }
     
-     const companyError = validateCompany(addingContactData.company);
-      if (companyError) {
-        toast.error(companyError);
-        return;
-      }
+     const companyError = validateCompany(formData.company);
+    if (companyError) {
+      toast.error(companyError);
+      return;
+    }
 
     setSaving(true);
     try {
