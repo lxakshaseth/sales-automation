@@ -235,6 +235,22 @@ export const deleteCampaingnController = async (
       deleteCampaingn.name,
       "Campaign removed"
     );
+    if (deleteCampaingn.status === "active") {
+      const nextCampaign = await Campaign.findOne().sort({ updatedAt: -1 });
+
+      if (nextCampaign) {
+        nextCampaign.status = "active";
+        await nextCampaign.save();
+
+        await createAuditLog(
+          "Campaigns",
+          "Update",
+          nextCampaign.name,
+          "Automatically activated after active campaign was deleted",
+        );
+      }
+    }
+
     return NextResponse.json(
       { success: true, message: "Deleted successfully" },
       { status: 200 },
