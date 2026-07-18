@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { LogOut, User, ChevronDown } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import ProfileModal from "@/Components/ProfileModal";
@@ -20,6 +20,7 @@ export default function TopBar({ title, description, children }: TopBarProps) {
     name: "",
     role: "",
   });
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
 
@@ -47,6 +48,16 @@ export default function TopBar({ title, description, children }: TopBarProps) {
         // ignore
       }
     }
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const initials = useMemo(() => {
@@ -78,7 +89,7 @@ export default function TopBar({ title, description, children }: TopBarProps) {
 
         <div className="flex items-center gap-4 shrink-0">
           {children}
-          <div className="relative">
+          <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-transparent"

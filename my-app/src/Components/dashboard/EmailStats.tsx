@@ -20,23 +20,56 @@ export default function EmailStats() {
   const [donutSize, setDonutSize] = useState(180);
 
   useEffect(() => {
-    const fetchAll = async () => {
+    let isMounted = true;
+
+    const fetchAll = async (showLoader = false) => {
       try {
-        const analyticsRes = await fetch("/api/email/analytics");
+        if (showLoader) {
+          setLoading(true);
+        }
+
+        const analyticsRes = await fetch("/api/email/analytics", {
+          cache: "no-store",
+        });
+
+        if (!analyticsRes.ok) return;
+
         const analyticsData = await analyticsRes.json();
-        setData(analyticsData);
+
+        if (isMounted) {
+          setData(analyticsData);
+        }
       } catch (error) {
         console.error("Failed to fetch email data", error);
       } finally {
-        setLoading(false);
+        if (showLoader && isMounted) {
+          setLoading(false);
+        }
       }
     };
-    fetchAll();
+
+    // Initial fetch
+    fetchAll(true);
+
+    // Poll every 5 seconds
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchAll(false);
+      }
+    }, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const successRate =
     data && data.sentEmails + data.failedEmails > 0
-      ? ((data.sentEmails / (data.sentEmails + data.failedEmails)) * 100).toFixed(1)
+      ? (
+          (data.sentEmails / (data.sentEmails + data.failedEmails)) *
+          100
+        ).toFixed(1)
       : "0";
 
   const pending = Math.max(
@@ -138,47 +171,103 @@ export default function EmailStats() {
   }
 
   const stats = [
-    { label: "Sent", value: Number(data?.sentEmails) || 0, color: "text-purple-600", bg: "bg-purple-50", dot: "bg-purple-500", shadow: "hover:shadow-purple-200/50 hover:border-purple-200" },
-    { label: "Failed", value: Number(data?.failedEmails) || 0, color: "text-red-500", bg: "bg-red-50", dot: "bg-red-500", shadow: "hover:shadow-red-200/50 hover:border-red-200" },
-    { label: "Pending", value: pending, color: "text-amber-500", bg: "bg-amber-50", dot: "bg-amber-400", shadow: "hover:shadow-amber-200/50 hover:border-amber-200" },
-    { label: "Click Through", value: data?.clickThroughRate ? `${data.clickThroughRate}` : "0%", color: "text-blue-500", bg: "bg-blue-50", dot: "bg-blue-400", shadow: "hover:shadow-blue-200/50 hover:border-blue-200" },
-    { label: "Unsubscribed", value: Number(data?.totalUnsubscribed) || 0, color: "text-orange-500", bg: "bg-orange-50", dot: "bg-orange-400", shadow: "hover:shadow-orange-200/50 hover:border-orange-200" },
+    {
+      label: "Sent",
+      value: Number(data?.sentEmails) || 0,
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+      dot: "bg-purple-500",
+      shadow: "hover:shadow-purple-200/50 hover:border-purple-200",
+    },
+    {
+      label: "Failed",
+      value: Number(data?.failedEmails) || 0,
+      color: "text-red-500",
+      bg: "bg-red-50",
+      dot: "bg-red-500",
+      shadow: "hover:shadow-red-200/50 hover:border-red-200",
+    },
+    {
+      label: "Pending",
+      value: pending,
+      color: "text-amber-500",
+      bg: "bg-amber-50",
+      dot: "bg-amber-400",
+      shadow: "hover:shadow-amber-200/50 hover:border-amber-200",
+    },
+    {
+      label: "Click Through",
+      value: data?.clickThroughRate ? `${data.clickThroughRate}` : "0%",
+      color: "text-blue-500",
+      bg: "bg-blue-50",
+      dot: "bg-blue-400",
+      shadow: "hover:shadow-blue-200/50 hover:border-blue-200",
+    },
+    {
+      label: "Unsubscribed",
+      value: Number(data?.totalUnsubscribed) || 0,
+      color: "text-orange-500",
+      bg: "bg-orange-50",
+      dot: "bg-orange-400",
+      shadow: "hover:shadow-orange-200/50 hover:border-orange-200",
+    },
   ];
 
   return (
-   
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 min-w-0 h-[320px] sm:h-[360px] flex flex-col relative transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-2xl hover:shadow-gray-400/50 hover:z-20 cursor-default">
-        <div className="flex items-center justify-between mb-5 gap-2 shrink-0">
-          <h3 className="text-[15px] font-semibold text-[#111827]">Email Status Overview</h3>
-          <span className="text-[11px] font-medium text-purple-600 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-full">● Live</span>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-5 items-center min-w-0 flex-1 min-h-0 overflow-y-auto">
-          <div ref={donutWrapRef} className="flex flex-col items-center w-full sm:w-auto sm:shrink-0 max-w-[220px]">
-            <canvas ref={canvasRef} style={{ display: "block", maxWidth: "100%" }} />
-            <div className="flex gap-3 mt-2 flex-wrap justify-center">
-              {[{ label: "Sent", color: "bg-purple-500" }, { label: "Failed", color: "bg-red-500" }, { label: "Pending", color: "bg-amber-400" }].map((l) => (
-                <div key={l.label} className="flex items-center gap-1">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${l.color}`} />
-                  <span className="text-[10px] text-gray-400 whitespace-nowrap">{l.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1 min-w-0 w-full">
-            {stats.map((s) => (
-              <div key={s.label} className={`${s.bg} ${s.shadow} rounded-xl border border-transparent px-4 py-3 flex items-center gap-3 min-w-0 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-default`}>
-                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${s.dot}`} />
-                <div className="min-w-0">
-                  <p className="text-xs text-gray-400 truncate">{s.label}</p>
-                  <p className={`text-base font-bold ${s.color} truncate`}>
-                    {typeof s.value === "number" ? Number.isFinite(s.value) ? s.value : 0 : s.value}
-                  </p>
-                </div>
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 min-w-0 h-[320px] sm:h-[360px] flex flex-col relative transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-2xl hover:shadow-gray-400/50 hover:z-20 cursor-default">
+      <div className="flex items-center justify-between mb-5 gap-2 shrink-0">
+        <h3 className="text-[15px] font-semibold text-[#111827]">
+          Email Status Overview
+        </h3>
+        <span className="text-[11px] font-medium text-purple-600 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-full">
+          ● Live
+        </span>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-5 items-center min-w-0 flex-1 min-h-0 overflow-y-auto">
+        <div
+          ref={donutWrapRef}
+          className="flex flex-col items-center w-full sm:w-auto sm:shrink-0 max-w-[220px]"
+        >
+          <canvas
+            ref={canvasRef}
+            style={{ display: "block", maxWidth: "100%" }}
+          />
+          <div className="flex gap-3 mt-2 flex-wrap justify-center">
+            {[
+              { label: "Sent", color: "bg-purple-500" },
+              { label: "Failed", color: "bg-red-500" },
+              { label: "Pending", color: "bg-amber-400" },
+            ].map((l) => (
+              <div key={l.label} className="flex items-center gap-1">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${l.color}`} />
+                <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                  {l.label}
+                </span>
               </div>
             ))}
           </div>
         </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1 min-w-0 w-full">
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              className={`${s.bg} ${s.shadow} rounded-xl border border-transparent px-4 py-3 flex items-center gap-3 min-w-0 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-default`}
+            >
+              <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${s.dot}`} />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-400 truncate">{s.label}</p>
+                <p className={`text-base font-bold ${s.color} truncate`}>
+                  {typeof s.value === "number"
+                    ? Number.isFinite(s.value)
+                      ? s.value
+                      : 0
+                    : s.value}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-
+    </div>
   );
 }

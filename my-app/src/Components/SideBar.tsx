@@ -81,6 +81,8 @@ interface SidebarItemProps {
   isCollapsed: boolean;
   isPermanentlyCollapsed: boolean;
   pathname: string;
+  searchQuery: string;
+  activeSearchHref: string | undefined | null;
   hoveredItem: {
     id: string;
     top: number;
@@ -102,6 +104,8 @@ function SidebarItem({
   isCollapsed,
   isPermanentlyCollapsed,
   pathname,
+  searchQuery,
+  activeSearchHref,
   hoveredItem,
   setHoveredItem,
   onClick,
@@ -117,7 +121,12 @@ function SidebarItem({
     ? item.items?.some((sub) => pathname === sub.href)
     : false;
 
-  const isActive = item.href ? pathname.startsWith(item.href) : isChildActive;
+  const routeActive = item.href
+    ? pathname.startsWith(item.href)
+    : isChildActive;
+
+  const isActive =
+    searchQuery.length > 0 ? item.href === activeSearchHref : routeActive;
 
   const handleParentClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (hasSubmenu) {
@@ -354,24 +363,27 @@ export default function Sidebar({
   };
 
   // Flatten menu for search, preserve hierarchy otherwise
-  const displayMenu = searchQuery
-    ? menu.reduce((acc: SidebarMenuItem[], item) => {
-        // Parent match
-        if (item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-          acc.push(item);
-        }
-        // Children match
-        else if (item.items) {
-          const matchingChildren = item.items.filter((sub) =>
-            sub.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const displayMenu =
+    normalizedQuery.length === 0
+      ? menu
+      : menu.filter((item) => {
+          if (item.name.toLowerCase().includes(normalizedQuery)) {
+            return true;
+          }
+
+          return (
+            item.items?.some((sub) =>
+              sub.name.toLowerCase().includes(normalizedQuery),
+            ) ?? false
           );
-          matchingChildren.forEach((sub) =>
-            acc.push({ ...sub, icon: item.icon }),
-          );
-        }
-        return acc;
-      }, [])
-    : menu;
+        });
+
+  const activeSearchHref =
+    normalizedQuery.length > 0 && displayMenu.length > 0
+      ? displayMenu[0].href
+      : null;
 
   const isEffectivelyCollapsed = isCollapsed;
 
@@ -488,7 +500,7 @@ export default function Sidebar({
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 shadow-xs"
+                className="w-full rounded-xl border border-transparent bg-slate-100 pl-10 pr-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 shadow-sm transition-all duration-200 outline-none hover:bg-slate-50 focus:bg-white focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
               />
             </div>
           )}
@@ -497,25 +509,22 @@ export default function Sidebar({
         {/* ================= NAVIGATION ================= */}
         <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
           {displayMenu.length > 0
-            ? displayMenu.map((item) => {
-                const isParent = !!item.items;
-                const count = 0;
-
-                return (
-                  <SidebarItem
-                    key={item.name}
-                    item={item}
-                    count={count}
-                    isCollapsed={isEffectivelyCollapsed && !isMobile}
-                    isPermanentlyCollapsed={isCollapsed && !isMobile}
-                    pathname={pathname}
-                    hoveredItem={hoveredItem}
-                    setHoveredItem={setHoveredItem}
-                    onClick={handleNavigation}
-                    onToggleCollapse={onToggleCollapse}
-                  />
-                );
-              })
+            ? displayMenu.map((item) => (
+                <SidebarItem
+                  key={item.name}
+                  item={item}
+                  count={0}
+                  isCollapsed={isEffectivelyCollapsed && !isMobile}
+                  isPermanentlyCollapsed={isCollapsed && !isMobile}
+                  pathname={pathname}
+                  hoveredItem={hoveredItem}
+                  setHoveredItem={setHoveredItem}
+                  onClick={handleNavigation}
+                  onToggleCollapse={onToggleCollapse}
+                  searchQuery={normalizedQuery}
+                  activeSearchHref={activeSearchHref}
+                />
+              ))
             : (!isEffectivelyCollapsed || isMobile) && (
                 <div className="px-4 py-8 text-center">
                   <p className="text-sm text-slate-500">No modules found</p>

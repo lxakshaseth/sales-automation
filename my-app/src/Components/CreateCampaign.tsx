@@ -94,11 +94,6 @@ export default function CreateCampaign() {
       return;
     }
 
-    if (!description.trim()) {
-      toast.error("Campaign description is required");
-      return;
-    }
-
     try {
       setSaving(true);
 
@@ -153,11 +148,6 @@ export default function CreateCampaign() {
 
     if (nameTaken) {
       toast.error("A campaign with this name already exists");
-      return;
-    }
-
-    if (!description.trim()) {
-      toast.error("Campaign description is required");
       return;
     }
 
@@ -232,13 +222,13 @@ export default function CreateCampaign() {
             className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-medium transition-all shadow-sm shadow-violet-600/20 disabled:opacity-50"
           >
             <Send size={16} />
-            {launching ? "Launching..." : "Create Campaign"}
+            {launching ? "Launching..." : "Save Campaign"}
           </button>
         </div>
       </div>
 
       {/* Page Title */}
-      <div>
+      <div className="-mt-6">
         <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">
           Create New Campaign
         </h1>
@@ -286,20 +276,6 @@ export default function CreateCampaign() {
             )}
           </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">
-              Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter campaign description"
-              rows={3}
-              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm resize-none"
-            />
-          </div>
-
           {/* Status */}
           <div>
             <label className="block text-sm font-medium text-zinc-700 mb-2">
@@ -315,10 +291,27 @@ export default function CreateCampaign() {
             </select>
           </div>
 
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-2">
+              Description
+              <span className="ml-1 text-gray-400 text-xs font-normal">
+                (optional)
+              </span>
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter campaign description"
+              rows={3}
+              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm resize-none"
+            />
+          </div>
+
           {/* Campaign Category */}
           <div>
             <label className="block text-sm font-medium text-zinc-700 mb-2">
-              Campaign Category
+              Campaign Category <span className="text-red-500">*</span>
             </label>
             <select
               value={campaignCategory}
@@ -331,32 +324,6 @@ export default function CreateCampaign() {
               <option value="Welcome">Welcome</option>
               <option value="Re-engagement">Re-engagement</option>
             </select>
-          </div>
-
-          {/* Schedule Date */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">
-              Schedule Date <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={scheduleDate}
-              onChange={(e) => setScheduleDate(e.target.value)}
-              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
-            />
-          </div>
-
-          {/* Schedule Time */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">
-              Schedule Time <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="time"
-              value={scheduleTime}
-              onChange={(e) => setScheduleTime(e.target.value)}
-              className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm"
-            />
           </div>
         </div>
       </motion.div>
@@ -401,7 +368,7 @@ export default function CreateCampaign() {
         </div>
         {filteredTemplates.length > 0 && (
           <div className="mt-6 border border-zinc-200 rounded-xl overflow-hidden">
-            <div className="grid grid-cols-12 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-700 border-b">
+            <div className="grid grid-cols-12 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-700 border-b border-zinc-200">
               <div className="col-span-4">Template Name</div>
               <div className="col-span-4">Subject</div>
               <div className="col-span-2">Type</div>
@@ -417,7 +384,7 @@ export default function CreateCampaign() {
                   onClick={() =>
                     setSelectedTemplateId(isSelected ? null : template._id)
                   }
-                  className={`w-full grid grid-cols-12 px-4 py-4 border-b text-left hover:bg-zinc-50 transition ${
+                  className={`w-full grid grid-cols-12 px-4 py-4 border-b border-zinc-200 text-left hover:bg-zinc-50 transition ${
                     isSelected ? "bg-violet-50" : ""
                   }`}
                 >
