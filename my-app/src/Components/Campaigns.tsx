@@ -33,19 +33,20 @@ type Campaign = {
   _id: string;
   name: string;
   description?: string;
-  status: "draft" | "active";
+  status: "draft" | "active" | "paused";
   emailTemplates?: TemplateRef[];
   smsTemplates?: TemplateRef[];
   createdAt: string;
   updatedAt: string;
 };
 
-const STATUS_TABS = ["All", "Draft", "Active"];
+const STATUS_TABS = ["All", "Draft", "Active", "Paused"];
 const DEFAULT_PAGE_SIZE = 10;
 
 const statusColor: Record<string, string> = {
   active: "bg-emerald-100 text-emerald-700 border border-emerald-200",
   draft: "bg-orange-100 text-orange-600 border border-orange-200",
+  paused: "bg-amber-100 text-amber-700 border border-amber-200",
 };
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -65,10 +66,11 @@ function formatDate(dateStr?: string) {
 
 function getAssignedTemplateNames(c: Campaign) {
   const names = [
-    ...(c.emailTemplates?.map((t) => t.name) || []),
-    ...(c.smsTemplates?.map((t) => t.name) || []),
+    ...(c.emailTemplates?.map((t) => t.name).filter(Boolean) || []),
+    ...(c.smsTemplates?.map((t) => t.name).filter(Boolean) || []),
   ];
-  return names.length > 0 ? names : null;
+
+  return names;
 }
 
 export default function Campaigns() {
@@ -388,7 +390,7 @@ export default function Campaigns() {
                       </td>
                       {/* Template Assigned */}
                       <td className="px-4 py-3">
-                        {assignedTemplates ? (
+                        {assignedTemplates.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {assignedTemplates.map((name, idx) => (
                               <span
@@ -400,7 +402,9 @@ export default function Campaigns() {
                             ))}
                           </div>
                         ) : (
-                          <span className="text-sm text-zinc-400">-</span>
+                          <span className="text-sm text-zinc-400 italic">
+                            No template
+                          </span>
                         )}
                       </td>
                       {/* Status */}
@@ -531,7 +535,7 @@ export default function Campaigns() {
                   }
                   className="w-full border border-zinc-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all bg-white capitalize"
                 >
-                  {["draft", "active"].map((s) => (
+                  {["draft", "active", "paused"].map((s) => (
                     <option key={s} value={s} className="capitalize">
                       {s}
                     </option>
@@ -679,7 +683,7 @@ export default function Campaigns() {
                 <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">
                   Template Assigned
                 </p>
-                {getAssignedTemplateNames(viewCampaign) ? (
+                {getAssignedTemplateNames(viewCampaign).length > 0 ? (
                   <div className="flex flex-wrap gap-1">
                     {getAssignedTemplateNames(viewCampaign)!.map(
                       (name, idx) => (
@@ -693,7 +697,9 @@ export default function Campaigns() {
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-zinc-400">-</p>
+                  <p className="text-sm text-zinc-400 italic">
+                    No template assigned
+                  </p>
                 )}
               </div>
               <div>

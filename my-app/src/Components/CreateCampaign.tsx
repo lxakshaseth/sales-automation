@@ -94,11 +94,6 @@ export default function CreateCampaign() {
       return;
     }
 
-    if (!description.trim()) {
-      toast.error("Campaign description is required");
-      return;
-    }
-
     try {
       setSaving(true);
 

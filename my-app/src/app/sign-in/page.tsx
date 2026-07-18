@@ -139,7 +139,7 @@ export default function Signin() {
           className="mb-6 flex items-center gap-3"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
+          transition={{ duration: 1.2 }}
         >
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7C3AED] text-white shadow-lg">
             <Rocket className="h-7 w-7" />
@@ -153,7 +153,7 @@ export default function Signin() {
         </motion.div>
 
         {/* Main Interface Wrapper Container */}
-        <AuthPageMotion direction="left">
+        <AuthPageMotion direction="right">
           <Card className="w-full max-w-5xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-md shadow-2xl border border-white/20">
             <CardContent className="p-0 grid md:grid-cols-[1.1fr_0.9fr]">
               {/* Left Portion - Actionable Auth Form */}
