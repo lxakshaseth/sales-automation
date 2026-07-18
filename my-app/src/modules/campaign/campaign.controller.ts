@@ -13,16 +13,13 @@ export const createCampaignController = async (req: NextRequest) => {
     });
     if (existing) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "A campaign with this name already exists.",
-        },
-        { status: 409 },
+        { success: false, message: "A campaign with this name already exists." },
+        { status: 409 }
       );
     }
 
     if (body.status === "active") {
-      // Enforce "only one active campaign at a time" on creation too.
+      // Enforce only one active campaign at a time on creation too.
       await Campaign.updateMany(
         { status: "active" },
         { $set: { status: "paused" } },
@@ -30,21 +27,13 @@ export const createCampaignController = async (req: NextRequest) => {
     }
 
     const campaign = await Campaign.create(body);
-    await createAuditLog(
-      "Campaigns",
-      "Create",
-      campaign.name,
-      "Campaign created",
-    );
+    await createAuditLog("Campaigns", "Create", campaign.name, "Campaign created");
 
-    return NextResponse.json(
-      { success: true, data: campaign },
-      { status: 201 },
-    );
+    return NextResponse.json({ success: true, data: campaign }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: error.message },
-      { status: 500 },
+      { status: 500 }
     );
   }
 };
@@ -153,35 +142,34 @@ export const updateCampaignController = async (
       });
       if (existing) {
         return NextResponse.json(
-          {
-            success: false,
-            message: "A campaign with this name already exists.",
-          },
-          { status: 409 },
+          { success: false, message: "A campaign with this name already exists." },
+          { status: 409 }
         );
       }
     }
 
     if (body.status === "active") {
-      // Enforce "only one active campaign at a time": demote any other
-      // currently-active campaign to paused before activating this one.
       await Campaign.updateMany(
         { _id: { $ne: id }, status: "active" },
         { $set: { status: "paused" } },
       );
     }
 
-    const updatedCampaign = await Campaign.findByIdAndUpdate(id, body, {
-      new: true,
-    });
+    const updatedCampaign = await Campaign.findByIdAndUpdate(
+      id,
+      body,
+      { new: true }
+    );
 
     let details = "Campaign updated";
 
     if (body.name && oldCampaign?.name !== body.name) {
       details = "Name changed";
-    } else if (body.status && oldCampaign?.status !== body.status) {
+    }
+    else if (body.status && oldCampaign?.status !== body.status) {
       details = `Status changed ${oldCampaign.status} → ${body.status}`;
-    } else if (
+    }
+    else if (
       body.description &&
       oldCampaign?.description !== body.description
     ) {
@@ -192,7 +180,7 @@ export const updateCampaignController = async (
       "Campaign",
       "Update",
       updatedCampaign?.name || oldCampaign?.name,
-      details,
+      details
     );
 
     if (!updatedCampaign) {
@@ -245,7 +233,7 @@ export const deleteCampaingnController = async (
       "Campaigns",
       "Delete",
       deleteCampaingn.name,
-      "Campaign removed",
+      "Campaign removed"
     );
     return NextResponse.json(
       { success: true, message: "Deleted successfully" },

@@ -202,7 +202,7 @@ const confirmDelete = async () => {
         <div className="mx-4 mt-3 flex items-start justify-between rounded-xl border border-green-200 bg-green-50 px-4 py-3">
 
           <p className="text-sm text-green-700">
-            ✔ 6-month-old audit logs were automatically deleted successfully.
+             6-month-old audit logs were automatically deleted successfully.
           </p>
 
           <button

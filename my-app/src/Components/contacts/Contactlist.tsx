@@ -54,6 +54,7 @@ interface Contact {
 interface Campaign {
   _id: string;
   name: string;
+  status?: string;
 }
 
 interface ContactFormFields {
@@ -301,8 +302,13 @@ function ContactsList(
   const openAssignModal = async () => {
     if (isInteractionDisabled) return;
     try {
-      const data = await getCampaigns();
-      setCampaigns(data.data || []);
+      const data = await getCampaigns({ status: "active" });
+      // Defensive client-side filter in case the API ever returns
+      // campaigns outside the requested status.
+      const activeCampaigns = (data.data || []).filter(
+        (c: Campaign) => c.status?.toLowerCase() === "active",
+      );
+      setCampaigns(activeCampaigns);
       setSelectedCampaignId("");
       setShowAssignModal(true);
     } catch (err) {
@@ -346,11 +352,11 @@ function ContactsList(
       return;
     }
     
-     const companyError = validateCompany(addingContactData.company);
-      if (companyError) {
-        toast.error(companyError);
-        return;
-      }
+    const companyError = validateCompany(formData.company);
+    if (companyError) {
+      toast.error(companyError);
+      return;
+    }
 
     setSaving(true);
     try {
