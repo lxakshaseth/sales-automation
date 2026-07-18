@@ -108,7 +108,7 @@ export default function Signup() {
           className="mb-6 flex items-center gap-3"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
+          transition={{ duration: 1.2 }}
         >
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7C3AED] text-white shadow-lg">
             <Rocket className="h-7 w-7" />
@@ -120,7 +120,7 @@ export default function Signup() {
             <p className="text-md text-slate-500">CRM & Lead Management</p>
           </div>
         </motion.div>
-        <AuthPageMotion direction="right">
+        <AuthPageMotion direction="left">
           <div className="w-full max-w-5xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-md shadow-2xl border border-white/20">
             <div className="grid md:grid-cols-[0.9fr_1.1fr]">
               <div className="hidden md:flex relative overflow-hidden flex-col bg-linear-to-br from-violet-700 via-violet-600 to-indigo-700 p-10">
