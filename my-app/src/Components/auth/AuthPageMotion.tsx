@@ -25,7 +25,7 @@ export default function AuthPageMotion({
         scale: 1,
       }}
       transition={{
-        duration: 0.45,
+        duration: 1.2,
         ease: [0.22, 1, 0.36, 1],
       }}
       className="w-full"

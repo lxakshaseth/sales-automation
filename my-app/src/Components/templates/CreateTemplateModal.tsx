@@ -84,7 +84,7 @@ export default function CreateTemplateModal({
 
   const injectIntoSubject = (tokenLabel: string) => {
     if (!tokenLabel.trim()) return;
-    const formatToken = `{{${tokenLabel.trim()}}}`;
+    const formatToken = `{{${tokenLabel.trim()}}} `;
     const start = subjectInputRef.current?.selectionStart || 0;
     const end = subjectInputRef.current?.selectionEnd || 0;
     const nextSubject =
@@ -104,7 +104,7 @@ export default function CreateTemplateModal({
 
   const injectIntoBody = (tokenLabel: string) => {
     if (!tokenLabel.trim()) return;
-    const formatToken = `{{${tokenLabel.trim()}}}`;
+    const formatToken = `{{${tokenLabel.trim()}}} `;
     if (editor && !editor.isDestroyed) {
       editor.chain().focus().insertContent(formatToken).run();
     } else {
