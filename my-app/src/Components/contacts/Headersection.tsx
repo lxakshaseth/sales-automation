@@ -38,8 +38,8 @@ export default function Headersection({
   };
 
   return (
-    <div className="bg-white border border-[#e5e7eb] rounded-2xl p-4 flex items-center justify-between shadow-sm">
-      <div className="relative w-full max-w-[600px]">
+    <div className="bg-white border border-[#e5e7eb] border-b-0 rounded-t-2xl p-4 flex items-center justify-between shadow-sm">
+      <div className="relative w-full max-w-150">
         <Search
           size={20}
           className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94a3b8]"
