@@ -349,10 +349,6 @@ function ContactsList(
       toast.error(phoneError);
       return;
     }
-<<<<<<< HEAD
-=======
-
->>>>>>> 00f55689c18480ed176e09ee9a7af3258b0f0673
     const companyError = validateCompany(formData.company);
     if (companyError) {
       toast.error(companyError);
