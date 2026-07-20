@@ -90,11 +90,7 @@ export async function getCampaigns(params?: { status?: string }) {
   const query = new URLSearchParams();
   if (params?.status) query.set("status", params.status);
 
-<<<<<<< HEAD
-  const response = await fetch(`/api/campaigns?${query.toString()}`, {
-=======
   const response = await fetch("/api/campaigns?${query.toString()}", {
->>>>>>> 8d6f4c5a9c9ab0044c7a67ae2a8d329e6651284a
     headers: getAuthHeaders(),
   });
   const data = await response.json();
