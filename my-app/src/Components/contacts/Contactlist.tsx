@@ -303,11 +303,6 @@ function ContactsList(
     if (isInteractionDisabled) return;
     try {
       const data = await getCampaigns({ status: "active" });
-<<<<<<< HEAD
-      // Defensive client-side filter in case the API ever returns
-      // campaigns outside the requested status.
-=======
->>>>>>> 8d6f4c5a9c9ab0044c7a67ae2a8d329e6651284a
       const activeCampaigns = (data.data || []).filter(
         (c: Campaign) => c.status?.toLowerCase() === "active",
       );
@@ -354,11 +349,7 @@ function ContactsList(
       toast.error(phoneError);
       return;
     }
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> 8d6f4c5a9c9ab0044c7a67ae2a8d329e6651284a
     const companyError = validateCompany(formData.company);
     if (companyError) {
       toast.error(companyError);
