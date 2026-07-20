@@ -349,7 +349,6 @@ function ContactsList(
       toast.error(phoneError);
       return;
     }
-
     const companyError = validateCompany(formData.company);
     if (companyError) {
       toast.error(companyError);

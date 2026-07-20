@@ -303,7 +303,6 @@ export default function Campaigns() {
       setDeleting(false);
     }
   };
-
   return (
     <div className="flex flex-col gap-8">
       {/* Table Card */}

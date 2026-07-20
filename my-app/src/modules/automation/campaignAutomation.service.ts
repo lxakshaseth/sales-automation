@@ -5,8 +5,8 @@ import { createAuditLog } from "@/modules/audit-log/auditLog.service";
 
 import { startCampaignFlow } from "./automation.service";
 
-const ELIGIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
-const BATCH_SIZE = 200; // cap per cron tick so one run can't overload the email queue
+const ELIGIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
+const BATCH_SIZE = 200;
 
 export type CampaignAutomationResult = {
   ranAt: Date;
@@ -26,9 +26,7 @@ export const runCampaignAutomationCycle =
     });
 
     if (!campaign) {
-      console.log(
-        "[campaign-automation] No active campaign found. Skipping cycle.",
-      );
+      console.log("[campaign-automation] No active campaign found. Skipping cycle.");
 
       return {
         ranAt,
@@ -94,6 +92,7 @@ export const runCampaignAutomationCycle =
     let assignedLeadCount = 0;
     let skippedLeadCount = 0;
 
+    
     for (const lead of eligibleLeads) {
       try {
         await startCampaignFlow(lead._id.toString());
