@@ -111,6 +111,10 @@ export default function Campaigns() {
   const [deleteCampaignTarget, setDeleteCampaignTarget] =
     useState<Campaign | null>(null);
   const [deleting, setDeleting] = useState(false);
+  /* Selection states */
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
   const fetchCampaigns = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -125,6 +129,7 @@ export default function Campaigns() {
       });
       setCampaigns(res.data || []);
       setTotalData(res.totalData || 0);
+      setSelectedIds([]);
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Failed to load campaigns"));
       setCampaigns([]);
@@ -147,6 +152,29 @@ export default function Campaigns() {
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setPage(1);
+    setSelectedIds([]);
+  };
+
+  const handleSelectAll = () => {
+    const visibleIds = campaigns.map((campaign) => campaign._id);
+
+    const allVisibleSelected = visibleIds.every((id) =>
+      selectedIds.includes(id),
+    );
+
+    if (allVisibleSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+    } else {
+      setSelectedIds((prev) => [...new Set([...prev, ...visibleIds])]);
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
+    } else {
+      setSelectedIds((prev) => [...prev, id]);
+    }
   };
 
   useEffect(() => {
@@ -242,6 +270,25 @@ export default function Campaigns() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    try {
+      setIsBulkDeleting(true);
+
+      await Promise.all(selectedIds.map((id) => deleteCampaignApi(id)));
+
+      toast.success("Selected campaigns deleted successfully");
+
+      setSelectedIds([]);
+      fetchCampaigns();
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to delete selected campaigns"));
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteCampaignTarget) return;
     try {
@@ -270,6 +317,7 @@ export default function Campaigns() {
                 onClick={() => {
                   setActiveTab(tab);
                   setPage(1);
+                  setSelectedIds([]);
                 }}
                 className={`px-5 py-2 text-sm font-medium rounded-t-xl transition-colors ${
                   activeTab === tab
@@ -301,10 +349,23 @@ export default function Campaigns() {
               onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setPage(1);
+                setSelectedIds([]);
               }}
               className="w-full pl-9 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
             />
           </div>
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              <Trash2 size={16} />
+              {isBulkDeleting
+                ? "Deleting..."
+                : `Delete Selected (${selectedIds.length})`}
+            </button>
+          )}
           <span className="text-sm text-zinc-500 ml-auto">
             {loading
               ? "Loading..."
@@ -317,6 +378,19 @@ export default function Campaigns() {
           <table className="w-full">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-100">
+                <th className="px-4 py-3 w-12 text-center">
+                  {campaigns.length > 0 && (
+                    <input
+                      type="checkbox"
+                      checked={campaigns.every((campaign) =>
+                        selectedIds.includes(campaign._id),
+                      )}
+                      onChange={handleSelectAll}
+                      className="rounded border-gray-300 text-violet-600 focus:ring-violet-500 h-4 w-4"
+                    />
+                  )}
+                </th>
+
                 {[
                   { label: "Name", sort: false },
                   { label: "Template Assigned", sort: false },
@@ -382,6 +456,14 @@ export default function Campaigns() {
                         i % 2 === 0 ? "" : "bg-zinc-50/30"
                       }`}
                     >
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(c._id)}
+                          onChange={() => handleSelectOne(c._id)}
+                          className="rounded border-gray-300 text-violet-600 focus:ring-violet-500 h-4 w-4"
+                        />
+                      </td>
                       {/* Name */}
                       <td className="px-4 py-3">
                         <span className="text-sm font-medium text-zinc-800">
@@ -465,6 +547,11 @@ export default function Campaigns() {
         </div>
 
         <div className="border-t border-zinc-100 p-4">
+          {selectedIds.length > 0 && (
+            <div className="mb-3 px-2 text-sm font-medium text-violet-600">
+              {selectedIds.length} selected
+            </div>
+          )}
           <Pagination
             currentPage={page}
             totalPages={totalPages}

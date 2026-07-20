@@ -239,7 +239,7 @@ export default function Signin() {
 
                 <div className="relative z-10">
                   <span className="inline-flex items-center rounded-full bg-white/10 px-4 py-1 text-sm backdrop-blur-md border border-white/20">
-                    🚀 Smart CRM Platform
+                    🚀 Smart Automation Platform
                   </span>
 
                   <h2 className="mt-6 text-5xl font-bold leading-tight">

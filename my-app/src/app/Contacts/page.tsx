@@ -112,17 +112,17 @@ export default function ContactsPage() {
   return (
     <div className="flex h-screen bg-zinc-50 font-sans overflow-hidden">
       <main
-        className={`flex-1 transition-all duration-300 overflow-y-auto ${
+        className={`flex flex-1 w-full flex-col py-10 px-8 bg-zinc-50 overflow-y-auto transition-all duration-300 ${
           isCollapsed ? "md:ml-20" : "md:ml-64"
         }`}
       >
-        <div className="p-6 lg:p-8">
+        <div className="max-w-[1600px] w-full mx-auto">
           <TopBar
             title="Contacts Directory"
             description="Manage your clients, leads, and team members."
           />
 
-          <div className="mt-6">
+          <div className="mt-5 mb-0">
             <Headersection
               searchQuery={searchQuery}
               onSearchChange={(query) => {
@@ -137,7 +137,7 @@ export default function ContactsPage() {
             />
           </div>
 
-          <div className="mt-6">
+          <div className="mt-0">
             <ContactsList
               ref={contactsListRef}
               searchQuery={searchQuery}

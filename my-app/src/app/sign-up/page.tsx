@@ -130,7 +130,7 @@ export default function Signup() {
                 <div className="relative z-10 flex flex-col h-full">
                   {/* Smart CRM */}
                   <span className="inline-flex w-fit items-center rounded-full bg-white/10 px-4 py-1 text-sm backdrop-blur-md border border-white/20 text-white">
-                    🚀 Smart CRM Platform
+                    🚀 Smart Automation Platform
                   </span>
 
                   <h2 className="mt-6 text-5xl font-bold leading-tight text-white">

@@ -427,7 +427,7 @@ function ContactsList(
   return (
     <div
       aria-busy={isInteractionDisabled || loading}
-      className="bg-white rounded-2xl border border-[#e5e7eb] shadow-sm overflow-hidden"
+      className="bg-white rounded-b-2xl border border-[#e5e7eb] border-t-0 shadow-sm overflow-hidden"
     >
       {/* BULK ACTIONS */}
       {selectedContacts.length > 0 && (
