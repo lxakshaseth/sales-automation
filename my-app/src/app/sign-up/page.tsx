@@ -51,7 +51,7 @@ export default function Signup() {
       return;
     }
     if (!/^[0-9]{10}$/.test(formData.mobile)) {
-      toast.error("Please enter a valid 10-digit mobile number");
+      toast.error("Enter a valid 10-digit number");
       return;
     }
     setLoading(true);
