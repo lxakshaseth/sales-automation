@@ -80,7 +80,7 @@ export default function CreateCampaign() {
 
   async function handleSaveDraft() {
     if (status !== "draft") {
-      toast.error("Set status to Draft to save as draft");
+      toast.error("Set status to Draft first");
       return;
     }
 
@@ -90,7 +90,7 @@ export default function CreateCampaign() {
     }
 
     if (nameTaken) {
-      toast.error("A campaign with this name already exists");
+      toast.error("Campaign name already exists");
       return;
     }
 
@@ -147,7 +147,7 @@ export default function CreateCampaign() {
     }
 
     if (nameTaken) {
-      toast.error("A campaign with this name already exists");
+      toast.error("Campaign name already exists");
       return;
     }
 

@@ -76,7 +76,7 @@ export default function RecentAdminActivities() {
 
   const confirmDelete = async () => {
     if (!fromDate || !toDate) {
-      toast.error("Please select both From and To dates.");
+      toast.error("Select both From and To dates");
       return;
     }
 
@@ -107,7 +107,7 @@ export default function RecentAdminActivities() {
       }
     } catch (err) {
       console.error(err);
-      toast.error("Something went wrong. Please try again.");
+      toast.error("Something went wrong");
     }
   };
 
