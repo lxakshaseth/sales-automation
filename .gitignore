@@ -1,0 +1,106 @@
+# Python
+
+**pycache**/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+
+venv/
+my-app/services/ai_chat_bot/.venv/
+.venv/
+env/
+ENV/
+
+# Environment Variables
+
+.env
+.env.*
+!.env.example
+
+# Pytest
+
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Ruff
+
+.ruff_cache/
+
+# MyPy
+
+.mypy_cache/
+
+# Logs
+
+logs/
+*.log
+
+# Data Files
+
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+
+.vscode/
+.idea/
+
+# OS Files
+
+.DS_Store
+Thumbs.db
+
+# Build Artifacts
+
+build/
+dist/
+*.egg-info/
+
+# Docker
+
+docker-compose.override.yml
+
+# Test Reports
+
+reports/
+test-results/
+benchmark_results/
+
+# Locust
+
+locust_results*
+*.csv
+*.html
+
+# Temporary Files
+
+tmp/
+temp/
+*.tmp
+
+# Secrets
+
+secrets/
+credentials.json
+service-account.json
+
+# Jupyter
+
+.ipynb_checkpoints/
+
+# AI Cache
+
+cache/
+embeddings_cache/
+vector_cache/
+
+# Generated Files
+
+generated/
+exports/
+uploads/
